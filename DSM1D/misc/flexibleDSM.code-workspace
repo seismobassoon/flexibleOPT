@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"name": "dsmapp",
+			"path": "../../../../../.julia/geniebuilder/apps/dsmapp"
+		},
+		{
+			"name": "convectionviewer",
+			"path": "../../../../../.julia/geniebuilder/apps/convectionviewer"
+		},
+		{
+			"name": "flexibledsm",
+			"path": "../../../../../.julia/geniebuilder/apps/flexibledsm"
+		}
+	],
+	"settings": {}
+}

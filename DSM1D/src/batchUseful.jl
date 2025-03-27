@@ -1,0 +1,59 @@
+# In this code, I collect some useful macros and functions 
+
+# macro to convert a variable name to a string 
+# https://discourse.julialang.org/t/can-i-use-a-function-variable-name-to-generate-a-string-to-set-it-equal-to/73659
+macro var2string(var)
+    :($(esc(var)) = $(String(var)))
+end
+
+function reinterpolateArrayMembers(Ncolor,nSegments)
+    nColors = Array{Int}(undef,nSegments)
+    smallNumberMembers = Ncolor ÷ nSegments
+    oneMoreMemberSegment = Ncolor % nSegments
+
+
+    nColors .=smallNumberMembers
+    nColors[1:oneMoreMemberSegment] .= smallNumberMembers+1
+    
+    intervalIndice=Array{Int,2}(undef,(2,nSegments))
+
+    for i in 1:nSegments
+        if i == 1
+            intervalIndice[1,i] = 1
+            intervalIndice[2,i] = nColors[1]
+        else
+            intervalIndice[1,i] = intervalIndice[1,i-1]+nColors[i-1]
+            intervalIndice[2,i] = intervalIndice[1,i]+nColors[i]-1
+        end
+    end
+
+    return nColors,intervalIndice
+end
+
+function expandVectors(vector,onesvector;fillinTheGap=1,Type=Int)
+    # this function expands a <N dimension vector on N dimension onesvector 
+    vector=collect(vector)
+    onesvector=collect(onesvector)
+    if size(vector)[1] !== sum(onesvector)
+        @show vector,onesvector
+        @error "the input vector dimension is not what onesvector can help"
+    end
+    Ndimension=size(onesvector)[1]
+    NewVector=fillinTheGap .* ones(Type,Ndimension)
+    iCoord = 0
+    
+    for jCoord in 1:Ndimension # here I cannot use eachindex since I need to be quite sure about the order of coordinates
+        if onesvector[jCoord] === 1
+            iCoord +=1
+            NewVector[jCoord]=vector[iCoord]
+        end
+    end
+    return NewVector
+end
+
+function string_as_varname(s::AbstractString,v::Any)
+    s=Symbol(s)
+    @eval (($s) = ($v))
+end
+
+car2vec(x::CartesianIndex) = collect(Tuple(x))
