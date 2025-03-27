@@ -113,8 +113,8 @@ models=(model .* 0.5 .+ 2)
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 
-
-modelPoints = size(model) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+Nt= 120
+modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
 constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=1.0)
 
