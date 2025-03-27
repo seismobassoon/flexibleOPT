@@ -1,4 +1,5 @@
 # In this code, I collect some useful macros and functions 
+using LinearAlgebra
 
 # macro to convert a variable name to a string 
 # https://discourse.julialang.org/t/can-i-use-a-function-variable-name-to-generate-a-string-to-set-it-equal-to/73659
@@ -57,3 +58,20 @@ function string_as_varname(s::AbstractString,v::Any)
 end
 
 car2vec(x::CartesianIndex) = collect(Tuple(x))
+
+function myInv(a;method="LU")
+    ainv=nothing
+    if method==="macGPU"# this does not work for the moment
+        a=convert(Array{Float32},a)
+        a_gpu = MtlArray(a)  # Move A to GPU
+        ainv = inv(a_gpu) 
+        ainv=convert(Array{Float64},ainv)
+    elseif method==="LU"
+        F=lu(a)
+        ainv=inv(F)
+    elseif method==="basic"
+        ainv=inv(a)
+    end
+    return ainv
+end
+

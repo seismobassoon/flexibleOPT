@@ -195,9 +195,8 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
             # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
             
             aa=transpose(TaylorExpansionCoeffs)*TaylorExpansionCoeffs
-            invaa= inv(aa)
+            invaa= myInv(aa)
             CˡηGlobal[:,:,linearK]=invaa*transpose(TaylorExpansionCoeffs)
-          
         end
     end 
 
@@ -379,7 +378,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     @show bigα
     #endregion
 
-    #region The inverse of Taylor expansions
+    #region Preparation for Taylor expansion
     
     orderTaylors=Array{Any,Ndimension}(undef,Tuple(orderU))
     pointsInSpaceTime=Array{Any,Ndimension}(undef,Tuple(pointsUsedForFields))
@@ -459,7 +458,6 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                         U_HERE = Ulocal[linearνᶜ,iField]
                         
                         for eachα in α
-
                             nodeValue=eachα.node
                             nᶜ = eachα.nᶜ
                             n = eachα.n
