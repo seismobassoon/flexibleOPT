@@ -402,7 +402,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,Δ=Δnum)
         # this clause can work only if the user gives Δcoordinates in advance!
     end
-
+    @show "Cˡη inversion done"
     #endregion
 
     #region making the (symbolic-numerical-hybrid) operator calling the factorial kernels and test functions
