@@ -571,7 +571,7 @@ function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,v
     NtypeofExpr = length(exprs)
 
     Models=Array{Any,1}(undef,NtypeofMaterialVariables)
-    @show models, NtypeofMaterialVariables
+    @show length(models), NtypeofMaterialVariables
     if length(models) !== NtypeofMaterialVariables 
         @error "Each material has to have its own model"
         
