@@ -524,7 +524,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
 end
 
-function constructingNumericalDiscretisedEquations(semiSymbolicsDiscretisedEquations,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
+function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
 
     #todo list
     #
@@ -555,6 +555,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsDiscretisedEquat
     #endregion
 
     #region unpacking, N-dimensionalising all the models 
+
+    testOnlyCentre = false
+    if ndims(semiSymbolicsOperators) === 2
+        testOnlyCentre = true
+    elseif ndims(semiSymbolicsOperators) !==3
+        @error "the semi symbolic operators are not computed correctly!"
+    end
 
     timeMarching = any(a -> a === t, coordinates) # important to know if we need to construct a time marching scheme
 
