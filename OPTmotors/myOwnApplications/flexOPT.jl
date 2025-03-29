@@ -27,7 +27,7 @@ famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
-model2D =nothing
+model =nothing
 #endregion
 
 #region Model input - option i) Model domain definition
@@ -120,7 +120,7 @@ models=((model .* 0.5 .+ 2))
 
 
 Nt= 120
-modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+@show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
 constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=1.0)
 
