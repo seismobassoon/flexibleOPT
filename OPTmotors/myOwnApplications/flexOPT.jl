@@ -109,7 +109,7 @@ IneedExternalSources = true
 if IneedExternalSources 
     @time Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
 end
-#@show AjiννᶜU, Γg
+
 
 #region je râle, je râle
 #
@@ -132,7 +132,10 @@ Nt= 120
 
 constructingEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
 if IneedExternalSources 
-   # constructingEquations(...) # right-hand side genre sparse or not etc.
+    # constructingEquations(...) # right-hand side genre sparse or not etc.
+    # here we recycle constructingEquations if the source terms are everywhere in the domain
+    #    otherwise another function to use Γg that is applied in a sparse way
+
 end
 
 

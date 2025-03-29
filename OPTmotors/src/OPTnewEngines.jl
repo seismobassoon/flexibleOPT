@@ -524,7 +524,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
 end
 
-function constructingNumericalDiscretisedEquations(semiSymbolicsDiscretisedEquations,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0,isExternalForceSparse=true)
+function constructingNumericalDiscretisedEquations(semiSymbolicsDiscretisedEquations,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
 
     #todo list
     #
@@ -622,27 +622,23 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsDiscretisedEquat
 
     # below should be parallelised at some points
 
+    timePointsUsedForOneStep=car2vec(localPointsIndices[end])[end]
 
-    timeSteps=1
+    timeStepsForAll=1
 
     if timeMarching
-        pointsForOneStep=car2vec(localPointsIndices[end])[end]
-        timeSteps=wholeRegionPoints[end]-pointsForOneStep+1
-        wholeRegionPoints[end]=pointsForOneStep
+        timeStepsForAll=wholeRegionPoints[end]-timePointsUsedForOneStep+1
+        wholeRegionPoints[end]=timePointsUsedForOneStep
     end
 
 
     場=Array{Any,1}(undef,NtypeofFields)
 
-    if isExternalForceSparse
-        #here the members of 場 should be sparse
-
-    else
-        for iField in eachindex(fields)
-            newstring=split(string(fields[iField]),"(")[1]*"_mod"
-            場[iField]=string_as_varname(newstring, Array{Any,Ndimension}(undef,Tuple(wholeRegionPoints)))
-            場[iField].=initialCondition # This is a very simple initial conditionning but this should be more flexible
-        end
+    
+    for iField in eachindex(fields)
+        newstring=split(string(fields[iField]),"(")[1]*"_mod"
+        場[iField]=string_as_varname(newstring, Array{Any,Ndimension}(undef,Tuple(wholeRegionPoints)))
+        場[iField].=initialCondition # This is a very simple initial conditionning but this should be more flexible
     end
     
     #endregion
