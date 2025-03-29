@@ -588,13 +588,12 @@ function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,v
             Models[iVar]=tmpModel
         else
             newCoords=expandVectors(size(models[iVar]),CartesianDependency)
-            @show newCoords
             
             tmpModel=reshape(models[iVar],newCoords...)
             Models[iVar]=tmpModel
 
             for iCoord in eachindex(newCoords)
-                if newCoords[iCoord]!== modelPoints[iCoord] || newCoords[iCoord] !== 1
+                if newCoords[iCoord]!== modelPoints[iCoord] && newCoords[iCoord] !== 1
                     @error "the model should have the same dimension! (or constant)"
                 end
             end
@@ -624,22 +623,21 @@ function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,v
 
     # below should be parallelised at some points
 
-    @show size(localPointsIndices)
 
     timeSteps=1
 
     if timeMarching
-        @show pointsForOneStep=car2vec(localPointsIndices)[end]
+        pointsForOneStep=car2vec(localPointsIndices[end])[end]
         timeSteps=wholeRegionPoints[end]-pointsForOneStep+1
-        @show wholeRegionPoints[end]=pointsForOneStep
+        wholeRegionPoints[end]=pointsForOneStep
     end
 
     場=Array{Any,1}(undef,NtypeofFields)
     for iField in eachindex(fields)
         newstring=split(string(fields[iField]),"(")[1]*"_mod"
         場[iField]=string_as_varname(newstring, Array{Any,Ndimension}(undef,Tuple(wholeRegionPoints)))
+        場[iField].=initialCondition # This is a very simple initial conditionning but this should be more flexible
     end
-    場 .= initialCondition
     
     #endregion
 

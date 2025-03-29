@@ -125,7 +125,7 @@ models=push!(models, (model .* 0.5 .+ 2))
 Nt= 120
 @show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
-constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=1.0)
+constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
 
 
 #constructingEquations(AjiννᶜU,)
