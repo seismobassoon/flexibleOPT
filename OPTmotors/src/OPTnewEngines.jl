@@ -524,13 +524,12 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
 end
 
-function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0,isExternalForceSparse=true)
+function constructingDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0,isExternalForceSparse=true)
 
     #todo list
     #
     # I have to include some complex initial condition for 場
     #
-    # external forces: use sparse (or not)
 
     
     #region general introduction

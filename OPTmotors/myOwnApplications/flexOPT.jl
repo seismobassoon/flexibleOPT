@@ -102,10 +102,13 @@ end
 Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
 
 exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+IneedExternalSources = true
+
 @time AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
 # if you do not want to apply external forces, it is possible to skip below
-@time Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
-
+if IneedExternalSources 
+    @time Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+end
 #@show AjiννᶜU, Γg
 
 #region je râle, je râle
@@ -127,7 +130,10 @@ models=push!(models, (model .* 0.5 .+ 2))
 Nt= 120
 @show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
-constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
+constructingEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
+if IneedExternalSources 
+   # constructingEquations(...) # right-hand side genre sparse or not etc.
+end
 
 
 #constructingEquations(AjiννᶜU,)
