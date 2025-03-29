@@ -149,7 +149,7 @@ function PDECoefFinder(pointsUsed,coordinates,expr,field,vars)
     return alpha, varM # varM: iVar and linearised cartesian indices
 end 
 
-function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=true,Δ=nothing)
+function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=true,Δ=nothing,timeMarching=false)
 
     # here we propose a big Taylor expansion matrix with Δcoordinates, symbolically (when Δ=nothing or Δ as a symbolic array)
     #   or numerically otherwise
@@ -171,13 +171,19 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
     #TaylorExpansionCoeffs=Array{Any,Ndimension*2}(undef, Tuple(vcat(collect(Tuple(multiOrdersIndices[end])),collect(Tuple(multiPointsIndices[end])))))
     
     CˡηGlobal = Array{Any,3}(undef,numberOfEtas,numberOfLs,numberOfEtas)
-    midLinearK = nothing # this is valid only for testOnlyCentre
+   
+
+    tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    if timeMarching
+        tmpVecForMiddlePoint[end]=2
+    end
+    midLinearK=CartesianIndex(Tuple(tmpVecForMiddlePoint))
 
     for k in multiPointsIndices
         linearK = LinearIndices(multiPointsIndices)[k]
         TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
-        if !testOnlyCentre || Tuple(k) === ((Tuple(multiPointsIndices[end] )).-1 ).÷2 .+1 
-            midLinearK = linearK # this is valid only for testOnlyCentre
+        if !testOnlyCentre || k === midLinearK
+            
             for i in multiPointsIndices
                 linearI = LinearIndices(multiPointsIndices)[i]
                 η = car2vec(i-k)
@@ -396,9 +402,9 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
 
     if CˡηSymbolicInversion # this seems super cool but it takes time
-        Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre)
+        Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,timeMarching=timeMarching)
     else
-        Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,Δ=Δnum)
+        Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,Δ=Δnum,timeMarching=timeMarching)
         # this clause can work only if the user gives Δcoordinates in advance!
     end
 
@@ -424,21 +430,24 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     AjiννᶜU .= 0
     # the small dictionary map should be here (not inside the loop) but I am too tired that I let this go
     # why tired? since I need to prepare another set of theDiffNu that can run from minus to plus 
-
-    middleLinearν = nothing # only valid for testOnlyCentre
+ 
+    tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    if timeMarching
+        tmpVecForMiddlePoint[end]=2
+    end
+    middleLinearν=CartesianIndex(Tuple(tmpVecForMiddlePoint))
 
     for iExpr in eachindex(exprs) # j in eq. 42
         for iField in eachindex(fields) # i in eq. 42
             α = bigα[iExpr,iField]
             
-            for ν in multiPointsIndices # the relative centre of the local coordinates
+            for ν in multiPointsIndices # the relative centre of the local coordinates ν
 
                 linearν = LinearIndices(multiPointsIndices)[ν]
                 CoefU = 0
                 
-                if !testOnlyCentre || Tuple(ν) === ((Tuple(multiPointsIndices[end] )).-1 ).÷2 .+1 
+                if !testOnlyCentre || ν === middleLinearν
 
-                    middleLinearν = linearν # only valid for testOnlyCentre
                     tmpCˡη=nothing
 
                     if testOnlyCentre # Cⁿη size is not the same
@@ -653,8 +662,21 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region we construct the numerical operators for each test function that is related to its corresponding point
 
     if !testOnlyCentre
-        # we need to explore everywhere in the wholeRegionPoints
+        # we need to explore everywhere in the wholeRegionPoints! Free surface etc. should be very much affected 
+        #
+        # otherwise, we use kind of 'truncated' crazy operators 
+        # derived at the centre point and we do not talk about it, just believe the absorbing boundaries
+        # like, tant pis, il n'y a pas de points donc j'ignore juste !
+
+        
+
+
+        
+        
+
+
     end
+
 
     #endregion
 
