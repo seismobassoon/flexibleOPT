@@ -524,13 +524,13 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
 end
 
-function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
+function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0,isExternalForceSparse=true)
 
     #todo list
     #
     # I have to include some complex initial condition for 場
     #
-    # external forces: do we need to construct a big matrix? 
+    # external forces: use sparse (or not)
 
     
     #region general introduction
@@ -643,7 +643,7 @@ function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,v
 
     #region we construct the numerical operators for each test function that is related to its corresponding point
 
-    
+
 
 
     #endregion
