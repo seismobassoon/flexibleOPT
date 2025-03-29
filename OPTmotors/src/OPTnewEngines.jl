@@ -524,7 +524,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
 end
 
-function constructingDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0,isExternalForceSparse=true)
+function constructingNumericalDiscretisedEquations(semiSymbolicsDiscretisedEquations,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0,isExternalForceSparse=true)
 
     #todo list
     #
@@ -631,11 +631,18 @@ function constructingDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,f
         wholeRegionPoints[end]=pointsForOneStep
     end
 
+
     場=Array{Any,1}(undef,NtypeofFields)
-    for iField in eachindex(fields)
-        newstring=split(string(fields[iField]),"(")[1]*"_mod"
-        場[iField]=string_as_varname(newstring, Array{Any,Ndimension}(undef,Tuple(wholeRegionPoints)))
-        場[iField].=initialCondition # This is a very simple initial conditionning but this should be more flexible
+
+    if isExternalForceSparse
+        #here the members of 場 should be sparse
+
+    else
+        for iField in eachindex(fields)
+            newstring=split(string(fields[iField]),"(")[1]*"_mod"
+            場[iField]=string_as_varname(newstring, Array{Any,Ndimension}(undef,Tuple(wholeRegionPoints)))
+            場[iField].=initialCondition # This is a very simple initial conditionning but this should be more flexible
+        end
     end
     
     #endregion
