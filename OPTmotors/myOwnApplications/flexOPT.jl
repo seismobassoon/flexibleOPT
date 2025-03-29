@@ -115,7 +115,8 @@ AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,Cˡ
 # here we need to give a numerical values 
 
 #models = ((model.*0.5.+2), (1))
-models=((model .* 0.5 .+ 2))
+models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
+models=push!(models, (model .* 0.5 .+ 2))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 
