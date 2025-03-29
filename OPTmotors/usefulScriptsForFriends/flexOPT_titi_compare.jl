@@ -1,5 +1,10 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
+using  Pkg
+cd(Base.source_dir())       
+Pkg.activate("../")                  # active the project, with a  static environment
+# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
+Pkg.update()      
 
 include("../src/imageReader.jl") # read 2D images for models
 include("../src/batchNewSymbolics.jl")
@@ -20,9 +25,11 @@ famousEquationType="1DpoissonHetero"
 #famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
-modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
-model2D =nothing
+modelDefinitionMethod=nothing # ToyModel or 2DimageFile (or 1DsphericalPlanet)
+model =nothing
 #endregion
+
+if modelDefinitionMethod !== nothing
 
 #region Model input - option i) Model domain definition
 
@@ -37,10 +44,10 @@ end
 
 if modelDefinitionMethod === "2DimageFile"
 
-    #imagefile="DSM1D/data/model/random/colourful.jpg"
-    #imagefile="DSM1D/data/model/artemis/IMG_6098.jpeg"
-    #imagefile="DSM1D/data/model/random/tmp.png"
-    imagefile = "DSM1D/data/model/random/marmousi.png"
+    #imagefile="../data/model/random/colourful.jpg"
+    #imagefile="../data/model/artemis/IMG_6098.jpeg"
+    #imagefile="../data/model/random/tmp.png"
+    imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
     model=read2DimageModel(imagefile,colormap;Nwidth=201,Nheight=402,showRecoveredImage=false)
@@ -86,6 +93,7 @@ end
 
 #endregion
 
+end
 
 
 #region Main programme

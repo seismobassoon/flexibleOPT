@@ -1,3 +1,9 @@
+using  Pkg
+cd(Base.source_dir())       
+Pkg.activate("../")                  # active the project, with a  static environment
+# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
+Pkg.update()      
+
 include("../src/imageReader.jl")
 
 #imagefile="DSM1D/data/model/artemis/IMG_6098.jpeg"

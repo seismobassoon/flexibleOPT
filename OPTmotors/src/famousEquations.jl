@@ -191,11 +191,11 @@ function famousEquations(name)
         coordinates =(x,y)
     elseif name==="2DacousticTime"
         # 2D wave equation with double couple source
-        @variables C2(x,y)  u(x,y,t) f(x,y,t)
+        @variables v(x,y)  u(x,y,t) f(x,y,t)
        
-        exprs =  ∂t²(u)- C2 *(∂x²(u) - ∂y²(u))
+        exprs =  ∂t²(u)- v^2 *(∂x²(u) - ∂y²(u))
         fields=u
-        vars = C2
+        vars = v
 
         extexprs = f
         extfields = f

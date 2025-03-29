@@ -1,6 +1,12 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
 
+using  Pkg
+cd(Base.source_dir())       
+Pkg.activate("../")                  # active the project, with a  static environment
+# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
+Pkg.update()      
+
 include("../src/imageReader.jl") # read 2D images for models
 include("../src/batchNewSymbolics.jl")
 include("../src/OPTnewEngines.jl") 
@@ -21,7 +27,7 @@ famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
-model2D =nothing
+model =nothing
 #endregion
 
 #region Model input - option i) Model domain definition
@@ -37,10 +43,10 @@ end
 
 if modelDefinitionMethod === "2DimageFile"
 
-    #imagefile="DSM1D/data/model/random/colourful.jpg"
-    #imagefile="DSM1D/data/model/artemis/IMG_6098.jpeg"
-    #imagefile="DSM1D/data/model/random/tmp.png"
-    imagefile = "DSM1D/data/model/random/marmousi.png"
+    #imagefile="../data/model/random/colourful.jpg"
+    #imagefile="../data/model/artemis/IMG_6098.jpeg"
+    #imagefile="../data/model/random/tmp.png"
+    imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
     model=read2DimageModel(imagefile,colormap;Nwidth=201,Nheight=402,showRecoveredImage=false)
@@ -95,10 +101,12 @@ end
 Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
 
 exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
-Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+@time AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+# if you do not want to apply external forces, it is possible to skip below
+@time Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
 
-@show AjiννᶜU, Γg
+#@show AjiννᶜU, Γg
+
 #region je râle, je râle
 #
 # if one wants to work with different Δvalues, OPTobj should be called each time
@@ -108,11 +116,17 @@ AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,Cˡ
 
 # here we need to give a numerical values 
 
-models = (model.*0.5.+2, (1)) # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
+#models = ((model.*0.5.+2), (1))
 
-modelPoints = size(model) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
+models=push!(models, (model .* 0.5 .+ 2))
+# if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
-constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=1.0)
+
+Nt= 120
+@show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+
+constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
 
 
 #constructingEquations(AjiννᶜU,)
