@@ -571,10 +571,9 @@ function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,v
     NtypeofExpr = length(exprs)
 
     Models=Array{Any,1}(undef,NtypeofMaterialVariables)
-    @show length(models), NtypeofMaterialVariables
+
     if length(models) !== NtypeofMaterialVariables 
         @error "Each material has to have its own model"
-        
     end
     
     
@@ -589,12 +588,13 @@ function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,v
             Models[iVar]=tmpModel
         else
             newCoords=expandVectors(size(models[iVar]),CartesianDependency)
-
+            @show newCoords
+            
             tmpModel=reshape(models[iVar],newCoords...)
             Models[iVar]=tmpModel
 
             for iCoord in eachindex(newCoords)
-                if newCoords[iCoord]!== modelPoints[iCoord] || newCoords[iCoord]!== 1
+                if newCoords[iCoord]!== modelPoints[iCoord] || newCoords[iCoord] !== 1
                     @error "the model should have the same dimension! (or constant)"
                 end
             end

@@ -101,10 +101,11 @@ end
 Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
 
 exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
-Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+@time AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+@time Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
 
-@show AjiννᶜU, Γg
+#@show AjiννᶜU, Γg
+
 #region je râle, je râle
 #
 # if one wants to work with different Δvalues, OPTobj should be called each time
@@ -115,6 +116,7 @@ AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,Cˡ
 # here we need to give a numerical values 
 
 #models = ((model.*0.5.+2), (1))
+
 models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
 models=push!(models, (model .* 0.5 .+ 2))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
