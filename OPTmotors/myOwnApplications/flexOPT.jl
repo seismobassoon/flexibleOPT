@@ -1,11 +1,6 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
 
-using  Pkg
-cd(Base.source_dir())       
-Pkg.activate("../")                  # active the project, with a  static environment
-# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
-Pkg.update()      
 
 include("../src/imageReader.jl") # read 2D images for models
 include("../src/batchNewSymbolics.jl")
