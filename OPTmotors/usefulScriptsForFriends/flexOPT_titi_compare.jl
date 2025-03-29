@@ -25,9 +25,11 @@ famousEquationType="1DpoissonHetero"
 #famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
-modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
-model2D =nothing
+modelDefinitionMethod=nothing # ToyModel or 2DimageFile (or 1DsphericalPlanet)
+model =nothing
 #endregion
+
+if modelDefinitionMethod !== nothing
 
 #region Model input - option i) Model domain definition
 
@@ -91,6 +93,7 @@ end
 
 #endregion
 
+end
 
 
 #region Main programme
