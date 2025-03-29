@@ -175,15 +175,14 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
 
     tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
     if timeMarching
-        tmpVecForMiddlePoint[end]=2
+        tmpVecForMiddlePoint[end]=multiPointsIndices[end]-1
     end
-    midLinearK=CartesianIndex(Tuple(tmpVecForMiddlePoint))
+    midK=CartesianIndex(Tuple(tmpVecForMiddlePoint))
 
     for k in multiPointsIndices
         linearK = LinearIndices(multiPointsIndices)[k]
         TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
-        if !testOnlyCentre || k === midLinearK
-            
+        if !testOnlyCentre || k === midK || (timeMarching && k[end] === multiPointsIndices[end]-1) # because we cannot predict more than one futures
             for i in multiPointsIndices
                 linearI = LinearIndices(multiPointsIndices)[i]
                 η = car2vec(i-k)
@@ -207,7 +206,7 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
     end 
 
     if testOnlyCentre
-        CˡηCentre = CˡηGlobal[:,:,midLinearK]
+        CˡηCentre = CˡηGlobal[:,:,LinearIndices(multiPointsIndices)[midK]]
         CˡηGlobal = nothing
         return CˡηCentre,Δ,multiOrdersIndices
     else
@@ -433,9 +432,10 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
  
     tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
     if timeMarching
-        tmpVecForMiddlePoint[end]=2
+        tmpVecForMiddlePoint[end]=multiPointsIndices[end]-1
     end
-    middleLinearν=CartesianIndex(Tuple(tmpVecForMiddlePoint))
+    middleν=CartesianIndex(Tuple(tmpVecForMiddlePoint))
+    middleLinearν = LinearIndices(multiPointsIndices)[middleν]
 
     for iExpr in eachindex(exprs) # j in eq. 42
         for iField in eachindex(fields) # i in eq. 42
@@ -446,8 +446,10 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                 linearν = LinearIndices(multiPointsIndices)[ν]
                 CoefU = 0
                 
-                if !testOnlyCentre || ν === middleLinearν
-
+                if !testOnlyCentre || ν === middleν || (timeMarching && ν[end]=== multiPointsIndices[end]-1) 
+                    # the first two ifs are trivial but the third () ifs are due to the fact that we cannot predict more than one future
+                    # (or at least it has no sense ...) 
+                    
                     tmpCˡη=nothing
 
                     if testOnlyCentre # Cⁿη size is not the same
@@ -668,7 +670,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         # derived at the centre point and we do not talk about it, just believe the absorbing boundaries
         # like, tant pis, il n'y a pas de points donc j'ignore juste !
 
-        
+
 
 
         
