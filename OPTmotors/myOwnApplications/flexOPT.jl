@@ -43,10 +43,10 @@ end
 
 if modelDefinitionMethod === "2DimageFile"
 
-    #imagefile="DSM1D/data/model/random/colourful.jpg"
-    #imagefile="DSM1D/data/model/artemis/IMG_6098.jpeg"
-    #imagefile="DSM1D/data/model/random/tmp.png"
-    imagefile = "DSM1D/data/model/random/marmousi.png"
+    #imagefile="../data/model/random/colourful.jpg"
+    #imagefile="../data/model/artemis/IMG_6098.jpeg"
+    #imagefile="../data/model/random/tmp.png"
+    imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
     model=read2DimageModel(imagefile,colormap;Nwidth=201,Nheight=402,showRecoveredImage=false)
