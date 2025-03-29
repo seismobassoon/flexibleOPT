@@ -1,12 +1,16 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
-using  Pkg
-cd(Base.source_dir())       
-Pkg.activate("../")                  # active the project, with a  static environment
-# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
-Pkg.update()      
+# using  Pkg
+# cd(Base.source_dir())       
+# Pkg.activate("../")                  # active the project, with a  static environment
+# # Pkg.activate(; temp=true)    #  activate the project with a temporary environment
+# Pkg.update()  
+#   A
+#   |
+#   |
+# Above is not needed since there is one Project.toml at the root and it's already loaded.
 
-include("../src/imageReader.jl") # read 2D images for models
+# include("../src/imageReader.jl") # read 2D images for models
 include("../src/batchNewSymbolics.jl")
 include("../src/OPTnewEngines.jl") 
 include("../src/famousEquations.jl")
