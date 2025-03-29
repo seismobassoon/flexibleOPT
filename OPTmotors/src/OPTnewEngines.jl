@@ -652,8 +652,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #region we construct the numerical operators for each test function that is related to its corresponding point
 
-
-
+    if !testOnlyCentre
+        # we need to explore everywhere in the wholeRegionPoints
+    end
 
     #endregion
 
