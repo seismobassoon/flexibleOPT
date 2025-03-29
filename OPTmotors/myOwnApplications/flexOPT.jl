@@ -1,6 +1,10 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
-
+using  Pkg
+cd(Base.source_dir())       
+Pkg.activate("../../")                  # active the project, with a  static environment
+# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
+Pkg.update()     
 
 include("../src/imageReader.jl") # read 2D images for models
 include("../src/batchNewSymbolics.jl")
@@ -25,6 +29,7 @@ modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPla
 model =nothing
 #endregion
 
+if modelDefinitionMethod !== nothing
 #region Model input - option i) Model domain definition
 
 if modelDefinitionMethod === "ToyModel"
@@ -86,6 +91,7 @@ if modelDefinitionMethod ==="1DsphericalPlanet"
 end
 
 #endregion
+end
 
 
 
