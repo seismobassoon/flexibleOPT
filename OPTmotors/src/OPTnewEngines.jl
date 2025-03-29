@@ -641,9 +641,9 @@ function constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,v
     
     #endregion
 
-    #region we construct the numerical operators for each test functions that is related to the points
+    #region we construct the numerical operators for each test function that is related to its corresponding point
 
-
+    
 
 
     #endregion
