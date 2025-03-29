@@ -1,6 +1,12 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
 
+using  Pkg
+cd(Base.source_dir())       
+Pkg.activate("../")                  # active the project, with a  static environment
+# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
+Pkg.update()      
+
 include("../src/imageReader.jl") # read 2D images for models
 include("../src/batchNewSymbolics.jl")
 include("../src/OPTnewEngines.jl") 
@@ -16,8 +22,8 @@ using BenchmarkTools
 #region Physics to choose, method to define material variable models
 #famousEquationType="2DsismoTimeIsoHetero" # you can write a new governing equation using x-y-z-t coordinates 
 #famousEquationType="1DsismoFreqHomo"
-famousEquationType="1DpoissonHetero"
-#famousEquationType="2DacousticTime"
+#famousEquationType="2DpoissonHetero"
+famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
@@ -92,13 +98,13 @@ end
 
 #region OPT symbolic derivation of objective functions to be minimised
 
-Δnum = (1) # this should be in the same order as coordinates 
+Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
 
 exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-AjiννᶜU,utilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+AjiννᶜU,dummyUtilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
 Γg,utilities=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
-@show AjiννᶜU,Γg
 
+@show AjiννᶜU, Γg
 #region je râle, je râle
 #
 # if one wants to work with different Δvalues, OPTobj should be called each time
@@ -108,11 +114,15 @@ AjiννᶜU,utilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSym
 
 # here we need to give a numerical values 
 
-#models = (model.*0.5.+2, (1))
+#models = ((model.*0.5.+2), (1))
+models=((model .* 0.5 .+ 2))
+# if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
-#modelPoints = size(model) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
-#constructingEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=1.0)
+Nt= 120
+modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+
+constructingEquations(AjiννᶜU,Γg,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=1.0)
 
 
 #constructingEquations(AjiννᶜU,)
