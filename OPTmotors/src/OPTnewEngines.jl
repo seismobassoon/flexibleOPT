@@ -466,7 +466,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                 if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord && !testOnlyCentre) 
                     # the first two ifs are trivial but the third () ifs are due to the fact that we cannot predict more than one future
                     # (or at least it has no sense ...) 
-                    @show testOnlyCentre, middleν, ν
+                    
 
                     tmpCˡη=nothing
 
@@ -666,22 +666,30 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     # below should be parallelised at some points
 
-    timePointsUsedForOneStep=car2vec(localPointsIndices[end])[end]
+    timePointsUsedForOneStep=1
 
     timeStepsForAll=1
+    NdimensionMinusTime=Ndimension
+    wholeRegionPointsSpace=wholeRegionPoints
 
     if timeMarching
+        timePointsUsedForOneStep=car2vec(localPointsIndices[end])[end]
         timeStepsForAll=wholeRegionPoints[end]-timePointsUsedForOneStep+1
-        wholeRegionPoints[end]=timePointsUsedForOneStep
+        wholeRegionPointsSpace=wholeRegionPoints[1:end-1]
+        NdimensionMinusTime -= 1
     end
 
 
-    場=Array{Any,1}(undef,NtypeofFields)
+    
+
+    
+
+    場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
 
     
     for iField in eachindex(fields)
         newstring=split(string(fields[iField]),"(")[1]*"_mod"
-        場[iField]=string_as_varname(newstring, Array{Any,Ndimension}(undef,Tuple(wholeRegionPoints)))
+        場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpace)))
         場[iField].=initialCondition # This is a very simple initial conditionning but this should be more flexible
     end
     

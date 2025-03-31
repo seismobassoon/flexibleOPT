@@ -130,7 +130,7 @@ models=push!(models, (model .* 0.5 .+ 2))
 Nt= 120
 @show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
-constructingEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
+constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
 if IneedExternalSources 
     # constructingEquations(...) # right-hand side genre sparse or not etc.
     # here we recycle constructingEquations if the source terms are everywhere in the domain
