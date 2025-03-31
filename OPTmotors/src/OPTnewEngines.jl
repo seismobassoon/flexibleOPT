@@ -239,7 +239,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
     return middle_value,extreme_value
 end
 
-function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, highestOrderPartial=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
+function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, highestOrderPartialSpace=2,highestOrderPartialTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
 
     #region General introduction, some cautions
 
@@ -302,7 +302,10 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     NtypeofFields=length(fields) # number of unknown fields
     
     Ndimension = length(coordinates) # we do not change this for the moment, especially for the time-marching scheme
-    pointsUsed = ones(Int, Ndimension).*(highestOrderPartial+1)
+    pointsUsed = ones(Int, Ndimension).*(highestOrderPartialSpace+1)
+    if timeMarching
+        pointUsed[end]=highestOrderPartialTime+1
+    end
 
 
     if length(Δnum) !== Ndimension && !CˡηSymbolicInversion
@@ -671,7 +674,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         # like, tant pis, il n'y a pas de points donc j'ignore juste !
 
 
-        
+
 
         
         
