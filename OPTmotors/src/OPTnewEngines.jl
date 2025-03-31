@@ -174,15 +174,17 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
    
 
     tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    midTimeCoord=nothing
     if timeMarching
-        tmpVecForMiddlePoint[end]=car2vec(multiPointsIndices[end])[end]-1
+        midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
+        tmpVecForMiddlePoint[end]=midTimeCoord
     end
     midK=CartesianIndex(Tuple(tmpVecForMiddlePoint))
 
     for k in multiPointsIndices
         linearK = LinearIndices(multiPointsIndices)[k]
         TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
-        if !testOnlyCentre || k === midK || (timeMarching && k[end] === multiPointsIndices[end]-1) # because we cannot predict more than one futures
+        if !testOnlyCentre || k === midK || (timeMarching && car2vec(k)[end] === midTimeCoord) # because we cannot predict more than one futures
             for i in multiPointsIndices
                 linearI = LinearIndices(multiPointsIndices)[i]
                 η = car2vec(i-k)
@@ -440,8 +442,10 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     # why tired? since I need to prepare another set of theDiffNu that can run from minus to plus 
  
     tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    midTimeCoord = nothing
     if timeMarching
-        tmpVecForMiddlePoint[end]=car2vec(multiPointsIndices[end])[end]-1
+        midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
+        tmpVecForMiddlePoint[end]=midTimeCoord
     end
     middleν=CartesianIndex(Tuple(tmpVecForMiddlePoint))
     middleLinearν = LinearIndices(multiPointsIndices)[middleν]
@@ -455,7 +459,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                 linearν = LinearIndices(multiPointsIndices)[ν]
                 CoefU = 0
                 
-                if !testOnlyCentre || ν === middleν || (timeMarching && ν[end]=== multiPointsIndices[end]-1) 
+                if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord) 
                     # the first two ifs are trivial but the third () ifs are due to the fact that we cannot predict more than one future
                     # (or at least it has no sense ...) 
                     
