@@ -671,8 +671,8 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         # like, tant pis, il n'y a pas de points donc j'ignore juste !
 
 
-
         
+
         
         
 
