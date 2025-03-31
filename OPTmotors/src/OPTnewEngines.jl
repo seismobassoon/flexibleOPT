@@ -184,7 +184,7 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
     for k in multiPointsIndices
         linearK = LinearIndices(multiPointsIndices)[k]
         
-        if !testOnlyCentre || k === midK || (timeMarching && car2vec(k)[end] === midTimeCoord || !testOnlyCentre) # because we cannot predict more than one futures
+        if !testOnlyCentre || k === midK || (timeMarching && car2vec(k)[end] === midTimeCoord && !testOnlyCentre) # because we cannot predict more than one futures
             CˡηGlobal[:,:,linearK]=illposedTaylorCoefficientsInversionSingleCentre(numberOfLs,numberOfEtas,multiOrdersIndices,multiPointsIndices,Δ,k)
         end
     end 
@@ -463,10 +463,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                 linearν = LinearIndices(multiPointsIndices)[ν]
                 CoefU = 0
                 
-                if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord || !testOnlyCentre) 
+                if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord && !testOnlyCentre) 
                     # the first two ifs are trivial but the third () ifs are due to the fact that we cannot predict more than one future
                     # (or at least it has no sense ...) 
-                    
+                    @show testOnlyCentre, middleν, ν
+
                     tmpCˡη=nothing
 
                     if testOnlyCentre # Cⁿη size is not the same
@@ -492,7 +493,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
                             for ηᶜ in multiPointsIndices
 
-                                @show linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
+                                linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
                                 #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
                                 #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
                                 #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
