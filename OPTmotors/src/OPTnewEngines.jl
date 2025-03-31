@@ -183,9 +183,9 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
 
     for k in multiPointsIndices
         linearK = LinearIndices(multiPointsIndices)[k]
-        TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
+        
         if !testOnlyCentre || k === midK || (timeMarching && car2vec(k)[end] === midTimeCoord || !testOnlyCentre) # because we cannot predict more than one futures
-            CˡηGlobal[:,:,linearK]=illposedTaylorCoefficientsInversionSingleCentre(multiOrdersIndices,multiPointsIndices,Δ,k)
+            CˡηGlobal[:,:,linearK]=illposedTaylorCoefficientsInversionSingleCentre(numberOfLs,numberOfEtas,multiOrdersIndices,multiPointsIndices,Δ,k)
         end
     end 
 
@@ -199,8 +199,9 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
     end
 end
 
-function illposedTaylorCoefficientsInversionSingleCentre(multiOrdersIndices,multiPointsIndices,Δ,k)
+function illposedTaylorCoefficientsInversionSingleCentre(numberOfLs,numberOfEtas,multiOrdersIndices,multiPointsIndices,Δ,k)
     # this should be completely numerical
+    TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
     for i in multiPointsIndices
         linearI = LinearIndices(multiPointsIndices)[i]
         η = car2vec(i-k)
