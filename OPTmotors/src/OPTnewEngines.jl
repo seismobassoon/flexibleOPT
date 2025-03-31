@@ -691,11 +691,10 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region relative ν to be considered, especially around the boundaries, useful for the following sections
 
     PointsSpace=CartesianIndices(Tuple(wholeRegionPointsSpace))
-    #NPointsSpace=LinearIndices(PointsSpace)[end] # number of points in space
-    midPointInSpace=CartesianIndex(Tuple(middlepoint[1:NdimensionMinusTime]))
-    νRelative=Array{Any,NdimensionMinusTime}(undef,PointsSpace)
+    NPointsSpace=LinearIndices(PointsSpace)[end] # number of points in space
+    νRelative=Array{Int,1}(undef,NpointsSpace)
 
-    νRelative .= midPointInSpace # for most of the points
+    νRelative .= LinearIndices(localPointsIndices)[middlepoint]  # for most of the points 
 
     #endregion
 
