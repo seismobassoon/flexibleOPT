@@ -679,18 +679,12 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         NdimensionMinusTime -= 1
     end
 
-
-    
-
-    
-
     場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
 
     
     for iField in eachindex(fields)
         newstring=split(string(fields[iField]),"(")[1]*"_mod"
         場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpace)))
-        場[iField].=initialCondition # This is a very simple initial conditionning but this should be more flexible
     end
     
     #endregion
