@@ -216,8 +216,8 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
 end
 
 function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices,midPoint,Δ)
+    # this should be completely numerical
 
-    
 end
 
 
@@ -548,8 +548,14 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #todo list
     #
+    #  need to work on the bc
+    # 
+    # need extend to 4 points with the same test functions (3 points) -> staggered grid
+    #  
     # I have to include some complex initial condition for 場
     #
+    # have to write:
+    #  function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices,midPoint,Δ)
 
     
     #region general introduction
