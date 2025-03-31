@@ -301,7 +301,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     timeMarching = any(a -> a === t, coordinates)
 
 
-    @unpack orderBtime, orderBspace, highestOrderPartial = trialFunctionsCharacteristics
+    @unpack orderBtime, orderBspace, highestOrderPartialSpace, highestOrderPartialTime = trialFunctionsCharacteristics
 
     NtypeofExpr=length(exprs)   # number of governing equations
     NtypeofMaterialVariables=length(vars) # number of material coefficients
