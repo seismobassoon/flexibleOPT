@@ -175,7 +175,7 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
 
     tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
     if timeMarching
-        tmpVecForMiddlePoint[end]=multiPointsIndices[end]-1
+        tmpVecForMiddlePoint[end]=car2vec(multiPointsIndices[end])[end]-1
     end
     midK=CartesianIndex(Tuple(tmpVecForMiddlePoint))
 
@@ -441,7 +441,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
  
     tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
     if timeMarching
-        tmpVecForMiddlePoint[end]=multiPointsIndices[end]-1
+        tmpVecForMiddlePoint[end]=car2vec(multiPointsIndices[end])[end]-1
     end
     middleν=CartesianIndex(Tuple(tmpVecForMiddlePoint))
     middleLinearν = LinearIndices(multiPointsIndices)[middleν]
