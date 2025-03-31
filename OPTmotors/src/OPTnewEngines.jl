@@ -681,15 +681,26 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
 
-    
     for iField in eachindex(fields)
         newstring=split(string(fields[iField]),"(")[1]*"_mod"
         場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpace)))
     end
     
+    #endregion 
+
+    #region relative ν to be considered, especially around the boundaries, useful for the following sections
+
+    PointsSpace=CartesianIndices(Tuple(wholeRegionPointsSpace))
+    #NPointsSpace=LinearIndices(PointsSpace)[end] # number of points in space
+    midPointInSpace=CartesianIndex(Tuple(middlepoint[1:NdimensionMinusTime]))
+    νRelative=Array{Any,NdimensionMinusTime}(undef,PointsSpace)
+
+    νRelative .= midPointInSpace # for most of the points
+
     #endregion
 
     #region we construct the numerical operators for each test function that is related to its corresponding point
+
 
     if !testOnlyCentre
         # we need to explore everywhere in the wholeRegionPoints! Free surface etc. should be very much affected 
