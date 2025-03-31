@@ -184,26 +184,8 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
     for k in multiPointsIndices
         linearK = LinearIndices(multiPointsIndices)[k]
         TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
-        if !testOnlyCentre || k === midK || (timeMarching && car2vec(k)[end] === midTimeCoord) # because we cannot predict more than one futures
-            for i in multiPointsIndices
-                linearI = LinearIndices(multiPointsIndices)[i]
-                η = car2vec(i-k)
-                distances= η .* Δ
-                for j in multiOrdersIndices
-                    linearJ = LinearIndices(multiOrdersIndices)[j]
-                    orders = car2vec(j).-1
-                    numerator = prod(distances .^orders)
-                    denominator=prod(factorial.(orders))
-                    tmpTaylorCoeffs = numerator/denominator
-                    TaylorExpansionCoeffs[linearJ,linearI]=tmpTaylorCoeffs 
-
-                end
-            end
-            # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
-            
-            aa=transpose(TaylorExpansionCoeffs)*TaylorExpansionCoeffs
-            invaa= myInv(aa)
-            CˡηGlobal[:,:,linearK]=invaa*transpose(TaylorExpansionCoeffs)
+        if !testOnlyCentre || k === midK || (timeMarching && car2vec(k)[end] === midTimeCoord || !testOnlyCentre) # because we cannot predict more than one futures
+            CˡηGlobal[:,:,linearK]=illposedTaylorCoefficientsInversionSingleCentre(multiOrdersIndices,multiPointsIndices,Δ,k)
         end
     end 
 
@@ -217,9 +199,28 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
     end
 end
 
-function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices,midPoint,Δ)
+function illposedTaylorCoefficientsInversionSingleCentre(multiOrdersIndices,multiPointsIndices,Δ,k)
     # this should be completely numerical
+    for i in multiPointsIndices
+        linearI = LinearIndices(multiPointsIndices)[i]
+        η = car2vec(i-k)
+        distances= η .* Δ
+        for j in multiOrdersIndices
+            linearJ = LinearIndices(multiOrdersIndices)[j]
+            orders = car2vec(j).-1
+            numerator = prod(distances .^orders)
+            denominator=prod(factorial.(orders))
+            tmpTaylorCoeffs = numerator/denominator
+            TaylorExpansionCoeffs[linearJ,linearI]=tmpTaylorCoeffs 
 
+        end
+    end
+    # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
+    
+    aa=transpose(TaylorExpansionCoeffs)*TaylorExpansionCoeffs
+    invaa= myInv(aa)
+    Cˡηlocal=invaa*transpose(TaylorExpansionCoeffs)
+    return Cˡηlocal
 end
 
 
@@ -459,7 +460,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                 linearν = LinearIndices(multiPointsIndices)[ν]
                 CoefU = 0
                 
-                if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord) 
+                if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord || !testOnlyCentre) 
                     # the first two ifs are trivial but the third () ifs are due to the fact that we cannot predict more than one future
                     # (or at least it has no sense ...) 
                     
