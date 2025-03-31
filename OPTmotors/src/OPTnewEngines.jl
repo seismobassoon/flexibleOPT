@@ -310,7 +310,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     Ndimension = length(coordinates) # we do not change this for the moment, especially for the time-marching scheme
     pointsUsed = ones(Int, Ndimension).*(highestOrderPartialSpace+1)
     if timeMarching
-        pointUsed[end]=highestOrderPartialTime+1
+        pointsUsed[end]=highestOrderPartialTime+1
     end
 
 
