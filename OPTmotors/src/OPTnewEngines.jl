@@ -453,7 +453,6 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     middleν=CartesianIndex(Tuple(tmpVecForMiddlePoint))
     middleLinearν = LinearIndices(multiPointsIndices)[middleν]
 
-    @show midTimeCoord
 
     for iExpr in eachindex(exprs) # j in eq. 42
         for iField in eachindex(fields) # i in eq. 42
@@ -467,7 +466,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                 if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord || !testOnlyCentre) 
                     # the first two ifs are trivial but the third () ifs are due to the fact that we cannot predict more than one future
                     # (or at least it has no sense ...) 
-                    @show "computing the non-zero coefs"
+                    
                     tmpCˡη=nothing
 
                     if testOnlyCentre # Cⁿη size is not the same
@@ -493,7 +492,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
                             for ηᶜ in multiPointsIndices
 
-                                linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
+                                @show linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
                                 #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
                                 #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
                                 #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
@@ -536,6 +535,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
             end
         end
     end
+
+    @show "finished"
 
     #endregion
 
