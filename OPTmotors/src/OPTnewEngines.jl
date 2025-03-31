@@ -672,8 +672,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     NdimensionMinusTime=Ndimension
     wholeRegionPointsSpace=wholeRegionPoints
 
+    spacePointsUsed=car2vec(localPointsIndices[end])
+
     if timeMarching
+
         timePointsUsedForOneStep=car2vec(localPointsIndices[end])[end]
+        spacePointsUsed=car2vec(localPointsIndices[end])[1:end-1]
+
         timeStepsForAll=wholeRegionPoints[end]-timePointsUsedForOneStep+1
         wholeRegionPointsSpace=wholeRegionPoints[1:end-1]
         NdimensionMinusTime -= 1
@@ -692,22 +697,49 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     PointsSpace=CartesianIndices(Tuple(wholeRegionPointsSpace))
     NPointsSpace=LinearIndices(PointsSpace)[end] # number of points in space
-    νRelative=Array{Int,1}(undef,NpointsSpace)
-
-    νRelative .= LinearIndices(localPointsIndices)[middlepoint]  # for most of the points 
+    νRelative=Array{Any,1}(undef,NpointsSpace)
+    νRelative.=middlepoint
+    #νRelative .= LinearIndices(localPointsIndices)[middlepoint]  # for most of the points 
 
     #endregion
 
     #region we construct the numerical operators for each test function that is related to its corresponding point
 
 
-    if !testOnlyCentre
-        # we need to explore everywhere in the wholeRegionPoints! Free surface etc. should be very much affected 
-        #
-        # otherwise, we use kind of 'truncated' crazy operators 
+
+    if testOnlyCentre
+        # If we compute only the operators without boundaries, we use kind of 'truncated' crazy operators 
         # derived at the centre point and we do not talk about it, just believe the absorbing boundaries
         # like, tant pis, il n'y a pas de points donc j'ignore juste !
 
+
+
+    else
+
+        # we need to explore everywhere in the wholeRegionPoints! Free surface etc. should be very much affected 
+        #
+      
+        boundaryPointsSpace=[]
+        for iDimSpace in eachindex(NdimensionMinusTime) # we take care of the boundaries of the Cartesian box (it should be the same for internal/external topography)
+            # points concerned
+            leftstart=1
+            leftend=spacePointsUsed[iDimSpace]÷2
+            rightstart=NpointsSpace[iDimSpace]-spacePointsUsed[iDimSpace]÷2+1
+            rightend=NpointsSpace[iDimSpace]
+            # suppose that the domain is sufficiently big (maybe it is not the case for some crazy topography ...)
+            for iCoord in range(leftstart,leftend)
+                
+                
+
+            end
+
+            for iCoord in range(rightstart,rightend)
+
+            end
+        end
+    end
+
+            
 
 
 
