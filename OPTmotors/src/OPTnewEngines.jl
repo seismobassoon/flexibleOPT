@@ -661,8 +661,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         elseif size(absorbingBoundaries)[2] === size(modelPoints)[1]-1 && timeMarching
             absorbingBoundaries=[absorbingBoundaries; 0 0]
         end
-        wholeRegionPoints=modelPoints.+sum(absorbingBoundaries,1)
+        wholeRegionPoints=modelPoints.+sum(absorbingBoundaries,1) 
     end
+
 
     # below should be parallelised at some points
 
@@ -691,6 +692,12 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpace)))
     end
     
+
+    # we need to put the left and right regions in order that centre ν configuration can pass
+
+    wholeRegionPointsSpacePlusZeros=nothing
+
+
     #endregion 
 
     #region relative ν to be considered, especially around the boundaries, useful for the following sections
@@ -705,7 +712,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #region we construct the numerical operators for each test function that is related to its corresponding point
 
-
+    # first we compute the νRelative more seriously
 
     if testOnlyCentre
         # If we compute only the operators without boundaries, we use kind of 'truncated' crazy operators 
@@ -729,7 +736,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
             # suppose that the domain is sufficiently big (maybe it is not the case for some crazy topography ...)
             for iCoord in range(leftstart,leftend)
                 
-                
+
 
             end
 
