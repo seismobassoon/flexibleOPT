@@ -249,7 +249,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
     return middle_value,extreme_value
 end
 
-function spaceCoordinatesConversionfunction(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
+function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
     exprs = [
         :(model2whole(a::CartesianIndex) = a + CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
         :(whole2model(a::CartesianIndex) = a - CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
@@ -715,25 +715,24 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     end
 
 
-    #since everything is super clumsy, here we have several useful functions to change one coordinate to another
+    #since everything is super clumsy, here we make several useful functions to change one coordinate to another
 
-    spaceCoordinatesConversionfunction(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
+    spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
 
     #endregion 
 
     #region relative ν to be considered, especially around the boundaries, useful for the following sections
 
     PointsSpace=CartesianIndices(Tuple(wholeRegionPointsSpace))
-    NPointsSpace=LinearIndices(PointsSpace)[end] # number of points in space
+    NPointsSpace=length(PointsSpace) # number of points in space
     νRelative=Array{Any,1}(undef,NpointsSpace)
     νRelative.=middlepoint
-    #νRelative .= LinearIndices(localPointsIndices)[middlepoint]  # for most of the points 
-
+    
     #endregion
 
     #region we construct the numerical operators for each test function that is related to its corresponding point
 
-    # first we compute the νRelative more seriously
+    # first we compute the νRelative more seriously if testOnlyCentre we might do nothing at all
 
     if testOnlyCentre
         # If we compute only the operators without boundaries, we use kind of 'truncated' crazy operators 
@@ -772,6 +771,8 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
             end
         end
     end
+
+    # 
 
     #endregion
 
