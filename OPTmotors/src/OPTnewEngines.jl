@@ -685,17 +685,22 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         NdimensionMinusTime -= 1
     end
 
+
+    # we need to put the left and right regions in order that centre ν configuration can pass
+
+    wholeRegionPointsSpacePlusZeros=wholeRegionPointsSpace.+ 2 .* spacePointsUsed
+
     場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
 
     for iField in eachindex(fields)
         newstring=split(string(fields[iField]),"(")[1]*"_mod"
-        場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpace)))
+        場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpacePlusZeros)))
     end
-    
 
-    # we need to put the left and right regions in order that centre ν configuration can pass
 
-    wholeRegionPointsSpacePlusZeros=nothing
+    #since everything is super clumsy, here we have several useful functions to change one coordinate to another
+
+    RealModel2wholeRegion
 
 
     #endregion 
