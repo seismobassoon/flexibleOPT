@@ -599,10 +599,17 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     # Julia hackathon October 2024, March 2025
     #
     #
+
+    # coordinates: Model: the real model domain; Whole: computation domain with absorbing boundaries; 
+    #              Empty: Whole + some more points to avoid missing reference to the field and material (they should be just zeros)
+    #
+
     # intermediate presentations: IPGP-CIA workshop October 2024; IPGP-ERI workshop November 2024; lighttalk @ systemI December 2024
     #             EGU @ Vienna May 2025
     #    
     #     Fuji & Duretz in preparation
+    #
+    #
     #
     #
     #endregion
@@ -705,13 +712,16 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     # we need to put the left and right regions in order that centre ν configuration can pass
 
-    wholeRegionPointsSpacePlusZeros=wholeRegionPointsSpace.+ 2 .* spacePointsUsed
+    emptyRegionPointsSpace=wholeRegionPointsSpace.+ 2 .* spacePointsUsed
 
+    場dummy=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
     場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
 
     for iField in eachindex(fields)
+        newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
         newstring=split(string(fields[iField]),"(")[1]*"_mod"
-        場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpacePlusZeros)))
+        場dummy[iField]=string_as_varname(newstring_dummy, Array{Any,NdimensionMinusTime}(undef,Tuple(emptyRegionPointsSpace)))
+        場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpace)))
     end
 
 
@@ -724,11 +734,23 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region relative ν to be considered, especially around the boundaries, useful for the following sections
 
     PointsSpace=CartesianIndices(Tuple(wholeRegionPointsSpace))
-    NPointsSpace=length(PointsSpace) # number of points in space
+    NpointsSpace=length(PointsSpace) # number of points in space
 
     NtestfunctionsInSpace=NpointsSpace # this assumption is valid only for test functions related to grid points
 
-    νRelative=Array{Any,1}(undef,NtestfunctionsInSpace)
+    νWhole=Array{Any,1}(undef,NtestfunctionsInSpace) # the coordinate in wholeRegionPointsSpace: for the moment mapping from testfunction to ν is bijective
+
+    # below is only for the bijective projection between test functions and ν
+
+    for iPoint in eachindex(νWhole)
+
+        νWhole[iPoint] = car2vec(PointsSpace[iPoint]) # this should be not true for higher B-spline test functions
+
+    end
+    @show νWhole
+
+
+    νRelative=Array{Any,1}(undef,NtestfunctionsInSpace) # the relative coordinate to take (the coordinate used for the semi-symbolic operator derivation)
     νRelative.=middlepoint
 
 
@@ -779,7 +801,12 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     # here the number of test functions should not be necessarily the number of points but I will work later
 
-    
+    for iPoint in eachindex(νWhole)
+        νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
+        νtmpModel=whole2model(νtmpWhole)
+        νtmpEmpty=whole2empty(νtmpEmpty)
+
+    end
 
 
 
