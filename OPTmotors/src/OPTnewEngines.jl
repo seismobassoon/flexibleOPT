@@ -801,10 +801,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     # here the number of test functions should not be necessarily the number of points but I will work later
 
+    costFunctions=Array{Any,1}(undef,NtestfunctionsInSpace)
+
     for iPoint in eachindex(νWhole)
         νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
         νtmpModel=whole2model(νtmpWhole)
         νtmpEmpty=whole2empty(νtmpEmpty)
+        
 
     end
 
