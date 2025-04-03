@@ -249,6 +249,22 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
     return middle_value,extreme_value
 end
 
+function spaceCoordinatesConversionfunction(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
+    exprs = [
+        :(model2whole(a::CartesianIndex) = a + CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
+        :(whole2model(a::CartesianIndex) = a - CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
+        :(whole2empty(a::CartesianIndex) = a + CartesianIndex(Tuple(spacePointsUsed))),
+        :(empty2whole(a::CartesianIndex) = a - CartesianIndex(Tuple(spacePointsUsed))),
+        :(model2empty(a::CartesianIndex) = whole2empty(model2whole(a))),
+        :(empty2model(a::CartesianIndex) = whole2model(empty2whole(a)))
+    ]
+
+    for ex in exprs
+        @eval $ex
+    end
+end
+
+
 function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, highestOrderPartialSpace=2,highestOrderPartialTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
 
     #region General introduction, some cautions
@@ -559,7 +575,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #todo list
     #
-    #  need to work on the bc
+    #  need to work on the bc (else clause )
     # 
     # need extend to 4 points with the same test functions (3 points) -> staggered grid
     #  
@@ -653,15 +669,16 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     if absorbingBoundaries === nothing
         wholeRegionPoints=modelPoints
     else
+        absorbingBoundariesPlusTime = absorbingBoundaries
         # absorbingBoundaries should be two column array 
         if size(absorbingBoundaries)[1] !== 2
             @error "you have to give us the left and right values for absorbing boundaries"
         elseif size(absorbingBoundaries)[2] !== size(modelPoints)[1] && !timeMarching
             @error "you have to give us the values for each direction for absorbing boundaries"
         elseif size(absorbingBoundaries)[2] === size(modelPoints)[1]-1 && timeMarching
-            absorbingBoundaries=[absorbingBoundaries; 0 0]
+            absorbingBoundariesPlusTime=[absorbingBoundaries; 0 0]
         end
-        wholeRegionPoints=modelPoints.+sum(absorbingBoundaries,1) 
+        wholeRegionPoints=modelPoints.+sum(absorbingBoundariesPlusTime,1) 
     end
 
 
@@ -700,8 +717,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #since everything is super clumsy, here we have several useful functions to change one coordinate to another
 
-    RealModel2wholeRegion
-
+    spaceCoordinatesConversionfunction(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
 
     #endregion 
 
@@ -724,9 +740,15 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         # derived at the centre point and we do not talk about it, just believe the absorbing boundaries
         # like, tant pis, il n'y a pas de points donc j'ignore juste !
 
-
+        # maybe we do not do anything!
 
     else
+
+        # we use this clause only if we are interested in a serious boundary conditions, 
+        # i.e. not the artificial cartesian box boundaries (we can just apply some stupid absorbing boundaries in that case)
+        # Hence this clause should be more generalised even it kills the performance
+        #  like, we give an array of free surface or discontinuities in CartesianIndex arrays 
+        # and we look all the points concerned
 
         # we need to explore everywhere in the wholeRegionPoints! Free surface etc. should be very much affected 
         #
@@ -751,15 +773,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         end
     end
 
-            
-
-
+    #endregion
 
         
         
 
 
-    end
+    
 
 
     #endregion
