@@ -725,8 +725,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     PointsSpace=CartesianIndices(Tuple(wholeRegionPointsSpace))
     NPointsSpace=length(PointsSpace) # number of points in space
-    νRelative=Array{Any,1}(undef,NpointsSpace)
+
+    NtestfunctionsInSpace=NpointsSpace # this assumption is valid only for test functions related to grid points
+
+    νRelative=Array{Any,1}(undef,NtestfunctionsInSpace)
     νRelative.=middlepoint
+
+
     
     #endregion
 
@@ -772,7 +777,11 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         end
     end
 
-    # 
+    # here the number of test functions should not be necessarily the number of points but I will work later
+
+    
+
+
 
     #endregion
 
