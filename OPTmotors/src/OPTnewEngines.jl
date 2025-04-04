@@ -250,7 +250,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 end
 
 function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
-    @show absorbingBoundaries, spacePointsUsed, NdimensionMinusTime
+  
     exprs = [
         :(model2whole(a::CartesianIndex) = a + CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
         :(whole2model(a::CartesianIndex) = a - CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
@@ -689,7 +689,8 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region construction of the fields
 
     wholeRegionPoints = nothing
-
+    absorbingBoundariesPlusTime = nothing
+    
     if absorbingBoundaries === nothing
         wholeRegionPoints=modelPoints
         absorbingBoundaries = zeros(Int,Ndimension)
@@ -706,6 +707,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         wholeRegionPoints=modelPoints.+sum(absorbingBoundariesPlusTime,1) 
     end
 
+    if timeMarching
+        absorbingBoundaries=absorbingBoundariesPlusTime[1:end-1]
+    end
 
     # below should be parallelised at some points
 
