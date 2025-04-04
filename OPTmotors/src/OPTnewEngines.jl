@@ -591,6 +591,8 @@ end
 function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
 
     #todo list
+    # 
+    # this function is tooooooo complicated! I think I can simplify very much this!
     #
     #  need to work on the bc (else clause )
     # 
@@ -654,6 +656,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     NtypeofExpr = length(exprs)
 
     Models=Array{Any,1}(undef,NtypeofMaterialVariables)
+    ModelPoints=Array{Int,2}(undef,Ndimension,NtypeofMaterialVariables)
 
     if length(models) !== NtypeofMaterialVariables 
         @error "Each material has to have its own model"
@@ -667,11 +670,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         end
         if sum(CartesianDependency) === 0 # when it is a constant
             tmpModel=Array{Any,Ndimension}(undef,(ones(Int, Ndimension)...)...)
+            ModelPoints[:,iVar] = ones(Int, Ndimension)
             tmpModel[CartesianIndex(Tuple(ones(Int, Ndimension))...)] = models[iVar]
             Models[iVar]=tmpModel
         else
             newCoords=expandVectors(size(models[iVar]),CartesianDependency)
-            
+            ModelPoints[:,iVar] = newCoords
+ 
             tmpModel=reshape(models[iVar],newCoords...)
             Models[iVar]=tmpModel
 
@@ -693,7 +698,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     if absorbingBoundaries === nothing
         wholeRegionPoints=modelPoints
-        absorbingBoundaries = zeros(Int,Ndimension)
+        absorbingBoundaries = zeros(Int,2, Ndimension)
         absorbingBoundariesPlusTime=absorbingBoundaries
     else
         absorbingBoundariesPlusTime = absorbingBoundaries
@@ -825,15 +830,23 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     costFunctions=Array{Any,1}(undef,NtestfunctionsInSpace)
 
-    for iPoint in eachindex(νWhole)
-        νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
-        @show νtmpWhole
-        νtmpModel=whole2model(νtmpWhole)
-        νtmpEmpty=whole2empty(νtmpEmpty)
+    for iT in 1:timePointsUsedForOneStep
+        for iVar in eachindex(vars)
+            spaceModelBouncedPoints=ModelPoints[1:Ndimension-1, iVar]
+            for iPoint in eachindex(νWhole)
+                νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
+                νtmpModel=whole2model(νtmpWhole)
+                νtmpEmpty=whole2empty(νtmpWhole)
 
-        @show νtmpWhole,νtmpModel,νtmpEmpty
-#        @show νᶜtmpWhole = νtmpWhole .- νRelative[iPoint] .+ localPointsIndices # this is the shift vector
+                νᶜtmpWhole = νtmpWhole .- νRelative[iPoint] .+ localPointsIndices # this is the shift vector
+                νᶜtmpModel = whole2model.(νᶜtmpWhole)
+                νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
+                νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
 
+
+                
+            end
+        end
     end
 
 
