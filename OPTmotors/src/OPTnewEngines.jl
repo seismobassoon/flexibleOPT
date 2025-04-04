@@ -264,6 +264,22 @@ function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUse
     end
 end
 
+function BouncingCoordinates(a::CartesianIndex,PointsUsed)
+    # this will bounce the boundary inside the PointsUsed vector
+    if length(a) !== length(PointsUsed)
+        @error "cannot bound this CartesianIndex due to the dimension mismatch"
+    end
+    avector=car2vec(a)
+    for iCoord in eachindex(avector)
+        if avector[iCoord] < 1
+            avector[iCoord] = 1
+        elseif avector[iCoord] > PointsUsed[iCoord]
+            avector[iCoord] = PointsUsed[iCoord]
+        end
+    end
+    a=CartesianIndex(Tuple(avector))
+    return a
+end
 
 function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, highestOrderPartialSpace=2,highestOrderPartialTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
 
@@ -807,7 +823,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
         νtmpModel=whole2model(νtmpWhole)
         νtmpEmpty=whole2empty(νtmpEmpty)
-        
+
+        @show νtmpWhole,νtmpModel,νtmpEmpty
+#        @show νᶜtmpWhole = νtmpWhole .- νRelative[iPoint] .+ localPointsIndices # this is the shift vector
 
     end
 
