@@ -830,18 +830,20 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     costFunctions=Array{Any,1}(undef,NtestfunctionsInSpace)
 
+    @show semiSymbolicsOperators,localPointsIndices
+
     for iT in 1:timePointsUsedForOneStep
         for iVar in eachindex(vars)
-            spaceModelBouncedPoints=ModelPoints[1:Ndimension-1, iVar]
+            spaceModelBouncedPoints=ModelPoints[1:Ndimension-1,iVar]
             for iPoint in eachindex(νWhole)
                 νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
                 νtmpModel=whole2model(νtmpWhole)
                 νtmpEmpty=whole2empty(νtmpWhole)
 
-                νᶜtmpWhole = νtmpWhole .- νRelative[iPoint] .+ localPointsIndices # this is the shift vector
+                νᶜtmpWhole = localPointsIndices[1:end] .+ νtmpWhole .- νRelative[iPoint]  # this is the shift vector
                 νᶜtmpModel = whole2model.(νᶜtmpWhole)
                 νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
-                νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
+                @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
 
 
                 
