@@ -570,7 +570,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         end
     end
 
-    @show "finished"
+
 
     #endregion
 
@@ -690,10 +690,11 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     wholeRegionPoints = nothing
     absorbingBoundariesPlusTime = nothing
-    
+
     if absorbingBoundaries === nothing
         wholeRegionPoints=modelPoints
         absorbingBoundaries = zeros(Int,Ndimension)
+        absorbingBoundariesPlusTime=absorbingBoundaries
     else
         absorbingBoundariesPlusTime = absorbingBoundaries
         # absorbingBoundaries should be two column array 
