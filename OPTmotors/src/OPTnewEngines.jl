@@ -250,6 +250,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 end
 
 function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
+    @show absorbingBoundaries, spacePointsUsed, NdimensionMinusTime
     exprs = [
         :(model2whole(a::CartesianIndex) = a + CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
         :(whole2model(a::CartesianIndex) = a - CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
@@ -691,6 +692,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     if absorbingBoundaries === nothing
         wholeRegionPoints=modelPoints
+        absorbingBoundaries = zeros(Int,Ndimension)
     else
         absorbingBoundariesPlusTime = absorbingBoundaries
         # absorbingBoundaries should be two column array 
@@ -763,7 +765,6 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         νWhole[iPoint] = car2vec(PointsSpace[iPoint]) # this should be not true for higher B-spline test functions
 
     end
-    @show νWhole
 
 
     νRelative=Array{Any,1}(undef,NtestfunctionsInSpace) # the relative coordinate to take (the coordinate used for the semi-symbolic operator derivation)

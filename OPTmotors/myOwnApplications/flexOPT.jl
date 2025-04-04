@@ -49,36 +49,7 @@ if modelDefinitionMethod === "2DimageFile"
     imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
-    model=read2DimageModel(imagefile,colormap;Nwidth=201,Nheight=402,showRecoveredImage=false)
-
-    # Either height or width should be decided 
-    # (if the user precises the both, then they are respected)
-
-    heightInMeter = 2000.0 # height in meter 
-    widthInMeter = 3000.0 # width in meter 
-    timeWindowInSecond = 200.0 # time window
-
-    ΔheightInMeter = 20.0 # almost 
-    ΔwidthInMeter = 20.0 # almost
-    ΔtimeInSecond = 10.0 # almost
-
-    #NF needs to make DomainWindow, ModelSizeTXYZ
-
-    if heightInMeter !== nothing && ΔheightInMeter !== nothing
-        ModelSizeX = trunc(Int, heightInMeter/ΔheightInMeter)+1
-    else
-        ModelSizeX = nothing
-    end
-
-
-    if widthInMeter !== nothing && ΔwidthInMeter !== nothing
-        ModelSizeY = trunc(Int, widthInMeter/ΔwidthInMeter) +1
-    else
-        ModelSizeY = nothing
-    end
-
-    ModelSizeT = trunc(Int, timeWindowInSecond/ΔtimeInSecond)
-    
+    model=read2DimageModel(imagefile,colormap;Nwidth=21,Nheight=41,showRecoveredImage=false)
 
 end
 #endregion
@@ -100,6 +71,7 @@ end
 #region OPT symbolic derivation of objective functions to be minimised
 
 Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
+Nt= 120
 
 exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
 IneedExternalSources = true
@@ -127,7 +99,7 @@ models=push!(models, (model .* 0.5 .+ 2))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 
-Nt= 120
+
 @show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
 constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
