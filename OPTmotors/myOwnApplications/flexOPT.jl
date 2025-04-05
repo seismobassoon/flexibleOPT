@@ -1,6 +1,9 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
-using  Pkg
+using  Pkg, DrWatson
+@quickactivate "flexibleDSM" 
+
+@show projectdir(), datadir()
 cd(Base.source_dir())       
 Pkg.activate("../../")                  # active the project, with a  static environment
 # Pkg.activate(; temp=true)    #  activate the project with a temporary environment

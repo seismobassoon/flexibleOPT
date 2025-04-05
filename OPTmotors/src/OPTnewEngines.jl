@@ -658,6 +658,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         modelPoints = (modelPoints...,1)
     end
 
+    localPointsSpaceIndices=CartesianIndices(Tuple(car2vec(localPointsIndices[end])[1:end-1]))
     Ndimension=length(coordinates)
     
    
@@ -840,7 +841,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     νtmpModel=whole2model(νtmpWhole)
                     νtmpEmpty=whole2empty(νtmpWhole)
                     @show νtmpWhole,νRelative[iPoint]
-                    νᶜtmpWhole = localPointsIndices[1:end-1] .+ νtmpWhole .- νRelative[1:end-1,iPoint]  # this is the shift vector
+                    νᶜtmpWhole = localPointsSpaceIndices[1:end] .+ νtmpWhole .- νRelative[1:end-1,iPoint]  # this is the shift vector
                     νᶜtmpModel = whole2model.(νᶜtmpWhole)
                     νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
                     @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
