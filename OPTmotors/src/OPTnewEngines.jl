@@ -2,6 +2,7 @@ using Symbolics,UnPack,LinearAlgebra
 
 include("../src/batchNewSymbolics.jl")
 include("../src/batchUseful.jl")
+include("../src/batchDrWatson.jl")
 
 # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
 
@@ -651,7 +652,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
 
     if !timeMarching
-        localPointsIndices=CartesianIndices(Tuple([car2vec(localPointsIndices[end]);1]);1)
+        localPointsIndices=CartesianIndices(Tuple([car2vec(localPointsIndices[end]);1]))
         middlepoint=CartesianIndex([car2vec(middlepoint);1]...)
         coordinates = (coordinates...,t)
         modelPoints = (modelPoints...,1)
@@ -839,7 +840,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     νtmpModel=whole2model(νtmpWhole)
                     νtmpEmpty=whole2empty(νtmpWhole)
                     @show νtmpWhole,νRelative[iPoint]
-                    νᶜtmpWhole = localPointsIndices[1:end] .+ νtmpWhole .- νRelative[iPoint]  # this is the shift vector
+                    νᶜtmpWhole = localPointsIndices[1:end-1] .+ νtmpWhole .- νRelative[1:end-1,iPoint]  # this is the shift vector
                     νᶜtmpModel = whole2model.(νᶜtmpWhole)
                     νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
                     @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
