@@ -283,7 +283,7 @@ function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     return a
 end
 
-function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, highestOrderPartialSpace=2,highestOrderPartialTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
+function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
 
     #region General introduction, some cautions
 
@@ -339,16 +339,16 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     timeMarching = any(a -> a === t, coordinates)
 
 
-    @unpack orderBtime, orderBspace, highestOrderPartialSpace, highestOrderPartialTime = trialFunctionsCharacteristics
+    @unpack orderBtime, orderBspace, pointsInSpace, pointsInlTime = trialFunctionsCharacteristics
 
     NtypeofExpr=length(exprs)   # number of governing equations
     NtypeofMaterialVariables=length(vars) # number of material coefficients
     NtypeofFields=length(fields) # number of unknown fields
     
     Ndimension = length(coordinates) # we do not change this for the moment, especially for the time-marching scheme
-    pointsUsed = ones(Int, Ndimension).*(highestOrderPartialSpace+1)
+    pointsUsed = ones(Int, Ndimension).*(pointsInSpace+1)
     if timeMarching
-        pointsUsed[end]=highestOrderPartialTime+1
+        pointsUsed[end]=pointsInTime+1
     end
 
 

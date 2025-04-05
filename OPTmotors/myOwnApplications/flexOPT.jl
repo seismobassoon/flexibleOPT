@@ -3,7 +3,8 @@
 using  Pkg, DrWatson
 @quickactivate "flexibleDSM" 
 
-@show projectdir(), datadir()
+datadir("sims", "operators")
+
 cd(Base.source_dir())       
 Pkg.activate("../../")                  # active the project, with a  static environment
 # Pkg.activate(; temp=true)    #  activate the project with a temporary environment
@@ -69,6 +70,7 @@ end
 
 
 
+
 #region Main programme
 
 #region OPT symbolic derivation of objective functions to be minimised
@@ -79,10 +81,20 @@ Nt= 120
 exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
 IneedExternalSources = true
 
-@time AjiννᶜU,utilities=OPTobj(exprs,fields,vars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+
+#DrWatson configurations
+trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2)
+
+operatorConfigurations = @strdict famousEquationType, trialFunctionsCharacteristics, Δnum
+
+@time AjiννᶜU,utilities=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
+
+# here I need to see how to do this with DrWatson
+# wsave(datadir("simulations", "sim_$(i).jld2"), f)
+
 # if you do not want to apply external forces, it is possible to skip below
 if IneedExternalSources 
-    @time Γg,utilitiesForce=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,CˡηSymbolicInversion=false,Δnum = Δnum)  
+    @time Γg,utilitiesForce=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
 end
 
 
