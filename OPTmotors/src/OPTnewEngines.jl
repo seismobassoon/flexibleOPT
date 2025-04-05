@@ -646,7 +646,19 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     timeMarching = any(a -> a === t, coordinates) # important to know if we need to construct a time marching scheme
 
     @unpack middlepoint,middlepointLinear,localPointsIndices,localMaterials,localFields = utilities
+
+    # below here the last coordinate is cosidered as time
+
+
+    if !timeMarching
+        localPointsIndices=CartesianIndices(Tuple([car2vec(localPointsIndices[end]);1]);1)
+        middlepoint=CartesianIndex([car2vec(middlepoint);1]...)
+        coordinates = (coordinates...,t)
+        modelPoints = (modelPoints...,1)
+    end
+
     Ndimension=length(coordinates)
+    
    
     modelPoints=collect(modelPoints)
 
@@ -695,50 +707,31 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region construction of the fields
 
     wholeRegionPoints = nothing
-    absorbingBoundariesPlusTime = nothing
 
     if absorbingBoundaries === nothing
         wholeRegionPoints=modelPoints
         absorbingBoundaries = zeros(Int,2, Ndimension)
-        absorbingBoundariesPlusTime=absorbingBoundaries
     else
-        absorbingBoundariesPlusTime = absorbingBoundaries
         # absorbingBoundaries should be two column array 
         if size(absorbingBoundaries)[1] !== 2
             @error "you have to give us the left and right values for absorbing boundaries"
         elseif size(absorbingBoundaries)[2] !== size(modelPoints)[1] && !timeMarching
             @error "you have to give us the values for each direction for absorbing boundaries"
         elseif size(absorbingBoundaries)[2] === size(modelPoints)[1]-1 && timeMarching
-            absorbingBoundariesPlusTime=[absorbingBoundaries; 0 0]
+            absorbingBoundaries=[absorbingBoundaries; 0 0]
         end
-        wholeRegionPoints=modelPoints.+sum(absorbingBoundariesPlusTime,1) 
-    end
-
-    if timeMarching
-        absorbingBoundaries=absorbingBoundariesPlusTime[:,1:end-1]
-    end
-
-    # below should be parallelised at some points
-
-    timePointsUsedForOneStep=1
-
-    timeStepsForAll=1
-    NdimensionMinusTime=Ndimension
-    wholeRegionPointsSpace=wholeRegionPoints
-
-    spacePointsUsed=car2vec(localPointsIndices[end])
-
-    if timeMarching
-
-        timePointsUsedForOneStep=car2vec(localPointsIndices[end])[end]
-        spacePointsUsed=car2vec(localPointsIndices[end])[1:end-1]
-
-        timeStepsForAll=wholeRegionPoints[end]-timePointsUsedForOneStep+1
-        wholeRegionPointsSpace=wholeRegionPoints[1:end-1]
-        NdimensionMinusTime -= 1
+        wholeRegionPoints=modelPoints.+sum(absorbingBoundaries,1) 
     end
 
 
+    # some useful stuff
+
+
+    spacePointsUsed=car2vec(localPointsIndices[end])[1:end-1]
+    timePointsUsedForOneStep=car2vec(localPointsIndices[end])[end]
+    wholeRegionPointsSpace=wholeRegionPoints[1:end-1]
+   
+ 
     # we need to put the left and right regions in order that centre ν configuration can pass
 
     emptyRegionPointsSpace=wholeRegionPointsSpace.+ 2 .* spacePointsUsed
@@ -746,17 +739,18 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     場dummy=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
     場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
 
-    for iField in eachindex(fields)
-        newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
-        newstring=split(string(fields[iField]),"(")[1]*"_mod"
-        場dummy[iField]=string_as_varname(newstring_dummy, Array{Any,NdimensionMinusTime}(undef,Tuple(emptyRegionPointsSpace)))
-        場[iField]=string_as_varname(newstring, Array{Any,NdimensionMinusTime}(undef,Tuple(wholeRegionPointsSpace)))
+    for it in 1:timePointsUsedForOneStep
+        for iField in eachindex(fields)
+            newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
+            newstring=split(string(fields[iField]),"(")[1]*"_mod"
+            場dummy[iField,it]=string_as_varname(newstring_dummy, Array{Any,Ndimension-1}(undef,Tuple(emptyRegionPointsSpace)))
+            場[iField,it]=string_as_varname(newstring, Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)))
+        end
     end
-
 
     #since everything is super clumsy, here we make several useful functions to change one coordinate to another
 
-    spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
+    spaceCoordinatesConversionfunctions(absorbingBoundaries[1:end-1], spacePointsUsed, NdimensionMinusTime)
 
     #endregion 
 
