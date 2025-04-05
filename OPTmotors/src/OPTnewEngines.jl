@@ -250,7 +250,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 end
 
 function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
-    
+    @show absorbingBoundaries, spacePointsUsed, NdimensionMinusTime
     exprs = [
         :(model2whole(a::CartesianIndex) = a + CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
         :(whole2model(a::CartesianIndex) = a - CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
@@ -636,6 +636,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region unpacking, N-dimensionalising all the models 
 
     testOnlyCentre = false
+
     if ndims(semiSymbolicsOperators) === 1
         testOnlyCentre = true
     elseif ndims(semiSymbolicsOperators) !==2
@@ -714,7 +715,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     end
 
     if timeMarching
-        absorbingBoundaries=absorbingBoundariesPlusTime[1:end-1]
+        absorbingBoundaries=absorbingBoundariesPlusTime[:,1:end-1]
     end
 
     # below should be parallelised at some points
@@ -828,8 +829,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     # here the number of test functions should not be necessarily the number of points but I will work later
 
-    costFunctions=Array{Any,1}(undef,NtestfunctionsInSpace)
+    costFunctions=Array{Any,2}(undef,NtypeofExpr,NtestfunctionsInSpace)
 
+    costFunctions .= 0
     @show semiSymbolicsOperators,localPointsIndices
     @show localMaterials,localFields
 
@@ -840,7 +842,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                 νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
                 νtmpModel=whole2model(νtmpWhole)
                 νtmpEmpty=whole2empty(νtmpWhole)
-
+                @show νtmpWhole,νRelative[iPoint]
                 νᶜtmpWhole = localPointsIndices[1:end] .+ νtmpWhole .- νRelative[iPoint]  # this is the shift vector
                 νᶜtmpModel = whole2model.(νᶜtmpWhole)
                 νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
