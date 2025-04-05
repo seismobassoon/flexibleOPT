@@ -83,18 +83,28 @@ IneedExternalSources = true
 
 
 #DrWatson configurations
-trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2)
 
-operatorConfigurations = @strdict famousEquationType, trialFunctionsCharacteristics, Δnum
+orderBtime=1
+orderBspace=1
+pointsInSpace=2
+pointsInTime=2
 
-@time AjiννᶜU,utilities=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
+operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime
 
+trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
+
+@time @show operatorData, file=produce_or_load(OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  , operatorConfigurations, path = "")
+
+AjiννᶜU=operatorData[1]
+utilities=operatorData[2]
 # here I need to see how to do this with DrWatson
 # wsave(datadir("simulations", "sim_$(i).jld2"), f)
 
 # if you do not want to apply external forces, it is possible to skip below
 if IneedExternalSources 
-    @time Γg,utilitiesForce=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
+    @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
+    Γg = operatorForceData[1]
+    utilitiesForce = operatorForceData[2]
 end
 
 
