@@ -645,7 +645,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     timeMarching = any(a -> a === t, coordinates) # important to know if we need to construct a time marching scheme
 
-    @unpack middlepoint,middlepointLinear,ocalPointsIndices,localMaterials,localFields = utilities
+    @unpack middlepoint,middlepointLinear,localPointsIndices,localMaterials,localFields = utilities
     Ndimension=length(coordinates)
    
     modelPoints=collect(modelPoints)
@@ -835,21 +835,24 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     @show semiSymbolicsOperators,localPointsIndices
     @show localMaterials,localFields
 
-    for iT in 1:timePointsUsedForOneStep
-        for iVar in eachindex(vars)
-            spaceModelBouncedPoints=ModelPoints[1:Ndimension-1,iVar]
-            for iPoint in eachindex(νWhole)
-                νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
-                νtmpModel=whole2model(νtmpWhole)
-                νtmpEmpty=whole2empty(νtmpWhole)
-                @show νtmpWhole,νRelative[iPoint]
-                νᶜtmpWhole = localPointsIndices[1:end] .+ νtmpWhole .- νRelative[iPoint]  # this is the shift vector
-                νᶜtmpModel = whole2model.(νᶜtmpWhole)
-                νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
-                @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
+
+    for iExpr in eachindex(exprs)
+        for iT in 1:timePointsUsedForOneStep
+            for iVar in eachindex(vars)
+                spaceModelBouncedPoints=ModelPoints[1:Ndimension-1,iVar]
+                for iPoint in eachindex(νWhole)
+                    νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
+                    νtmpModel=whole2model(νtmpWhole)
+                    νtmpEmpty=whole2empty(νtmpWhole)
+                    @show νtmpWhole,νRelative[iPoint]
+                    νᶜtmpWhole = localPointsIndices[1:end] .+ νtmpWhole .- νRelative[iPoint]  # this is the shift vector
+                    νᶜtmpModel = whole2model.(νᶜtmpWhole)
+                    νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
+                    @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
 
 
-                
+                    
+                end
             end
         end
     end
