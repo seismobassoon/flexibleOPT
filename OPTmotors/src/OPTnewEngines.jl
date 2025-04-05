@@ -463,7 +463,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     L_MINUS_N = CartesianIndices(Tuple(l_minus_n))
     L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
 
-    AjiννᶜU = Array{Num,3}(undef,length(multiPointsIndices),NtypeofFields,NtypeofExpr)
+    AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices),NtypeofExpr)
     # yes indeed, (νᶜ,) ν, i, j are the oder here
 
     Ulocal = Array{Num,2}(undef,length(multiPointsIndices),NtypeofFields)
@@ -565,7 +565,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                     end
                 end
 
-                AjiννᶜU[linearν,iField,iExpr] += CoefU
+                AjiννᶜU[linearν,iExpr] += CoefU
             end
         end
     end
@@ -578,7 +578,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
     utilities=(middlepoint=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
     if testOnlyCentre
-        smallAjiννᶜU = AjiννᶜU[middleLinearν,:,:]
+        smallAjiννᶜU = AjiννᶜU[middleLinearν,:]
         return smallAjiννᶜU,utilities
     else
         return AjiννᶜU,utilities
@@ -636,9 +636,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region unpacking, N-dimensionalising all the models 
 
     testOnlyCentre = false
-    if ndims(semiSymbolicsOperators) === 2
+    if ndims(semiSymbolicsOperators) === 1
         testOnlyCentre = true
-    elseif ndims(semiSymbolicsOperators) !==3
+    elseif ndims(semiSymbolicsOperators) !==2
         @error "the semi symbolic operators are not computed correctly!"
     end
 
@@ -831,6 +831,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     costFunctions=Array{Any,1}(undef,NtestfunctionsInSpace)
 
     @show semiSymbolicsOperators,localPointsIndices
+    @show localMaterials,localFields
 
     for iT in 1:timePointsUsedForOneStep
         for iVar in eachindex(vars)
