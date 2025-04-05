@@ -750,7 +750,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #since everything is super clumsy, here we make several useful functions to change one coordinate to another
 
-    spaceCoordinatesConversionfunctions(absorbingBoundaries[1:end-1], spacePointsUsed, NdimensionMinusTime)
+    spaceCoordinatesConversionfunctions(absorbingBoundaries[1:end-1], spacePointsUsed, Ndimension-1)
 
     #endregion 
 
