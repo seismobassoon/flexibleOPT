@@ -576,7 +576,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
     #region outputs
     
-    utilities=(middlepoint=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
+    utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
     if testOnlyCentre
         smallAjiννᶜU = AjiννᶜU[middleLinearν,:]
         return smallAjiννᶜU,utilities
@@ -645,7 +645,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     timeMarching = any(a -> a === t, coordinates) # important to know if we need to construct a time marching scheme
 
-    @unpack middlepoint,localPointsIndices,localMaterials,localFields = utilities
+    @unpack middlepoint,middlepointLinear,ocalPointsIndices,localMaterials,localFields = utilities
     Ndimension=length(coordinates)
    
     modelPoints=collect(modelPoints)
