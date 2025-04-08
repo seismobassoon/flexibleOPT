@@ -1,12 +1,13 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
 using  Pkg, DrWatson
-@quickactivate "flexibleDSM" 
 
-datadir("sims", "operators")
+#Pkg.activate("../../")    
+@quickactivate "flexibleDSM"
+
 
 cd(Base.source_dir())       
-Pkg.activate("../../")                  # active the project, with a  static environment
+              # active the project, with a  static environment
 # Pkg.activate(; temp=true)    #  activate the project with a temporary environment
 #Pkg.update()     
 
@@ -78,7 +79,7 @@ end
 Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
 Nt= 120
 
-exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+
 IneedExternalSources = true
 
 
@@ -89,23 +90,13 @@ orderBspace=1
 pointsInSpace=2
 pointsInTime=2
 
-operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime
+operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
 
-trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
 
-@time @show operatorData, file=produce_or_load(OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  , operatorConfigurations, path = "")
+@show savename(operatorConfigurations,"opt")
+f=OPTobj(operatorConfigurations)
 
-AjiννᶜU=operatorData[1]
-utilities=operatorData[2]
-# here I need to see how to do this with DrWatson
-# wsave(datadir("simulations", "sim_$(i).jld2"), f)
-
-# if you do not want to apply external forces, it is possible to skip below
-if IneedExternalSources 
-    @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
-    Γg = operatorForceData[1]
-    utilitiesForce = operatorForceData[2]
-end
+@wsave(datadir("semiSymbolics", savename(operatorConfigurations,"opt")),f)
 
 
 #region je râle, je râle

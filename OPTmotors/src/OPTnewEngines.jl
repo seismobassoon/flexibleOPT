@@ -283,6 +283,26 @@ function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     return a
 end
 
+function OPTobj(operatorConfigurations::Dict)
+    # this is just a wrapper for the OPTobj function below, for DrWatson package
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources= operatorConfigurations
+    exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+
+    trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
+    operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)
+    #AjiννᶜU=operatorData[1]
+    #utilities=operatorData[2]   
+
+    operatorForceData=nothing
+    # if you do not want to apply external forces, it is possible to skip below
+    if IneedExternalSources 
+        @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
+        #Γg = operatorForceData[1]
+        #utilitiesForce = operatorForceData[2]
+    end
+    return operatorData, operatorForceData
+end
+
 function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
 
     #region General introduction, some cautions
