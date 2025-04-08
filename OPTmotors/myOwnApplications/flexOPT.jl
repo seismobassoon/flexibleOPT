@@ -70,11 +70,8 @@ end
 end
 
 
+#region numerical configuration
 
-
-#region Main programme
-
-#region OPT symbolic derivation of objective functions to be minimised
 
 Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
 Nt= 120
@@ -93,10 +90,19 @@ pointsInTime=2
 operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
 
 
-@show savename(operatorConfigurations,"opt")
-f=OPTobj(operatorConfigurations)
 
-@wsave(datadir("semiSymbolics", savename(operatorConfigurations,"opt")),f)
+#endregion
+
+
+
+#region Main programme
+
+#region OPT symbolic derivation of objective functions to be minimised
+
+@show savename(operatorConfigurations,"opt")
+@show f=OPTobj(operatorConfigurations)
+
+wsave(datadir("semiSymbolics", savename(operatorConfigurations,"opt")),f)
 
 
 #region je râle, je râle

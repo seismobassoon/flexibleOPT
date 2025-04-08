@@ -289,7 +289,7 @@ function OPTobj(operatorConfigurations::Dict)
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
 
     trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
-    operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)
+    @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)
     #AjiννᶜU=operatorData[1]
     #utilities=operatorData[2]   
 
