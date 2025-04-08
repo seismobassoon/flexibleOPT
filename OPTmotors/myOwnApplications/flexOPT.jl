@@ -99,10 +99,10 @@ operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspac
 
 #region OPT symbolic derivation of objective functions to be minimised
 
-@show savename(operatorConfigurations,"opt")
+@show savename(operatorConfigurations,"jld2")
 @show f=OPTobj(operatorConfigurations)
 
-wsave(datadir("semiSymbolics", savename(operatorConfigurations,"opt")),f)
+wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),f)
 
 
 #region je râle, je râle

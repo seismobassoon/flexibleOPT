@@ -300,6 +300,7 @@ function OPTobj(operatorConfigurations::Dict)
         #Γg = operatorForceData[1]
         #utilitiesForce = operatorForceData[2]
     end
+    
     return operatorData, operatorForceData
 end
 
