@@ -99,12 +99,11 @@ operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspac
 
 #region OPT symbolic derivation of objective functions to be minimised
 
-@show savename(operatorConfigurations,"jld2")
 #@show f=OPTobj(operatorConfigurations)
-semiSymbolicOperators,file=produce_or_load(OPTobj, operatorConfigurations,  datadir("semiSymbolics"))
+semiSymbolicOperators,file=produce_or_load(OPTobj, operatorConfigurations,  datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
 #wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),Dict("semiSymbolicOperators" => f))
 
-@unpack operatorPDE=AjiννᶜU,peratorForce=Γg = semiSymbolicOperators
+@unpack operatorPDE=AjiννᶜU,operatorForce=Γg = semiSymbolicOperators
 
 @show "ok?"
 #region je râle, je râle
