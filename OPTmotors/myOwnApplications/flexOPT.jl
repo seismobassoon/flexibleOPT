@@ -100,11 +100,16 @@ operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspac
 #region OPT symbolic derivation of objective functions to be minimised
 
 @show savename(operatorConfigurations,"jld2")
-@show f=OPTobj(operatorConfigurations)
+#@show f=OPTobj(operatorConfigurations)
+semiSymbolicOperators=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
+#wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),Dict("semiSymbolicOperators" => f))
 
-wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),Dict("semiSymbolicOperators" => f))
+AjiννᶜU=semiSymbolicOperators[1]
+if IneedExternalSources
+    Γg=semiSymbolicOperators[2]
+end
 
-
+@show "ok?"
 #region je râle, je râle
 #
 # if one wants to work with different Δvalues, OPTobj should be called each time
