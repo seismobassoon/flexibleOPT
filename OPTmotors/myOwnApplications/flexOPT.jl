@@ -1,9 +1,9 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
-using  Pkg, DrWatson,JLD2
-
-#Pkg.activate("../../")    
-@quickactivate "flexibleDSM"
+using  Pkg
+Pkg.activate("../..")
+#Pkg.add("DrWatson") 
+#@quickactivate "flexibleDSM"
 
 
 cd(Base.source_dir())       
@@ -100,12 +100,16 @@ operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspac
 #region OPT symbolic derivation of objective functions to be minimised
 
 
-semiSymbolicOperators,file=produce_or_load(OPTobj, operatorConfigurations,  datadir("semiSymbolics"))
-#wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),Dict("semiSymbolicOperators" => f))
+f,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
+#operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
+operators=f["operators"]
+operatorPDE,operatorForce,eqInfo = operators
+exprs,fields,vars,extexprs,extfields,extvars,coordinates=eqInfo
 
-@unpack operatorPDE=AjiννᶜU,operatorForce=Γg = semiSymbolicOperators
+AjiννᶜU,utilities=operatorPDE
+Γg,utilitiesForce=operatorForce
+#endregion
 
-@show "ok?"
 #region je râle, je râle
 #
 # if one wants to work with different Δvalues, OPTobj should be called each time

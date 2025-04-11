@@ -287,7 +287,7 @@ function OPTobj(operatorConfigurations::Dict)
     # this is just a wrapper for the OPTobj function below, for DrWatson package
     @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources= operatorConfigurations
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-
+    global ∂,∂²
     trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
     @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)
     #AjiννᶜU=operatorData[1]
@@ -300,7 +300,8 @@ function OPTobj(operatorConfigurations::Dict)
         #Γg = operatorForceData[1]
         #utilitiesForce = operatorForceData[2]
     end
-    operators=(operatorPDE=operatorData, operatorForce=operatorForceData)
+    eqInfo=(exprs=exprs,fields=fields,vars=vars,extexprs=extexprs,extfields=extfields,extvars=extvars,coordinates=coordinates)
+    operators=(operatorPDE=operatorData, operatorForce=operatorForceData,eqInfo=eqInfo)
     return @strdict(operators)
 end
 
@@ -357,6 +358,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
     #region initialising, unpacking etc. 
 
+
+    
     timeMarching = any(a -> a === t, coordinates)
 
 
