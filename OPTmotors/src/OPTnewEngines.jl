@@ -1,4 +1,4 @@
-using Symbolics,UnPack,LinearAlgebra
+using Symbolics,UnPack,LinearAlgebra,DrWatson
 
 include("../src/batchNewSymbolics.jl")
 include("../src/batchUseful.jl")
@@ -301,7 +301,7 @@ function OPTobj(operatorConfigurations::Dict)
         #utilitiesForce = operatorForceData[2]
     end
     operators=(operatorPDE=operatorData, operatorForce=operatorForceData)
-    return operators
+    return @strdict(operators)
 end
 
 function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
