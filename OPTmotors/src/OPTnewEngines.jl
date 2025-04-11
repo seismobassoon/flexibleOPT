@@ -300,8 +300,8 @@ function OPTobj(operatorConfigurations::Dict)
         #Γg = operatorForceData[1]
         #utilitiesForce = operatorForceData[2]
     end
-    
-    return operatorData, operatorForceData
+    operators=(operatorPDE=operatorData, operatorForce=operatorForceData)
+    return operators
 end
 
 function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)

@@ -101,13 +101,10 @@ operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspac
 
 @show savename(operatorConfigurations,"jld2")
 #@show f=OPTobj(operatorConfigurations)
-semiSymbolicOperators=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
+semiSymbolicOperators,file=produce_or_load(OPTobj, operatorConfigurations,  datadir("semiSymbolics"))
 #wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),Dict("semiSymbolicOperators" => f))
 
-AjiννᶜU=semiSymbolicOperators[1]
-if IneedExternalSources
-    Γg=semiSymbolicOperators[2]
-end
+@unpack operatorPDE=AjiννᶜU,peratorForce=Γg = semiSymbolicOperators
 
 @show "ok?"
 #region je râle, je râle
