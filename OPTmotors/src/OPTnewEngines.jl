@@ -852,8 +852,8 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     costFunctions=Array{Any,2}(undef,NtypeofExpr,NtestfunctionsInSpace)
 
     costFunctions .= 0
-    @show semiSymbolicsOperators,localPointsIndices
-    @show localMaterials,localFields
+    #@show semiSymbolicsOperators,localPointsIndices
+    #@show localMaterials,localFields
 
 
     for iExpr in eachindex(exprs)
