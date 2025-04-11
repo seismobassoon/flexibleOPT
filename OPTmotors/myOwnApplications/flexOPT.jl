@@ -1,6 +1,6 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
-using  Pkg, DrWatson
+using  Pkg, DrWatson,JLD2
 
 #Pkg.activate("../../")    
 @quickactivate "flexibleDSM"
@@ -102,7 +102,7 @@ operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspac
 @show savename(operatorConfigurations,"jld2")
 @show f=OPTobj(operatorConfigurations)
 
-wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),f)
+wsave(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")),Dict("semiSymbolicOperators" => f))
 
 
 #region je râle, je râle
