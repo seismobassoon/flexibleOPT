@@ -267,7 +267,11 @@ function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUse
 end
 
 function BouncingCoordinates(a::CartesianIndex,PointsUsed)
+    #
     # this will bounce the boundary inside the PointsUsed vector
+    #
+    # i.e. get the nearby coordinates inside the domain to fake the continuity
+
     if length(a) !== length(PointsUsed)
         @error "cannot bound this CartesianIndex due to the dimension mismatch"
     end
@@ -868,8 +872,11 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
                     νᶜtmpEmpty = conv.whole2empty.(νᶜtmpWhole)
                     
-                    @show νᶜtmpModelTruncated = BouncingCoordinates.((νᶜtmpModel), spaceModelBouncedPoints)
+                    # model parameters should be bounced at the whole region limits
+                    νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
 
+                    # field values are defined only at the whole region and not at the Empty
+                    
 
                     
                 end

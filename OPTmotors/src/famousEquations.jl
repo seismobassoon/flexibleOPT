@@ -201,6 +201,18 @@ function famousEquations(name)
         extfields = f
         extvars = f
         coordinates =(x,y,t)
+    elseif name==="2DacousticHomoTime"
+        # 2D wave equation with double couple source
+        @variables v  u(x,y,t) f(x,y,t)
+       
+        exprs =  ∂t²(u)- v^2 *(∂x²(u) - ∂y²(u))
+        fields=u
+        vars = v
+
+        extexprs = f
+        extfields = f
+        extvars = f
+        coordinates =(x,y,t)
 
     elseif name==="3DsismoTimeIso"
         # this is not yet working
