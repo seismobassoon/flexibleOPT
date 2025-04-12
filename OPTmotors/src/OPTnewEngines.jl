@@ -251,20 +251,20 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 end
 
 function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
-    #@show absorbingBoundaries, spacePointsUsed, NdimensionMinusTime
-    exprs = [
-        :(model2whole(a::CartesianIndex) = a + CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
-        :(whole2model(a::CartesianIndex) = a - CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
-        :(whole2empty(a::CartesianIndex) = a + CartesianIndex(Tuple(spacePointsUsed))),
-        :(empty2whole(a::CartesianIndex) = a - CartesianIndex(Tuple(spacePointsUsed))),
-        :(model2empty(a::CartesianIndex) = whole2empty(model2whole(a))),
-        :(empty2model(a::CartesianIndex) = whole2model(empty2whole(a)))
-    ]
+    offset_model = CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))
+    offset_empty = CartesianIndex(Tuple(spacePointsUsed))
 
-    for ex in exprs
-        @eval $ex
-    end
+    model2whole(a::CartesianIndex) = a + offset_model
+    whole2model(a::CartesianIndex) = a - offset_model
+    whole2empty(a::CartesianIndex) = a + offset_empty
+    empty2whole(a::CartesianIndex) = a - offset_empty
+    model2empty(a::CartesianIndex) = whole2empty(model2whole(a))
+    empty2model(a::CartesianIndex) = whole2model(empty2whole(a))
+
+    return (; model2whole, whole2model, whole2empty, empty2whole, model2empty, empty2model)
 end
+
+
 
 function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     # this will bounce the boundary inside the PointsUsed vector
@@ -703,7 +703,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         @error "Each material has to have its own model"
     end
     
-    @show vars, coordinates
+    
     for iVar in eachindex(vars)
         CartesianDependency=findCartesianDependency(vars[iVar],length(coordinates))
         if ndims(models[iVar]) === CartesianDependency
@@ -777,8 +777,8 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     end
 
     #since everything is super clumsy, here we make several useful functions to change one coordinate to another
-
-    spaceCoordinatesConversionfunctions(absorbingBoundaries[1:end-1], spacePointsUsed, Ndimension-1)
+    
+    conv=spaceCoordinatesConversionfunctions(absorbingBoundaries[:,1:end-1], spacePointsUsed, Ndimension-1)
 
     #endregion 
 
@@ -864,12 +864,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                 spaceModelBouncedPoints=ModelPoints[1:Ndimension-1,iVar]
                 for iPoint in eachindex(νWhole)
                     νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
-                    νtmpModel=whole2model(νtmpWhole)
-                    νtmpEmpty=whole2empty(νtmpWhole)
-                    @show νtmpWhole,νRelative[iPoint]
-                    νᶜtmpWhole = localPointsSpaceIndices[1:end] .+ νtmpWhole .- νRelative[1:end-1,iPoint]  # this is the shift vector
-                    νᶜtmpModel = whole2model.(νᶜtmpWhole)
-                    νᶜtmpEmpty = whole2empty.(νᶜtmpWhole)
+                    νtmpModel=conv.whole2model(νtmpWhole)
+                    νtmpEmpty=conv.whole2empty(νtmpWhole)
+                    #νtmpWhole,νRelative[iPoint]
+
+                    νᶜtmpWhole = localPointsSpaceIndices.+ νtmpWhole .- νRelative[1:end-1,iPoint]  # this is the shift vector
+                    νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
+                    νᶜtmpEmpty = conv.whole2empty.(νᶜtmpWhole)
                     @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
 
 
