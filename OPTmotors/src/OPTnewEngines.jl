@@ -668,12 +668,14 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         @error "the semi symbolic operators are not computed correctly!"
     end
 
+    @show coordinates
     timeMarching = any(a -> a === t, coordinates) # important to know if we need to construct a time marching scheme
-
+    @show timeMarching
     @unpack middlepoint,middlepointLinear,localPointsIndices,localMaterials,localFields = utilities
 
     # below here the last coordinate is cosidered as time
 
+    @show timeMarching
 
     if !timeMarching
         localPointsIndices=CartesianIndices(Tuple([car2vec(localPointsIndices[end]);1]))
@@ -701,7 +703,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         @error "Each material has to have its own model"
     end
     
-    
+    @show vars, coordinates
     for iVar in eachindex(vars)
         CartesianDependency=findCartesianDependency(vars[iVar],length(coordinates))
         if ndims(models[iVar]) === CartesianDependency
