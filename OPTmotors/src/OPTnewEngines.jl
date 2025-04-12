@@ -857,7 +857,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     for iExpr in eachindex(exprs)
         for iT in 1:timePointsUsedForOneStep
             for iVar in eachindex(vars)
-                spaceModelBouncedPoints=ModelPoints[1:Ndimension-1,iVar]
+                spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
                 for iPoint in eachindex(νWhole)
                     νtmpWhole=vec2car(νWhole[iPoint])
                     νtmpModel=conv.whole2model(νtmpWhole)
@@ -867,7 +867,8 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
                     νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
                     νᶜtmpEmpty = conv.whole2empty.(νᶜtmpWhole)
-                    @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)
+                    
+                    @show νᶜtmpModelTruncated = BouncingCoordinates.((νᶜtmpModel), spaceModelBouncedPoints)
 
 
                     
