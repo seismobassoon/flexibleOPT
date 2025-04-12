@@ -6,7 +6,9 @@ include("../src/batchDrWatson.jl")
 
 # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
 
-# in the near future, xyzt coordinates shouold be more flexible! With CartesianIndices!!
+
+timeDimensionString="t" # if the user does not want to use "t" for the time marching scheme, it should be changed
+# and this "t" should be the last element in coordinates
 
 function findCartesianDependency(expression,Ndimension)
     
@@ -180,7 +182,7 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
         midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
         tmpVecForMiddlePoint[end]=midTimeCoord
     end
-    midK=CartesianIndex(Tuple(tmpVecForMiddlePoint))
+    midK=vec2car(tmpVecForMiddlePoint)
 
     for k in multiPointsIndices
         linearK = LinearIndices(multiPointsIndices)[k]
@@ -251,8 +253,8 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 end
 
 function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
-    offset_model = CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))
-    offset_empty = CartesianIndex(Tuple(spacePointsUsed))
+    offset_model = vec2car(absorbingBoundaries[1, 1:NdimensionMinusTime])
+    offset_empty = vec2car(spacePointsUsed)
 
     model2whole(a::CartesianIndex) = a + offset_model
     whole2model(a::CartesianIndex) = a - offset_model
@@ -263,8 +265,6 @@ function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUse
 
     return (; model2whole, whole2model, whole2empty, empty2whole, model2empty, empty2model)
 end
-
-
 
 function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     # this will bounce the boundary inside the PointsUsed vector
@@ -279,7 +279,7 @@ function BouncingCoordinates(a::CartesianIndex,PointsUsed)
             avector[iCoord] = PointsUsed[iCoord]
         end
     end
-    a=CartesianIndex(Tuple(avector))
+    a=vec2car(avector)
     return a
 end
 
@@ -360,7 +360,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
 
 
-    timeMarching = any(a -> a === "t", string.(coordinates))
+    timeMarching = any(a -> a === timeDimensionString, string.(coordinates))
 
 
     @unpack orderBtime, orderBspace, pointsInSpace, pointsInTime = trialFunctionsCharacteristics
@@ -508,7 +508,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
         tmpVecForMiddlePoint[end]=midTimeCoord
     end
-    middleν=CartesianIndex(Tuple(tmpVecForMiddlePoint))
+    middleν=vec2car(tmpVecForMiddlePoint)
     middleLinearν = LinearIndices(multiPointsIndices)[middleν]
 
 
@@ -669,13 +669,11 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     end
 
 
-    timeMarching = any(a -> a === "t", string.(coordinates)) # important to know if we need to construct a time marching scheme
+    timeMarching = any(a -> a === timeDimensionString, string.(coordinates)) # important to know if we need to construct a time marching scheme
 
     @unpack middlepoint,middlepointLinear,localPointsIndices,localMaterials,localFields = utilities
 
-    # below here the last coordinate is cosidered as time
-
-    @show timeMarching
+    # the last coordinate should be cosidered as time
 
     if !timeMarching
         localPointsIndices=CartesianIndices(Tuple([car2vec(localPointsIndices[end]);1]))
@@ -712,7 +710,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         if sum(CartesianDependency) === 0 # when it is a constant
             tmpModel=Array{Any,Ndimension}(undef,(ones(Int, Ndimension)...)...)
             ModelPoints[:,iVar] = ones(Int, Ndimension)
-            tmpModel[CartesianIndex(Tuple(ones(Int, Ndimension))...)] = models[iVar]
+            tmpModel[vec2car(ones(Int, Ndimension)...)] = models[iVar]
             Models[iVar]=tmpModel
         else
             newCoords=expandVectors(size(models[iVar]),CartesianDependency)
@@ -854,8 +852,6 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     costFunctions=Array{Any,2}(undef,NtypeofExpr,NtestfunctionsInSpace)
 
     costFunctions .= 0
-    #@show semiSymbolicsOperators,localPointsIndices
-    #@show localMaterials,localFields
 
 
     for iExpr in eachindex(exprs)
@@ -863,12 +859,12 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
             for iVar in eachindex(vars)
                 spaceModelBouncedPoints=ModelPoints[1:Ndimension-1,iVar]
                 for iPoint in eachindex(νWhole)
-                    νtmpWhole=CartesianIndex(Tuple(νWhole[iPoint]))
+                    νtmpWhole=vec2car(νWhole[iPoint])
                     νtmpModel=conv.whole2model(νtmpWhole)
-                    νtmpEmpty=conv.whole2empty(νtmpWhole)
-                    #νtmpWhole,νRelative[iPoint]
+                    νtmpEmpty=conv.whole2empty(νtmpWhole)   
 
-                    νᶜtmpWhole = localPointsSpaceIndices.+ νtmpWhole .- νRelative[1:end-1,iPoint]  # this is the shift vector
+                    
+                    νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
                     νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
                     νᶜtmpEmpty = conv.whole2empty.(νᶜtmpWhole)
                     @show νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, spaceModelBouncedPoints)

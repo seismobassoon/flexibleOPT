@@ -58,7 +58,9 @@ function string_as_varname(s::AbstractString,v::Any)
 end
 
 car2vec(x::CartesianIndex) = collect(Tuple(x))
-
+carDropDim(x::CartesianIndex) = CartesianIndex(Tuple(car2vec(x)[1:end-1]))
+carAddDim(x::CartesianIndex,n::Int) = CartesianIndex(Tuple([car2vec(x);n]))
+vec2car(x::Array{Int,1})=CartesianIndex(Tuple(x))
 function myInv(a;method="LU")
     ainv=nothing
     if method==="macGPU"# this does not work for the moment
