@@ -668,9 +668,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         @error "the semi symbolic operators are not computed correctly!"
     end
 
-    @show coordinates
+
     timeMarching = any(a -> a === t, coordinates) # important to know if we need to construct a time marching scheme
-    @show timeMarching
+
     @unpack middlepoint,middlepointLinear,localPointsIndices,localMaterials,localFields = utilities
 
     # below here the last coordinate is cosidered as time
