@@ -251,7 +251,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 end
 
 function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
-    @show absorbingBoundaries, spacePointsUsed, NdimensionMinusTime
+    #@show absorbingBoundaries, spacePointsUsed, NdimensionMinusTime
     exprs = [
         :(model2whole(a::CartesianIndex) = a + CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
         :(whole2model(a::CartesianIndex) = a - CartesianIndex(Tuple(absorbingBoundaries[1, 1:NdimensionMinusTime]))),
@@ -359,8 +359,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     #region initialising, unpacking etc. 
 
 
-    
-    timeMarching = any(a -> a === t, coordinates)
+
+    timeMarching = any(a -> a === "t", string.(coordinates))
 
 
     @unpack orderBtime, orderBspace, pointsInSpace, pointsInTime = trialFunctionsCharacteristics
@@ -669,7 +669,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     end
 
 
-    timeMarching = any(a -> a === t, coordinates) # important to know if we need to construct a time marching scheme
+    timeMarching = any(a -> a === "t", string.(coordinates)) # important to know if we need to construct a time marching scheme
 
     @unpack middlepoint,middlepointLinear,localPointsIndices,localMaterials,localFields = utilities
 
