@@ -252,16 +252,16 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
     return middle_value,extreme_value
 end
 
-function spaceCoordinatesConversionfunctions(absorbingBoundaries, spacePointsUsed, NdimensionMinusTime)
+function spaceCoordinatesConversionfunctions(absorbingBoundaries, NdimensionMinusTime)
     offset_model = vec2car(absorbingBoundaries[1, 1:NdimensionMinusTime])
-    offset_empty = vec2car(spacePointsUsed)
+    #offset_empty = vec2car(spacePointsUsed)
 
     model2whole(a::CartesianIndex) = a + offset_model
     whole2model(a::CartesianIndex) = a - offset_model
-    whole2empty(a::CartesianIndex) = a + offset_empty
-    empty2whole(a::CartesianIndex) = a - offset_empty
-    model2empty(a::CartesianIndex) = whole2empty(model2whole(a))
-    empty2model(a::CartesianIndex) = whole2model(empty2whole(a))
+    #whole2empty(a::CartesianIndex) = a + offset_empty
+    #empty2whole(a::CartesianIndex) = a - offset_empty
+    #model2empty(a::CartesianIndex) = whole2empty(model2whole(a))
+    #empty2model(a::CartesianIndex) = whole2model(empty2whole(a))
 
     return (; model2whole, whole2model, whole2empty, empty2whole, model2empty, empty2model)
 end
@@ -286,6 +286,8 @@ function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     a=vec2car(avector)
     return a
 end
+
+
 
 function OPTobj(operatorConfigurations::Dict)
     # this is just a wrapper for the OPTobj function below, for DrWatson package
@@ -780,7 +782,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #since everything is super clumsy, here we make several useful functions to change one coordinate to another
     
-    conv=spaceCoordinatesConversionfunctions(absorbingBoundaries[:,1:end-1], spacePointsUsed, Ndimension-1)
+    conv=spaceCoordinatesConversionfunctions(absorbingBoundaries[:,1:end-1], Ndimension-1)
 
     #endregion 
 
@@ -865,19 +867,19 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                 for iPoint in eachindex(νWhole)
                     νtmpWhole=vec2car(νWhole[iPoint])
                     νtmpModel=conv.whole2model(νtmpWhole)
-                    νtmpEmpty=conv.whole2empty(νtmpWhole)   
-
+                    #νtmpEmpty=conv.whole2empty(νtmpWhole)   
                     
                     νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
                     νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
-                    νᶜtmpEmpty = conv.whole2empty.(νᶜtmpWhole)
+                    #νᶜtmpEmpty = conv.whole2empty.(νᶜtmpWhole)
                     
                     # model parameters should be bounced at the whole region limits
                     νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
 
                     # field values are defined only at the whole region and not at the Empty
+                    #replace!(x -> x>0.2 ? missing : x, Array{Union{Float64, Missing}}(A) )
+                    #replace!(x -> )
                     
-
                     
                 end
             end
