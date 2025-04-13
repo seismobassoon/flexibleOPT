@@ -287,6 +287,10 @@ function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     return a
 end
 
+function ReplacerHorsLimiteParMissing(a::Array{CartesianIndex,1})
+    @show a
+end
+
 
 
 function OPTobj(operatorConfigurations::Dict)
@@ -876,6 +880,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     # model parameters should be bounced at the whole region limits
                     νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
 
+                    νᶜtmpWholeMissing = ReplacerHorsLimiteParMissing(νᶜtmpWhole,PointsSpace[end])
                     # field values are defined only at the whole region and not at the Empty
                     #replace!(x -> x>0.2 ? missing : x, Array{Union{Float64, Missing}}(A) )
                     #replace!(x -> )
