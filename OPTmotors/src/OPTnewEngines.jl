@@ -617,15 +617,14 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
 end
 
-function makeCompleteCostFunctions(operators)
-    # This is a kind of wrapper to read a set of semi-symbolic operators to numerically implement them
+function makeCompleteCostFunctions(concreteModelParameters::Dict)
+    # This is a kind of big wrapper to construct an explicit numerical Cost functions to be minimised during the simulation
 
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources= operatorConfigurations
-    exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-
+    @unpack operatorConfigurations, modelPoints = concreteModelParameters
+    operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
     operators=operators["operators"]
     operatorPDE,operatorForce,eqInfo = operators
@@ -633,6 +632,16 @@ function makeCompleteCostFunctions(operators)
 
     AjiννᶜU,utilities=operatorPDE
     Γg,utilitiesForce=operatorForce
+
+    constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
+    if IneedExternalSources 
+        # constructingEquations(...) # right-hand side genre sparse or not etc.
+        # here we recycle constructingEquations if the source terms are everywhere in the domain
+        #    otherwise another function to use Γg that is applied in a sparse way
+
+    end
+
+    return utilities
 
 end
 

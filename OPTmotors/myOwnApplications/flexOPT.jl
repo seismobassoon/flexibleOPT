@@ -109,7 +109,7 @@ models=push!(models, (model .* 0.5 .+ 2))
 
 @show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
-concreteModelParameters = @strdict famousEquationType Δnum IneedExternalSources modelPoints
+concreteModelParameters = @strdict operatorConfigurations modelPoints
 
 #endregion
 
@@ -121,20 +121,10 @@ concreteModelParameters = @strdict famousEquationType Δnum IneedExternalSources
 #region OPT symbolic derivation of objective functions to be minimised
 
 
-operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
-makeCompleteCostFunctions(operators,concreteModelParameters)
+
+produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
 
 
-
-
-
-constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
-if IneedExternalSources 
-    # constructingEquations(...) # right-hand side genre sparse or not etc.
-    # here we recycle constructingEquations if the source terms are everywhere in the domain
-    #    otherwise another function to use Γg that is applied in a sparse way
-
-end
 
 
 
