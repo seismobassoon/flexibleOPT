@@ -287,8 +287,6 @@ function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     return a
 end
 
-
-
 function OPTobj(operatorConfigurations::Dict)
     # this is just a wrapper for the OPTobj function below, for DrWatson package
     @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources= operatorConfigurations
@@ -766,16 +764,16 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
  
     # we need to put the left and right regions in order that centre ν configuration can pass
 
-    emptyRegionPointsSpace=wholeRegionPointsSpace.+ 2 .* spacePointsUsed
+    #emptyRegionPointsSpace=wholeRegionPointsSpace.+ 2 .* spacePointsUsed
 
-    場dummy=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
+    #場dummy=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
     場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
 
     for it in 1:timePointsUsedForOneStep
         for iField in eachindex(fields)
-            newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
+            #newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
             newstring=split(string(fields[iField]),"(")[1]*"_mod"
-            場dummy[iField,it]=string_as_varname(newstring_dummy, Array{Any,Ndimension-1}(undef,Tuple(emptyRegionPointsSpace)))
+            #場dummy[iField,it]=string_as_varname(newstring_dummy, Array{Any,Ndimension-1}(undef,Tuple(emptyRegionPointsSpace)))
             場[iField,it]=string_as_varname(newstring, Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)))
         end
     end
@@ -858,37 +856,68 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     costFunctions=Array{Any,2}(undef,NtypeofExpr,NtestfunctionsInSpace)
 
     @show semiSymbolicsOperators
-    @show localMaterials
+    @show localMaterials[1,15],localFields,size(localFields)
+    @show Models[1][10,15,1]
 
-    for iTestFunctions in eachindex(NtestfunctionsInSpace)
-        iPoint = iTestFunctions # We need to be careful that this can be no more true for different basis functions other than linear B-spline
+    for iTestFunctions in eachindex(νWhole)
+        # here each test function is connected to one ν point 
+        # We need to be careful that this can be no more true for different basis functions other than linear B-spline
+        iPoint = iTestFunctions 
         νtmpWhole=vec2car(νWhole[iPoint])
+        # be careful with the two lines above, they are based on the assumption that each test function is linked to one collocated point
+
 
         #νtmpModel=conv.whole2model(νtmpWhole)
         νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
         νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
 
-        for iExpr in eachindex(exprs)
+        # examine νᶜtmpWhole if it is out of the range 
 
-            tmpCostFunction = 0
+
+
+        for iExpr in eachindex(exprs)
 
             tmpMapping=Dict()
 
-            for iVar in eachindex(vars)
-                spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
-                # model parameters should be bounced at the whole region limits
-                νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
 
-
-            end
-
-
-
-        
             for iT in 1:timePointsUsedForOneStep
                 
+                for iVar in eachindex(vars)
                     
-                   
+                    spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
+
+                    if ModelPoints[end,iVar] > 1
+                        iiT=iT
+                    else
+                        iiT = 1
+                    end
+
+
+                    # model parameters should be bounced at the whole region limits
+                    νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
+                    for jPoint in eachindex(νᶜtmpWhole)
+                        jPointT=carAddDim(jPoint,iT)
+                        linearjPointT=LinearIndices(localPointsIndices)[jPointT]
+                        tmpMapping[localMaterials[iVar,linearjPointT]] = Models[iVar][carAddDim(νᶜtmpModelTruncated[jPoint],iiT)]
+                        
+                    end
+
+                end
+                for jPoint in eachindex(νᶜtmpWhole)
+                    jPointT=carAddDim(jPoint,iT)
+                    linearjPointT=LinearIndices(localPointsIndices)[jPointT]
+                    for iField in eachindex(fields)
+                        if jPoint >=vec2car(νWhole[1]) && jPoint <= vec2car(νWhole[end])
+                            @show localFields[linearjPointT,iField]
+                            @show jPoint
+                            @show (場[iField,iT])[1,1]
+                            tmpMapping[localFields[linearjPointT,iField]] = 場[iField,iT][jPoint]
+                        else
+                            tmpMapping[localFields[linearjPointT,iField]]=0.
+                            @show jPoint, νWhole[1],νWhole[end]
+                        end
+                    end
+                end
 
                         
 
@@ -904,12 +933,12 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                
             end
 
-            costFunctions[iExpr,iTestFunctions]=tmpCostFunction
+            costFunctions[iExpr,iTestFunctions]=substitute(semiSymbolicsOperators[iExpr],tmpMapping)
 
         end
     end
 
-
+    @show costFunctions
 
     #endregion
 
