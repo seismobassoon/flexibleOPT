@@ -862,7 +862,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     for iTestFunctions in eachindex(NtestfunctionsInSpace)
         iPoint = iTestFunctions # We need to be careful that this can be no more true for different basis functions other than linear B-spline
         νtmpWhole=vec2car(νWhole[iPoint])
-        
+
         #νtmpModel=conv.whole2model(νtmpWhole)
         νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
         νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
@@ -871,10 +871,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
             tmpCostFunction = 0
 
+            tmpMapping=Dict()
+
             for iVar in eachindex(vars)
                 spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
                 # model parameters should be bounced at the whole region limits
                 νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
+                
 
             end
 
