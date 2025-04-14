@@ -858,6 +858,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     costFunctions=Array{Any,2}(undef,NtypeofExpr,NtestfunctionsInSpace)
 
     @show semiSymbolicsOperators
+    @show localMaterials
 
     for iTestFunctions in eachindex(NtestfunctionsInSpace)
         iPoint = iTestFunctions # We need to be careful that this can be no more true for different basis functions other than linear B-spline
@@ -877,7 +878,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                 spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
                 # model parameters should be bounced at the whole region limits
                 νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
-                
+
 
             end
 
