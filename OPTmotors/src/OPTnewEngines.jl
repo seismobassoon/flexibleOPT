@@ -857,26 +857,30 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     costFunctions=Array{Any,2}(undef,NtypeofExpr,NtestfunctionsInSpace)
 
-    costFunctions .= 0
+    @show semiSymbolicsOperators
 
     for iTestFunctions in eachindex(NtestfunctionsInSpace)
         iPoint = iTestFunctions # We need to be careful that this can be no more true for different basis functions other than linear B-spline
         νtmpWhole=vec2car(νWhole[iPoint])
-        νtmpModel=conv.whole2model(νtmpWhole)
+        
+        #νtmpModel=conv.whole2model(νtmpWhole)
         νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
         νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
 
+        for iExpr in eachindex(exprs)
 
-        for iVar in eachindex(vars)
-            spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
-            # model parameters should be bounced at the whole region limits
-            νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
+            tmpCostFunction = 0
 
-        end
+            for iVar in eachindex(vars)
+                spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
+                # model parameters should be bounced at the whole region limits
+                νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
+
+            end
+
 
 
         
-        for iExpr in eachindex(exprs)
             for iT in 1:timePointsUsedForOneStep
                 
                     
@@ -893,8 +897,11 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                         
                         
                 
-                end
+               
             end
+
+            costFunctions[iExpr,iTestFunctions]=tmpCostFunction
+
         end
     end
 
