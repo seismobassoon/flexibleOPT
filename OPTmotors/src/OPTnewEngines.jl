@@ -623,7 +623,22 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, modelPoints = concreteModelParameters
+    @unpack famousEquationType, Δnum, Nt, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models = concreteModelParameters
+
+
+    # here we need to give a numerical values 
+
+    #models = ((model.*0.5.+2), (1))
+
+    models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
+    models=push!(models, (model .* 0.5 .+ 2))
+    # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
+
+    modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+
+
+
+
     operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
     operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
