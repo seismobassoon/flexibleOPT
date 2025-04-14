@@ -617,6 +617,25 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
 end
 
+function makeCompleteCostFunctions(operators)
+    # This is a kind of wrapper to read a set of semi-symbolic operators to numerically implement them
+
+    #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
+    
+
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources= operatorConfigurations
+    exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+
+
+    operators=operators["operators"]
+    operatorPDE,operatorForce,eqInfo = operators
+    exprs,fields,vars,extexprs,extfields,extvars,coordinates=eqInfo
+
+    AjiννᶜU,utilities=operatorPDE
+    Γg,utilitiesForce=operatorForce
+
+end
+
 function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
 
     #todo list
@@ -772,7 +791,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     for it in 1:timePointsUsedForOneStep
         for iField in eachindex(fields)
             #newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
-            newstring=split(string(fields[iField]),"(")[1]*"_mod"
+            newstring=split(string(fields[iField]),"(")[1]*"_mod"*"_t="*string(it)
             場[iField,it]=Symbolics.variables(Symbol(newstring),Base.OneTo.(Tuple(wholeRegionPointsSpace))...)
             #場dummy[iField,it]=string_as_varname(newstring_dummy, Array{Any,Ndimension-1}(undef,Tuple(emptyRegionPointsSpace)))
             #場[iField,it]=Symbolics.variables(Symbol(newstring),
@@ -921,7 +940,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                             tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
                         else
                             tmpMapping[localFields[linearjPointTLocal,iField]]=0.
-                            jPoint, νWhole[1],νWhole[end]
+                            #jPoint, νWhole[1],νWhole[end]
                         end
                     end
                 end
@@ -940,7 +959,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                
             end
 
-            @show costFunctions[iExpr,iTestFunctions]=substitute(semiSymbolicsOperators[iExpr],tmpMapping)
+            costFunctions[iExpr,iTestFunctions]=substitute(semiSymbolicsOperators[iExpr],tmpMapping)
 
         end
     end
@@ -949,13 +968,6 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #endregion
 
-        
-        
-
-
-    
-
-
-    #endregion
+    return costFunctions
 
 end

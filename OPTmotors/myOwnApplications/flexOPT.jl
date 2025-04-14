@@ -74,7 +74,7 @@ end
 
 
 Δnum = (1.0,1.0,1.0) # this should be in the same order as coordinates 
-Nt= 120
+
 
 
 IneedExternalSources = true
@@ -95,27 +95,9 @@ operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspac
 
 
 
-#region Main programme
+#region model configuration
 
-#region OPT symbolic derivation of objective functions to be minimised
-
-
-f,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
-#operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
-operators=f["operators"]
-operatorPDE,operatorForce,eqInfo = operators
-exprs,fields,vars,extexprs,extfields,extvars,coordinates=eqInfo
-
-AjiννᶜU,utilities=operatorPDE
-Γg,utilitiesForce=operatorForce
-#endregion
-
-#region je râle, je râle
-#
-# if one wants to work with different Δvalues, OPTobj should be called each time
-# this is a bit of frustration for me due to the incapability of Symbolics to deal with stupid simplification 
-#
-#endregion
+Nt= 120
 
 # here we need to give a numerical values 
 
@@ -125,9 +107,26 @@ models=[] # you might need to make this empty tuple first, otherwise one-member 
 models=push!(models, (model .* 0.5 .+ 2))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
-
-
 @show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+
+concreteModelParameters = @strdict famousEquationType Δnum IneedExternalSources modelPoints
+
+#endregion
+
+
+
+
+#region Main programme
+
+#region OPT symbolic derivation of objective functions to be minimised
+
+
+operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
+makeCompleteCostFunctions(operators,concreteModelParameters)
+
+
+
+
 
 constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
 if IneedExternalSources 
@@ -136,6 +135,17 @@ if IneedExternalSources
     #    otherwise another function to use Γg that is applied in a sparse way
 
 end
+
+
+
+#region je râle, je râle
+#
+# if one wants to work with different Δvalues, OPTobj should be called each time
+# this is a bit of frustration for me due to the incapability of Symbolics to deal with stupid simplification 
+#
+#endregion
+
+
 
 
 #constructingEquations(AjiννᶜU,)
