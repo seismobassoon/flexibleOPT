@@ -623,7 +623,8 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack operatorConfigurations, modelPoints = concreteModelParameters
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, modelPoints = concreteModelParameters
+    operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
     operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
     operators=operators["operators"]
@@ -633,7 +634,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     AjiννᶜU,utilities=operatorPDE
     Γg,utilitiesForce=operatorForce
 
-    constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
+    costfunctions = constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
     if IneedExternalSources 
         # constructingEquations(...) # right-hand side genre sparse or not etc.
         # here we recycle constructingEquations if the source terms are everywhere in the domain
@@ -641,7 +642,8 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
     end
 
-    return utilities
+    numOperators=(costfunctions=costfunctions)
+    return @strdict(numOperators)
 
 end
 

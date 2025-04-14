@@ -30,6 +30,8 @@ using BenchmarkTools
 famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
+modelName="marmousi"
+
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
 model =nothing
 #endregion
@@ -87,7 +89,7 @@ orderBspace=1
 pointsInSpace=2
 pointsInTime=2
 
-operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
+#operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
 
 
 
@@ -109,7 +111,7 @@ models=push!(models, (model .* 0.5 .+ 2))
 
 @show modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
 
-concreteModelParameters = @strdict operatorConfigurations modelPoints
+concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName modelPoints
 
 #endregion
 
@@ -122,7 +124,7 @@ concreteModelParameters = @strdict operatorConfigurations modelPoints
 
 
 
-produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
+f,file=produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
 
 
 
