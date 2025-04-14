@@ -287,10 +287,6 @@ function BouncingCoordinates(a::CartesianIndex,PointsUsed)
     return a
 end
 
-function ReplacerHorsLimiteParMissing(a::Array{CartesianIndex,1})
-    @show a
-end
-
 
 
 function OPTobj(operatorConfigurations::Dict)
@@ -863,29 +859,40 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     costFunctions .= 0
 
+    for iTestFunctions in eachindex(NtestfunctionsInSpace)
+        iPoint = iTestFunctions # We need to be careful that this can be no more true for different basis functions other than linear B-spline
+        νtmpWhole=vec2car(νWhole[iPoint])
+        νtmpModel=conv.whole2model(νtmpWhole)
+        νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
+        νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
 
-    for iExpr in eachindex(exprs)
-        for iT in 1:timePointsUsedForOneStep
-            for iVar in eachindex(vars)
-                spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
-                for iPoint in eachindex(νWhole)
-                    νtmpWhole=vec2car(νWhole[iPoint])
-                    νtmpModel=conv.whole2model(νtmpWhole)
-                    #νtmpEmpty=conv.whole2empty(νtmpWhole)   
-                    
-                    νᶜtmpWhole = localPointsSpaceIndices .+ (νtmpWhole - carDropDim(νRelative[iPoint])) # this is the shift vector
-                    νᶜtmpModel = conv.whole2model.(νᶜtmpWhole)
-                    #νᶜtmpEmpty = conv.whole2empty.(νᶜtmpWhole)
-                    
-                    # model parameters should be bounced at the whole region limits
-                    νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
 
-                    νᶜtmpWholeMissing = ReplacerHorsLimiteParMissing(νᶜtmpWhole,PointsSpace[end])
-                    # field values are defined only at the whole region and not at the Empty
-                    #replace!(x -> x>0.2 ? missing : x, Array{Union{Float64, Missing}}(A) )
-                    #replace!(x -> )
+        for iVar in eachindex(vars)
+            spaceModelBouncedPoints=ModelPoints[1:end-1,iVar]
+            # model parameters should be bounced at the whole region limits
+            νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
+
+        end
+
+
+        
+        for iExpr in eachindex(exprs)
+            for iT in 1:timePointsUsedForOneStep
+                
                     
-                    
+                   
+
+                        
+
+                        #場[iField,it]=string_as_varname(newstring, Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)))
+                        #
+                        #νᶜtmpWholeMissing = ReplacerHorsLimiteParMissing(νᶜtmpWhole,PointsSpace[end])
+                        # field values are defined only at the whole region and not at the Empty
+                        #replace!(x -> x>0.2 ? missing : x, Array{Union{Float64, Missing}}(A) )
+                        #replace!(x -> )
+                        
+                        
+                
                 end
             end
         end
