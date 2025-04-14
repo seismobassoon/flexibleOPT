@@ -773,8 +773,10 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         for iField in eachindex(fields)
             #newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
             newstring=split(string(fields[iField]),"(")[1]*"_mod"
+            場[iField,it]=Symbolics.variables(Symbol(newstring),Base.OneTo.(Tuple(wholeRegionPointsSpace))...)
             #場dummy[iField,it]=string_as_varname(newstring_dummy, Array{Any,Ndimension-1}(undef,Tuple(emptyRegionPointsSpace)))
-            場[iField,it]=string_as_varname(newstring, Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)))
+            #場[iField,it]=Symbolics.variables(Symbol(newstring),
+            #string_as_varname(newstring, Array{Any,Ndimension-1}(empty,Tuple(wholeRegionPointsSpace)))
         end
     end
 
@@ -855,9 +857,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     costFunctions=Array{Any,2}(undef,NtypeofExpr,NtestfunctionsInSpace)
 
-    @show semiSymbolicsOperators
-    @show localMaterials[1,15],localFields,size(localFields)
-    @show Models[1][10,15,1]
+    #@show semiSymbolicsOperators
+    #@show localMaterials[1,15],localFields,size(localFields)
+    #@show Models[1][10,15,1]
 
     for iTestFunctions in eachindex(νWhole)
         # here each test function is connected to one ν point 
@@ -895,26 +897,31 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
                     # model parameters should be bounced at the whole region limits
                     νᶜtmpModelTruncated = BouncingCoordinates.(νᶜtmpModel, Ref(spaceModelBouncedPoints))
-                    for jPoint in eachindex(νᶜtmpWhole)
-                        jPointT=carAddDim(jPoint,iT)
-                        linearjPointT=LinearIndices(localPointsIndices)[jPointT]
-                        tmpMapping[localMaterials[iVar,linearjPointT]] = Models[iVar][carAddDim(νᶜtmpModelTruncated[jPoint],iiT)]
+
+                    for jPoint in νᶜtmpWhole
+                        jPointLocal = jPoint - νtmpWhole + carDropDim(νRelative[iPoint])
+                        jPointTLocal = carAddDim(jPointLocal,iT)
+                        linearjPointTLocal=LinearIndices(localPointsIndices)[jPointTLocal]
+              
+                        tmpMapping[localMaterials[iVar,linearjPointTLocal]] = Models[iVar][carAddDim(νᶜtmpModelTruncated[jPointLocal],iiT)]
                         
                     end
 
                 end
-                for jPoint in eachindex(νᶜtmpWhole)
-                    jPointT=carAddDim(jPoint,iT)
-                    linearjPointT=LinearIndices(localPointsIndices)[jPointT]
+
+                for jPoint in νᶜtmpWhole
+                    #@show iPoint, jPoint
+                    jPointLocal = jPoint - νtmpWhole + carDropDim(νRelative[iPoint])
+                    jPointTLocal = carAddDim(jPointLocal,iT)
+                    linearjPointTLocal=LinearIndices(localPointsIndices)[jPointTLocal]
+                    #jPointT=carAddDim(jPoint,iT)
+                    #linearjPointT=LinearIndices(localPointsIndices)[jPointT]
                     for iField in eachindex(fields)
-                        if jPoint >=vec2car(νWhole[1]) && jPoint <= vec2car(νWhole[end])
-                            @show localFields[linearjPointT,iField]
-                            @show jPoint
-                            @show (場[iField,iT])[1,1]
-                            tmpMapping[localFields[linearjPointT,iField]] = 場[iField,iT][jPoint]
+                        if is_all_less_than_or_equal(vec2car(νWhole[1]),jPoint) && is_all_less_than_or_equal(jPoint,vec2car(νWhole[end]))
+                            tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
                         else
-                            tmpMapping[localFields[linearjPointT,iField]]=0.
-                            @show jPoint, νWhole[1],νWhole[end]
+                            tmpMapping[localFields[linearjPointTLocal,iField]]=0.
+                            jPoint, νWhole[1],νWhole[end]
                         end
                     end
                 end
@@ -933,12 +940,12 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                
             end
 
-            costFunctions[iExpr,iTestFunctions]=substitute(semiSymbolicsOperators[iExpr],tmpMapping)
+            @show costFunctions[iExpr,iTestFunctions]=substitute(semiSymbolicsOperators[iExpr],tmpMapping)
 
         end
     end
 
-    @show costFunctions
+    #@show costFunctions
 
     #endregion
 

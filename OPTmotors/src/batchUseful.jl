@@ -62,6 +62,10 @@ carDropDim(x::CartesianIndex) = CartesianIndex(Tuple(car2vec(x)[1:end-1]))
 carAddDim(x::CartesianIndex,n::Int) = CartesianIndex(Tuple([car2vec(x);n]))
 vec2car(x::Array{Int})=CartesianIndex(Tuple(vec(x))) 
 
+function is_all_less_than_or_equal(c1::CartesianIndex, c2::CartesianIndex)
+    all(x -> x[1] ≤ x[2], zip(Tuple(c1), Tuple(c2)))
+end
+
 function myInv(a;method="LU")
     ainv=nothing
     if method==="macGPU"# this does not work for the moment
