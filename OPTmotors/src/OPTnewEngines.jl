@@ -680,7 +680,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
         if sourceRegionInModelSpace !== nothing # sparse source region in space
             rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce sourceRegionInModelSpace
-            produce_or_load(constructingNumericalDiscretisedEquationsSourceConcentrated,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
+            produce_or_load(constructingNumericalDiscretisedEquationsMasked,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         else
             rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce
             produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
@@ -698,7 +698,9 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
 end
 
-function constructingNumericalDiscretisedEquationsSourceConcentrated(config::Dict)
+function constructingNumericalDiscretisedEquationsMasked(config::Dict)
+    @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities, maskedRegion = config
+
 
 
 end
@@ -718,7 +720,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     # 
     # this function is tooooooo complicated! I think I can simplify very much this!
     #
-    #  need to work on the bc (else clause )
+    #  need to work on the bc, same like the masked thing (limited region of source)
+    #
+    # absorbing boundaries : I think we can already put the bc inside the numerical operators but be careful with the time marching: search for weightingCerjean
     # 
     # need extend to 4 points with the same test functions (3 points) -> staggered grid
     #  
@@ -894,7 +898,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     for iPoint in eachindex(νWhole)
 
-        νWhole[iPoint] = car2vec(PointsSpace[iPoint]) # this should be not true for higher B-spline test functions
+        νWhole[iPoint] = PointsSpace[iPoint] # this should be not true for higher B-spline test functions
 
     end
 
@@ -960,7 +964,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         # here each test function is connected to one ν point 
         # We need to be careful that this can be no more true for different basis functions other than linear B-spline
         iPoint = iTestFunctions 
-        νtmpWhole=vec2car(νWhole[iPoint])
+        νtmpWhole=νWhole[iPoint]
         # be careful with the two lines above, they are based on the assumption that each test function is linked to one collocated point
 
 
@@ -1012,8 +1016,20 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     #jPointT=carAddDim(jPoint,iT)
                     #linearjPointT=LinearIndices(localPointsIndices)[jPointT]
                     for iField in eachindex(fields)
-                        if is_all_less_than_or_equal(vec2car(νWhole[1]),jPoint) && is_all_less_than_or_equal(jPoint,vec2car(νWhole[end]))
+                        if is_all_less_than_or_equal(CartesianIndex(ones(Int, Ndimension-1)...),whole2model(jPoint)) && is_all_less_than_or_equal(whole2model(jPoint),vec2car(ModelPoints[1:end-1]))
+                            # when it is inside the model domain box
                             tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
+
+                        elseif is_all_less_than_or_equal(νWhole[1],jPoint) && is_all_less_than_or_equal(jPoint,νWhole[end])
+                            # if it is in the absorbing boundary zones we apply a simple Cerjean
+                            if iT === timePointsUsedForOneStep # the last one (the future) will be using un-weighted operators
+                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
+                            else
+                                weightingCerjean = 1.0
+                                #distance = 
+                                #weighting  = 
+                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*weightingCerjean
+                            end
                         else
                             tmpMapping[localFields[linearjPointTLocal,iField]]=0.
                             #jPoint, νWhole[1],νWhole[end]
