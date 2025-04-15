@@ -668,12 +668,23 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsRHS .= 0.
    
 
+
+
     if IneedExternalSources 
         # constructingEquations(...) # right-hand side genre sparse or not etc.
         # here we recycle constructingEquations if the source terms are everywhere in the domain
         #    otherwise another function to use Γg that is applied in a sparse way
+
+
+        if IsSourceConcentrated
+
+        end
+
+
+        rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce
+
         @show typeof(costfunctionsRHS),size(costfunctionsRHS)
-        @show "hello "
+
     end
     costfunctions=costfunctionsLHS-costfunctionsRHS
     numOperators=(costfunctions=costfunctions)
