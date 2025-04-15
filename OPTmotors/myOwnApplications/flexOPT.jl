@@ -89,9 +89,6 @@ orderBspace=1
 pointsInSpace=2
 pointsInTime=2
 
-#operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
-
-
 
 #endregion
 
@@ -99,12 +96,9 @@ pointsInTime=2
 
 #region model configuration
 
-concreteModelParameters = @strdict famousEquationType Δnum Nt orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models
-
-# I know, I know, Nt is not very important to generate the numerical operators: I need to put Nt somewhere else ...
+concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models
 
 #endregion
-
 
 
 
@@ -115,7 +109,7 @@ concreteModelParameters = @strdict famousEquationType Δnum Nt orderBtime orderB
 f,file=produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
 
 
-
+Nt = 120
 
 
 #region je râle, je râle

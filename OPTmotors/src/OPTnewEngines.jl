@@ -623,7 +623,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack famousEquationType, Δnum, Nt, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models = concreteModelParameters
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models = concreteModelParameters
 
 
     # here we need to give a numerical values 
@@ -634,10 +634,15 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     models=push!(models, (model .* 0.5 .+ 2))
     # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
-    modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
-
-
-
+    # put fake Nt here
+    
+    timeMarching = any(a -> a === timeDimensionString, string.(coordinates)) 
+    if timeMarching
+        Nt = pointsInTime+1
+        modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+    else
+        modelPoints = (size(model))
+    end
 
     operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
     operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
@@ -658,7 +663,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsRHS = costfunctions
 
     costfunctionsRHS = similar(costfunctionsLHS)
-    @show costfunctionsRHS .= 0.
+    costfunctionsRHS .= 0.
    
 
     if IneedExternalSources 
@@ -666,10 +671,11 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
         # here we recycle constructingEquations if the source terms are everywhere in the domain
         #    otherwise another function to use Γg that is applied in a sparse way
         @show typeof(costfunctionsRHS)
+        @show "hello "
     end
-    #costfunctions=costfunctionsLHS-costfunctionsRHS
-    #numOperators=(costfunctions=costfunctions)
-    #return @strdict(numOperators)
+    costfunctions=costfunctionsLHS-costfunctionsRHS
+    numOperators=(costfunctions=costfunctions)
+    return @strdict(numOperators)
 
 end
 
