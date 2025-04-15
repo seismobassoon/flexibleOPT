@@ -636,11 +636,11 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
     # put fake Nt here
-    
+    fakeNt = 1
     timeMarching = any(a -> a === timeDimensionString, string.(coordinates)) 
     if timeMarching
-        Nt = pointsInTime+1
-        modelPoints = (size(model)...,Nt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+        fakeNt = pointsInTime+1
+        modelPoints = (size(model)...,fakeNt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
     else
         modelPoints = (size(model))
     end
@@ -657,8 +657,10 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
 
     lhsConfigurations = @strdict AjiννᶜU coordinates modelName models famousEquationType modelPoints utilities
-    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters))) # left-hand side, which is far more recyclable than r.h.s.
+    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters))) 
+    # left-hand side, which is far more recyclable than r.h.s.
     
+
     operators=numOperators["numOperators"]
     costfunctions=operators
 
@@ -667,7 +669,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsRHS = similar(costfunctionsLHS)
     costfunctionsRHS .= 0.
    
-
+    sourceRegionInModelSpace = 
 
 
     if IneedExternalSources 
@@ -676,12 +678,16 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
         #    otherwise another function to use Γg that is applied in a sparse way
 
 
-        if IsSourceConcentrated
-
+        if sourceRegionInModelSpace !== nothing # sparse source region in space
+            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce sourceRegionInModelSpace
+            produce_or_load(constructingNumericalDiscretisedEquationsSourceConcentrated,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
+        else
+            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce
+            produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         end
 
 
-        rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce
+        
 
         @show typeof(costfunctionsRHS),size(costfunctionsRHS)
 
@@ -689,6 +695,11 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctions=costfunctionsLHS-costfunctionsRHS
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
+
+end
+
+function constructingNumericalDiscretisedEquationsSourceConcentrated(config::Dict)
+
 
 end
 
