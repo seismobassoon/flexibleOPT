@@ -670,7 +670,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsRHS = similar(costfunctionsLHS)
     costfunctionsRHS .= 0.
    
-    maskedRegion = 
+    maskedRegionForSources =
 
 
     if IneedExternalSources 
@@ -700,6 +700,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 end
 
 function constructingNumericalDiscretisedEquationsMasked(config::Dict)
+     # this technique should be used for boundary conditions, overlapped region, limited region of external sources etc.
     @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities, maskedRegion = config
 
 
