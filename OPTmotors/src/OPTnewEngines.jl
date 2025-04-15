@@ -291,7 +291,7 @@ function OPTobj(operatorConfigurations::Dict)
     # this is just a wrapper for the OPTobj function below, for DrWatson package
     @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources= operatorConfigurations
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-    global ∂,∂²
+  
     trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
     @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)
     #AjiννᶜU=operatorData[1]
@@ -624,7 +624,8 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     
 
     @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models = concreteModelParameters
-
+    exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+    global ∂,∂²
 
     # here we need to give a numerical values 
 
@@ -654,16 +655,16 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     AjiννᶜU,utilities=operatorPDE
     Γg,utilitiesForce=operatorForce
 
-    lhsConfigurations = @strdict AjiννᶜU coordinates models exprs fields vars modelPoints utilities
+    lhsConfigurations = @strdict AjiννᶜU coordinates modelName models famousEquationType modelPoints utilities
     numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators")) # left-hand side, which is far more recyclable than r.h.s.
     
     operators=numOperators["numOperators"]
     costfunctions=operators
 
-    costfunctionsRHS = costfunctions
+    costfunctionsLHS = costfunctions
 
     costfunctionsRHS = similar(costfunctionsLHS)
-    costfunctionsRHS .= 0.
+    @show costfunctionsRHS .= 0.
    
 
     if IneedExternalSources 
@@ -681,8 +682,9 @@ end
 
 function constructingNumericalDiscretisedEquations(config::Dict)
     # just a wrapper
-    @unpack AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities = config
-    constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
+    @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities = config
+    exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+    costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
 end
