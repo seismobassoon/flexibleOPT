@@ -655,8 +655,9 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     AjiννᶜU,utilities=operatorPDE
     Γg,utilitiesForce=operatorForce
 
+
     lhsConfigurations = @strdict AjiννᶜU coordinates modelName models famousEquationType modelPoints utilities
-    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators")) # left-hand side, which is far more recyclable than r.h.s.
+    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters))) # left-hand side, which is far more recyclable than r.h.s.
     
     operators=numOperators["numOperators"]
     costfunctions=operators
@@ -664,14 +665,14 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsLHS = costfunctions
 
     costfunctionsRHS = similar(costfunctionsLHS)
-    @show costfunctionsRHS .= 0.
+    costfunctionsRHS .= 0.
    
 
     if IneedExternalSources 
         # constructingEquations(...) # right-hand side genre sparse or not etc.
         # here we recycle constructingEquations if the source terms are everywhere in the domain
         #    otherwise another function to use Γg that is applied in a sparse way
-        @show typeof(costfunctionsRHS)
+        @show typeof(costfunctionsRHS),size(costfunctionsRHS)
         @show "hello "
     end
     costfunctions=costfunctionsLHS-costfunctionsRHS
