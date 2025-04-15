@@ -3,6 +3,7 @@ using Symbolics,UnPack,LinearAlgebra,DrWatson
 include("../src/batchNewSymbolics.jl")
 include("../src/batchUseful.jl")
 include("../src/batchDrWatson.jl")
+include("../src/CerjanBoundary.jl")
 
 # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
 
@@ -722,7 +723,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #
     #  need to work on the bc, same like the masked thing (limited region of source)
     #
-    # absorbing boundaries : I think we can already put the bc inside the numerical operators but be careful with the time marching: search for weightingCerjean
+    # absorbing boundaries : I think we can already put the bc inside the numerical operators but be careful with the time marching: search for weightingCerjan
     # 
     # need extend to 4 points with the same test functions (3 points) -> staggered grid
     #  
@@ -1021,14 +1022,12 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                             tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
 
                         elseif is_all_less_than_or_equal(νWhole[1],jPoint) && is_all_less_than_or_equal(jPoint,νWhole[end])
-                            # if it is in the absorbing boundary zones we apply a simple Cerjean
+                            # if it is in the absorbing boundary zones we apply a simple Cerjan
                             if iT === timePointsUsedForOneStep # the last one (the future) will be using un-weighted operators
                                 tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
                             else
-                                weightingCerjean = 1.0
-                                #distance = 
-                                #weighting  = 
-                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*weightingCerjean
+                                distance2 = distance2_point_to_box(whole2model(jPoint),CartesianIndex(ones(Int, Ndimension-1)...), vec2car(ModelPoints[1:end-1]))
+                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*CerjanBoundaryCondition(distance2)
                             end
                         else
                             tmpMapping[localFields[linearjPointTLocal,iField]]=0.

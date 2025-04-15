@@ -66,6 +66,27 @@ function is_all_less_than_or_equal(c1::CartesianIndex, c2::CartesianIndex)
     all(x -> x[1] ≤ x[2], zip(Tuple(c1), Tuple(c2)))
 end
 
+function distance2_point_to_box(p::CartesianIndex, c1::CartesianIndex, c2::CartesianIndex)
+    lower = min.(Tuple(c1), Tuple(c2))
+    upper = max.(Tuple(c1), Tuple(c2))
+    point = Tuple(p)
+
+    # For each dimension, compute distance to box surface
+    distsq = 0.0
+    for i in eachindex(point)
+        if point[i] < lower[i]
+            distsq += (lower[i] - point[i])^2
+        elseif point[i] > upper[i]
+            distsq += (point[i] - upper[i])^2
+        else
+            # inside the slab: distance = 0 for this dimension
+        end
+    end
+
+    return distsq
+end
+
+
 function myInv(a;method="LU")
     ainv=nothing
     if method==="macGPU"# this does not work for the moment
