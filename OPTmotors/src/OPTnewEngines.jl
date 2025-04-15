@@ -669,7 +669,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsRHS = similar(costfunctionsLHS)
     costfunctionsRHS .= 0.
    
-    sourceRegionInModelSpace = 
+    maskedRegion = 
 
 
     if IneedExternalSources 
