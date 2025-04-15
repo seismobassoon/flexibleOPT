@@ -110,9 +110,7 @@ concreteModelParameters = @strdict famousEquationType Δnum Nt orderBtime orderB
 
 #region Main programme
 
-#region OPT symbolic derivation of objective functions to be minimised
-
-
+#region OPT symbolic derivation of objective functions to be minimised, first semi-symbolically then numerically
 
 f,file=produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
 

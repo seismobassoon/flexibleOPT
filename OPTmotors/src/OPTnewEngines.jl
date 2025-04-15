@@ -649,17 +649,36 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     AjiννᶜU,utilities=operatorPDE
     Γg,utilitiesForce=operatorForce
 
-    costfunctions = constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0) # left-hand side
+    lhsConfigurations = @strdict AjiννᶜU coordinates models exprs fields vars modelPoints utilities
+    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators")) # left-hand side, which is far more recyclable than r.h.s.
+    
+    operators=numOperators["numOperators"]
+    costfunctions=operators
+
+    costfunctionsRHS = costfunctions
+
+    costfunctionsRHS = similar(costfunctionsLHS)
+    @show costfunctionsRHS .= 0.
+   
+
     if IneedExternalSources 
         # constructingEquations(...) # right-hand side genre sparse or not etc.
         # here we recycle constructingEquations if the source terms are everywhere in the domain
         #    otherwise another function to use Γg that is applied in a sparse way
-
+        @show typeof(costfunctionsRHS)
     end
+    #costfunctions=costfunctionsLHS-costfunctionsRHS
+    #numOperators=(costfunctions=costfunctions)
+    #return @strdict(numOperators)
 
+end
+
+function constructingNumericalDiscretisedEquations(config::Dict)
+    # just a wrapper
+    @unpack AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities = config
+    constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
-
 end
 
 function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
