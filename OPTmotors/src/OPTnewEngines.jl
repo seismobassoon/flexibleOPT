@@ -841,6 +841,11 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     if absorbingBoundaries === nothing
         wholeRegionPoints=modelPoints
         absorbingBoundaries = zeros(Int,2, Ndimension)
+    elseif absorbingBoundaries === "CerjanBoundary"
+        wholeRegionPoints=modelPoints
+        absorbingBoundaries = ones(Int,2, Ndimension-1)*CerjanGridPoints
+        absorbingBoundaries=[absorbingBoundaries; 0 0]
+        wholeRegionPoints=modelPoints.+sum(absorbingBoundaries,1) 
     else
         # absorbingBoundaries should be two column array 
         if size(absorbingBoundaries)[1] !== 2
