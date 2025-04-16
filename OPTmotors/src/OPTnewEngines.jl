@@ -670,7 +670,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsRHS = similar(costfunctionsLHS)
     costfunctionsRHS .= 0.
    
-    maskedRegionForSources =
+    maskedRegionForSources = # in Ndimension(-1) (with or without time)
 
 
     if IneedExternalSources 
