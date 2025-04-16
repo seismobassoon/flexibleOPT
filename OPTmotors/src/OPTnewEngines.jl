@@ -686,7 +686,8 @@ end
 function constructingNumericalDiscretisedEquationsMasked(config::Dict)
      # this technique should be used for boundary conditions, overlapped region, limited region of external sources etc.
     @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities, maskedRegion = config
-
+    #exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+    #costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
 
 
 end
