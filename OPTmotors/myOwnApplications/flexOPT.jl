@@ -123,7 +123,9 @@ end
 
 
 # if IneedExternalSources and if the source region is localised in space then
-maskedRegionForSourcesInSpace  = nothing # in Ndimension (or Ndimension  - 1 if timeMarching)
+maskedRegionForSourcesInSpace  = [] 
+maskedRegionForSourcesInSpace = push!(maskedRegionForSourcesInSpace, CartesianIndex(size(model).÷2))# in Ndimension (or Ndimension  - 1 if timeMarching)
+
 
 concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints maskedRegionForSourcesInSpace
 
