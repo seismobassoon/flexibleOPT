@@ -620,37 +620,17 @@ end
 
 function makeCompleteCostFunctions(concreteModelParameters::Dict)
     # This is a kind of big wrapper to construct an explicit numerical Cost functions to be minimised during the simulation
+    
 
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models = concreteModelParameters
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, maskedRegionForSourcesInSpace = concreteModelParameters
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
     global ∂,∂²
 
-    maskedRegionForSources = nothing
-    if IneedExternalSources === true
-        #maskedRegionForSources = # in Ndimension(-1) (with or without time)
-    end
 
-    # here we need to give a numerical values 
-
-    #models = ((model.*0.5.+2), (1))
-
-    models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
-    models=push!(models, (model .* 0.5 .+ 2))
-    # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
-
-    # put fake Nt here
-    fakeNt = 1
-    timeMarching = any(a -> a === timeDimensionString, string.(coordinates)) 
-    if timeMarching
-        fakeNt = pointsInTime+1
-        modelPoints = (size(model)...,fakeNt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
-    else
-        modelPoints = (size(model))
-    end
-
+    
     operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
     operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
@@ -683,8 +663,8 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
         #    otherwise another function to use Γg that is applied in a sparse way
 
 
-        if sourceRegionInModelSpace !== nothing # sparse source region in space
-            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSources
+        if maskedRegionForSourcesInSpace !== nothing # sparse source region in space
+            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace
             produce_or_load(constructingNumericalDiscretisedEquationsMasked,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         else
             rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce

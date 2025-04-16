@@ -34,6 +34,7 @@ modelName="marmousi"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
 model =nothing
+
 #endregion
 
 if modelDefinitionMethod !== nothing
@@ -80,7 +81,7 @@ end
 
 
 IneedExternalSources = true
-
+maskedRegionForSourcesInSpace = nothing
 
 #DrWatson configurations
 
@@ -93,10 +94,38 @@ pointsInTime=2
 #endregion
 
 
-
 #region model configuration
 
-concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models
+
+# here we need to give a numerical values 
+
+#models = ((model.*0.5.+2), (1))
+
+models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
+models=push!(models, (model .* 0.5 .+ 2))
+# if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
+
+# this is the real Nt 
+Nt = 120
+
+
+# put fake Nt here for quasi-numerical operator construction
+exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+
+fakeNt = 1
+timeMarching = any(a -> a === timeDimensionString, string.(coordinates)) 
+if timeMarching
+    fakeNt = pointsInTime+1
+    modelPoints = (size(model)...,fakeNt) # Nx, Ny etc thing. Nt is also mentioned and it should be the last element!
+else
+    modelPoints = (size(model))
+end
+
+
+# if IneedExternalSources and if the source region is localised in space then
+maskedRegionForSourcesInSpace  = nothing # in Ndimension (or Ndimension  - 1 if timeMarching)
+
+concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints maskedRegionForSourcesInSpace
 
 #endregion
 
@@ -109,7 +138,7 @@ concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspa
 f,file=produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
 
 
-Nt = 120
+
 
 
 #region je râle, je râle
