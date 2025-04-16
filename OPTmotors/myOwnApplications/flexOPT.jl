@@ -124,7 +124,7 @@ end
 
 # if IneedExternalSources and if the source region is localised in space then
 maskedRegionForSourcesInSpace  = [] 
-maskedRegionForSourcesInSpace = push!(maskedRegionForSourcesInSpace, vec2car(modelPoints[1:end-1].÷2))# in Ndimension (or Ndimension  - 1 if timeMarching)
+maskedRegionForSourcesInSpace = push!(maskedRegionForSourcesInSpace, CartesianIndex(modelPoints[1:end-1].÷2))# in Ndimension (or Ndimension  - 1 if timeMarching)
 # in this example, I put a point source at the centre of the model space
 
 
