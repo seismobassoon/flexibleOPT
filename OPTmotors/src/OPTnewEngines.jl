@@ -608,7 +608,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
     utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
     if testOnlyCentre
-        smallAjiννᶜU = AjiννᶜU[middleLinearν,:]
+        smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
+        smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
         return smallAjiννᶜU,utilities
     else
         return AjiννᶜU,utilities
@@ -687,7 +688,7 @@ function constructingNumericalDiscretisedEquationsMasked(config::Dict)
      # this technique should be used for boundary conditions, overlapped region, limited region of external sources etc.
     @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities, maskedRegion = config
     #exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-    #costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
+    #costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,fields,vars,modelPoints,utilities;initialCondition=0.0)
 
 
 end
@@ -696,12 +697,12 @@ function constructingNumericalDiscretisedEquations(config::Dict)
     # just a wrapper
     @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities = config
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-    costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,exprs,fields,vars,modelPoints,utilities;initialCondition=0.0)
+    costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,fields,vars,modelPoints,utilities;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
 end
 
-function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,exprs,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
+function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
 
     #todo list
     # 
@@ -782,7 +783,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     NtypeofMaterialVariables = length(vars)
     NtypeofFields = length(fields)
-    NtypeofExpr = length(exprs)
+    NtypeofExpr = size(semiSymbolicsOperators)[end]
 
     Models=Array{Any,1}(undef,NtypeofMaterialVariables)
     ModelPoints=Array{Int,2}(undef,Ndimension,NtypeofMaterialVariables)
@@ -968,7 +969,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
 
 
-        for iExpr in eachindex(exprs)
+        for iExpr in eachindex(semiSymbolicsOperators[1,:])
 
             tmpMapping=Dict()
 
@@ -1040,9 +1041,14 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                 
                
             end
-
-            costFunctions[iExpr,iTestFunctions]=substitute(semiSymbolicsOperators[iExpr],tmpMapping)
-
+            tmpAddress = nothing
+            if testOnlyCentre
+                tmpAddress = 1
+            else
+                tmpAddress=carDropDim(νRelative[iPoint])
+            end
+            costFunctions[iExpr,iTestFunctions]=substitute(semiSymbolicsOperators[tmpAddress,iExpr],tmpMapping)
+            # be careful that semiSymbolicsOperators could be 2D
         end
     end
 
