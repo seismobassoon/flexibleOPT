@@ -628,6 +628,11 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
     global ∂,∂²
 
+    maskedRegionForSources = nothing
+    if IneedExternalSources === true
+        #maskedRegionForSources = # in Ndimension(-1) (with or without time)
+    end
+
     # here we need to give a numerical values 
 
     #models = ((model.*0.5.+2), (1))
@@ -670,8 +675,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctionsRHS = similar(costfunctionsLHS)
     costfunctionsRHS .= 0.
    
-    maskedRegionForSources = # in Ndimension(-1) (with or without time)
-
+    
 
     if IneedExternalSources 
         # constructingEquations(...) # right-hand side genre sparse or not etc.
@@ -680,7 +684,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
 
         if sourceRegionInModelSpace !== nothing # sparse source region in space
-            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce sourceRegionInModelSpace
+            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSources
             produce_or_load(constructingNumericalDiscretisedEquationsMasked,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         else
             rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce
