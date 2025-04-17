@@ -199,7 +199,7 @@ function famousEquations(name)
 
         extexprs = f
         extfields = f
-        extvars = 1
+        extvars = f
         coordinates =(x,y,t)
     elseif name==="2DacousticHomoTime"
         # 2D wave equation with double couple source
