@@ -654,9 +654,10 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     AjiννᶜU,utilities=operatorPDE
     Γg,utilitiesForce=operatorForce
 
+    maskedRegionForFieldInSpace = nothing # if it is nothing then we develop the operators everywhere
 
-    lhsConfigurations = @strdict AjiννᶜU coordinates modelName models famousEquationType modelPoints utilities
-    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters))) 
+    lhsConfigurations = @strdict AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace 
+    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters));ignores=["vars","fields"]) 
 
 
     # left-hand side, which is far more recyclable than r.h.s.
@@ -679,10 +680,10 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
 
 
         if maskedRegionForSourcesInSpace !== nothing # sparse source region in space
-            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace 
-            produce_or_load(constructingNumericalDiscretisedEquationsMasked,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
+            rhsConfigurations = @strdict Γg coordinates modelName models fields vars famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace 
+            produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         else
-            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce 
+            rhsConfigurations = @strdict Γg coordinates modelName models fields vars famousEquationType modelPoints utilitiesForce 
             produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         end
 
@@ -711,7 +712,6 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     # 
     # this function is tooooooo complicated! I think I can simplify very much this!
     #
-    #  I need to finish region analysing maskedRegionForSourcesInSpace
     #
     #  need to work on the bc, same like the masked thing (limited region of source)
     #
@@ -757,8 +757,8 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region unpacking, N-dimensionalising all the models 
 
     testOnlyCentre = false
-
-    if ndims(semiSymbolicsOperators) === 1
+ 
+    if size(semiSymbolicsOperators)[1] === 1
         testOnlyCentre = true
     elseif ndims(semiSymbolicsOperators) !==2
         @error "the semi symbolic operators are not computed correctly!"
@@ -948,7 +948,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         #
       
         boundaryPointsSpace=[]
-        for iDimSpace in eachindex(NdimensionMinusTime) # we take care of the boundaries of the Cartesian box (it should be the same for internal/external topography)
+        for iDimSpace in 1:Ndimension-1 # we take care of the boundaries of the Cartesian box (it should be the same for internal/external topography)
             # points concerned
             leftstart=1
             leftend=spacePointsUsed[iDimSpace]÷2
