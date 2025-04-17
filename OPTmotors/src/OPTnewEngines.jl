@@ -629,24 +629,24 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, maskedRegionForSourcesInSpace = concreteModelParameters
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
     global ∂,∂²
-
-
     
+    # here we construct semi symbolic operators (with numerical Δnum)
     operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
     operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
 
     # constructing numerical operator (with still symbolic expression for time coordinates)
 
-    quasiNumericalOperatorConstruction(operators,modelName,models) 
+    costfunctions  = quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources) 
     
 
 end
 
-function quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints)
+function quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources)
+
     # this is a big wrapper that reads the semi symbolic expressions to give a set of numerical operators (with symbolic expression in time)
     # which will call wrappers of onstructingNumericalDiscretisedEquations(Masked)
-    
+
     operators=operators["operators"]
     operatorPDE,operatorForce,eqInfo = operators
     exprs,fields,vars,extexprs,extfields,extvars,coordinates=eqInfo
@@ -673,59 +673,45 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     
 
     if IneedExternalSources 
-        # constructingEquations(...) # right-hand side genre sparse or not etc.
-        # here we recycle constructingEquations if the source terms are everywhere in the domain
-        #    otherwise another function to use Γg that is applied in a sparse way
+
+        # if the source is localised in space, we used Masked version (which should be very efficient for boundary conditions too)
+
 
 
         if maskedRegionForSourcesInSpace !== nothing # sparse source region in space
-            lhsORrhs="rhs"
-            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace lhsORrhs
+            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace 
             produce_or_load(constructingNumericalDiscretisedEquationsMasked,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         else
-            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce
+            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce 
             produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         end
-
-
-        
 
         @show typeof(costfunctionsRHS),size(costfunctionsRHS)
 
     end
     costfunctions=costfunctionsLHS-costfunctionsRHS
-    numOperators=(costfunctions=costfunctions)
-    return @strdict(numOperators)
+    #numOperators=(costfunctions=costfunctions)
+    return costfunctions
 end
 
-function constructingNumericalDiscretisedEquationsMasked(config::Dict)
-     # this technique should be used for boundary conditions, overlapped region, limited region of external sources etc.
-    @unpack numOperator,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion, lhsORrhs = config
-  
-    costfunctions = nothing
-    if lhsORrhs === "rhs"
-        costfunctions=constructingNumericalDiscretisedEquations(numOperator,coordinates,models,extfields,extvars,modelPoints,utilities;initialCondition=0.0)
-    elseif lhsORrhs === "lhs"
-        costfunctions=constructingNumericalDiscretisedEquations(numOperator,coordinates,models,fields,vars,modelPoints,utilities;initialCondition=0.0)
-    end
-    numOperators=(costfunctions=costfunctions)
-    return @strdict(numOperators)
-end
+
 
 function constructingNumericalDiscretisedEquations(config::Dict)
     # just a wrapper
-    @unpack AjiννᶜU,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities = config
+    @unpack AjiννᶜU,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion = config
 
-    costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,fields,vars,modelPoints,utilities;initialCondition=0.0)
+    costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
 end
 
-function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,fields,vars,modelPoints,utilities;absorbingBoundaries=nothing,initialCondition=0.0)
+function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,fields,vars,modelPoints,utilities,maskedRegion;absorbingBoundaries=nothing,initialCondition=0.0)
 
     #todo list
     # 
     # this function is tooooooo complicated! I think I can simplify very much this!
+    #
+    #  I need to finish region analysing maskedRegionForSourcesInSpace
     #
     #  need to work on the bc, same like the masked thing (limited region of source)
     #
@@ -840,6 +826,10 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #endregion
     
+    #region analysing maskedRegionForSourcesInSpace
+
+    #endregion
+
     #region construction of the fields
 
     wholeRegionPoints = nothing
