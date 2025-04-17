@@ -263,8 +263,8 @@ function spaceCoordinatesConversionfunctions(absorbingBoundaries, NdimensionMinu
     #empty2whole(a::CartesianIndex) = a - offset_empty
     #model2empty(a::CartesianIndex) = whole2empty(model2whole(a))
     #empty2model(a::CartesianIndex) = whole2model(empty2whole(a))
-
-    return (; model2whole, whole2model, whole2empty, empty2whole, model2empty, empty2model)
+    return(; model2whole, whole2model)
+    #return (; model2whole, whole2model, whole2empty, empty2whole, model2empty, empty2model)
 end
 
 function BouncingCoordinates(a::CartesianIndex,PointsUsed)
@@ -639,7 +639,11 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
     costfunctions  = quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace) 
     
-    @show costfunctions
+
+    # 
+
+    numOperators=(costfunctions=costfunctions)
+    return @strdict(numOperators)
 end
 
 function quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForFieldInSpace = nothing,maskedRegionForSourcesInSpace=nothing)
@@ -670,13 +674,16 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     
 
     if IneedExternalSources 
-
-        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
-        numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters));filename = config -> savename("source",concreteModelParameters; ignores=["vars", "fields"]))
+        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=((1.0)) fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
+        numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(concreteModelParameters));filename = config -> savename("source",concreteModelParameters; ignores=["vars", "fields"]))
        
         costfunctionsRHS=numOperators["numOperators"]
     end
-    costfunctions=costfunctionsLHS.-costfunctionsRHS
+  
+    #@show size(costfunctionsLHS),size(costfunctionsRHS)
+    #@show costfunctionsRHS[1,430],costfunctionsRHS[1,431],costfunctionsRHS[1,434]
+    #costfunctions=0.#costfunctionsLHS[1,1]-costfunctionsLHS[1,1]
+    costfunctions = costfunctionsLHS .- costfunctionsRHS
     #numOperators=(costfunctions=costfunctions)
     return costfunctions
 end
@@ -877,12 +884,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     elseif typeof(maskedRegionInSpace) === Array{CartesianIndex,1}
         maskingField .= 0.0
         for iSpace in maskedRegionInSpace
-            jSpace = model2whole(iSpace)
+            @show jSpace = conv.model2whole(iSpace)
             maskingField[jSpace] =1.0
         end
     else
         @error "maskedRegionInSpace should be a 1D array of CartesianIndex (if it is CartesianIndices, you need to collect(Tuple()))"
     end
+
 
     #endregion
 
@@ -1017,7 +1025,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     #jPointT=carAddDim(jPoint,iT)
                     #linearjPointT=LinearIndices(localPointsIndices)[jPointT]
                     for iField in eachindex(fields)
-                        if is_all_less_than_or_equal(CartesianIndex(ones(Int, Ndimension-1)...),whole2model(jPoint)) && is_all_less_than_or_equal(whole2model(jPoint),vec2car(ModelPoints[1:end-1]))
+                        if is_all_less_than_or_equal(CartesianIndex(ones(Int, Ndimension-1)...),conv.whole2model(jPoint)) && is_all_less_than_or_equal(conv.whole2model(jPoint),vec2car(ModelPoints[1:end-1]))
                             # when it is inside the model domain box
                             tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*maskingField[jPoint]
 
@@ -1026,7 +1034,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                             if iT === timePointsUsedForOneStep # the last one (the future) will be using un-weighted operators
                                 tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*maskingField[jPoint]
                             else
-                                distance2 = distance2_point_to_box(whole2model(jPoint),CartesianIndex(ones(Int, Ndimension-1)...), vec2car(ModelPoints[1:end-1]))
+                                distance2 = distance2_point_to_box(conv.whole2model(jPoint),CartesianIndex(ones(Int, Ndimension-1)...), vec2car(ModelPoints[1:end-1]))
                                 tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*maskingField[jPoint]*CerjanBoundaryCondition(distance2)
                             end
                         else

@@ -96,6 +96,9 @@ pointsInTime=2
 
 #region model configuration
 
+# this is the real Nt 
+Nt = 120
+
 
 # here we need to give a numerical values 
 
@@ -104,9 +107,6 @@ pointsInTime=2
 models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
 models=push!(models, (model .* 0.5 .+ 2))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
-
-# this is the real Nt 
-Nt = 120
 
 
 # put fake Nt here for quasi-numerical operator construction
@@ -139,6 +139,8 @@ concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspa
 #region OPT symbolic derivation of objective functions to be minimised, first semi-symbolically then numerically
 
 f,file=produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
+
+
 
 
 
