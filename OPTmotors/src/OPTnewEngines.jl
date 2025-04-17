@@ -655,16 +655,14 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     Γg,utilitiesForce=operatorForce
 
     lhsConfigurations = @strdict semiSymbolicOpt=AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace 
-    numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters));ignores=["vars","fields"]) 
+
+    numOperators,file = @produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters));filename = config -> savename(concreteModelParameters; ignores=["vars", "fields"]))
 
 
     # left-hand side, which is far more recyclable than r.h.s.
     
+    costfunctionsLHS=numOperators["numOperators"]
 
-    operators=numOperators["numOperators"]
-    costfunctions=operators
-
-    costfunctionsLHS = costfunctions
 
     costfunctionsRHS = similar(costfunctionsLHS)
     costfunctionsRHS .= 0.
@@ -674,11 +672,11 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     if IneedExternalSources 
 
         rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
-        produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
+        numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters));filename = config -> savename("source",concreteModelParameters; ignores=["vars", "fields"]))
        
-
+        costfunctionsRHS=numOperators["numOperators"]
     end
-    costfunctions=costfunctionsLHS-costfunctionsRHS
+    costfunctions=costfunctionsLHS.-costfunctionsRHS
     #numOperators=(costfunctions=costfunctions)
     return costfunctions
 end
@@ -794,7 +792,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         if sum(CartesianDependency) === 0 # when it is a constant
             tmpModel=Array{Any,Ndimension}(undef,(ones(Int, Ndimension)...)...)
             ModelPoints[:,iVar] = ones(Int, Ndimension)
-            tmpModel[vec2car(ones(Int, Ndimension)...)] = models[iVar]
+            tmpModel[vec2car(ones(Int, Ndimension))] = models[iVar]
             Models[iVar]=tmpModel
         else
             newCoords=expandVectors(size(models[iVar]),CartesianDependency)
@@ -871,14 +869,14 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #endregion 
 
-    #region check if maskedRegionInSpac is OK or not
+    #region making a maskingField (for limited source areas, boundary conditions, etc.)
 
     maskingField=Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)) # maskingField is defined only for whole domain
     if maskedRegionInSpace === nothing
         maskingField .= 1.0
     elseif typeof(maskedRegionInSpace) === Array{CartesianIndex,1}
         maskingField .= 0.0
-        for iSpace in maskedRegionForSourcesInSpace
+        for iSpace in maskedRegionInSpace
             jSpace = model2whole(iSpace)
             maskingField[jSpace] =1.0
         end
