@@ -637,12 +637,12 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
     # constructing numerical operator (with still symbolic expression for time coordinates)
 
-    costfunctions  = quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources) 
+    costfunctions  = quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace) 
     
-
+    @show costfunctions
 end
 
-function quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources)
+function quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForFieldInSpace = nothing,maskedRegionForSourcesInSpace=nothing)
 
     # this is a big wrapper that reads the semi symbolic expressions to give a set of numerical operators (with symbolic expression in time)
     # which will call wrappers of onstructingNumericalDiscretisedEquations(Masked)
@@ -654,9 +654,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     AjiννᶜU,utilities=operatorPDE
     Γg,utilitiesForce=operatorForce
 
-    maskedRegionForFieldInSpace = nothing # if it is nothing then we develop the operators everywhere
-
-    lhsConfigurations = @strdict AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace 
+    lhsConfigurations = @strdict semiSymbolicOpt=AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace 
     numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters));ignores=["vars","fields"]) 
 
 
@@ -675,19 +673,9 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
 
     if IneedExternalSources 
 
-        # if the source is localised in space, we used Masked version (which should be very efficient for boundary conditions too)
-
-
-
-        if maskedRegionForSourcesInSpace !== nothing # sparse source region in space
-            rhsConfigurations = @strdict Γg coordinates modelName models fields vars famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace 
-            produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
-        else
-            rhsConfigurations = @strdict Γg coordinates modelName models fields vars famousEquationType modelPoints utilitiesForce 
-            produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
-        end
-
-        @show typeof(costfunctionsRHS),size(costfunctionsRHS)
+        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
+        produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
+       
 
     end
     costfunctions=costfunctionsLHS-costfunctionsRHS
@@ -699,9 +687,9 @@ end
 
 function constructingNumericalDiscretisedEquations(config::Dict)
     # just a wrapper
-    @unpack AjiννᶜU,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion = config
+    @unpack semiSymbolicOpt,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion = config
 
-    costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
+    costfunctions=constructingNumericalDiscretisedEquations(semiSymbolicOpt,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
 end
