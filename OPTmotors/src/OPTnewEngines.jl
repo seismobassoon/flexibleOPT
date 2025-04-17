@@ -635,6 +635,18 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
     operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
+
+    # constructing numerical operator (with still symbolic expression for time coordinates)
+
+    quasiNumericalOperatorConstruction(operators,modelName,models) 
+    
+
+end
+
+function quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints)
+    # this is a big wrapper that reads the semi symbolic expressions to give a set of numerical operators (with symbolic expression in time)
+    # which will call wrappers of onstructingNumericalDiscretisedEquations(Masked)
+    
     operators=operators["operators"]
     operatorPDE,operatorForce,eqInfo = operators
     exprs,fields,vars,extexprs,extfields,extvars,coordinates=eqInfo
@@ -645,6 +657,8 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
     lhsConfigurations = @strdict AjiννᶜU coordinates modelName models famousEquationType modelPoints utilities
     numOperators,file = produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters))) 
+
+
     # left-hand side, which is far more recyclable than r.h.s.
     
 
@@ -665,7 +679,8 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
 
         if maskedRegionForSourcesInSpace !== nothing # sparse source region in space
-            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace
+            lhsORrhs="rhs"
+            rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce maskedRegionForSourcesInSpace lhsORrhs
             produce_or_load(constructingNumericalDiscretisedEquationsMasked,rhsConfigurations,datadir("numOperatorsSource",savename(concreteModelParameters))) 
         else
             rhsConfigurations = @strdict Γg coordinates modelName models famousEquationType modelPoints utilitiesForce
@@ -681,22 +696,26 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     costfunctions=costfunctionsLHS-costfunctionsRHS
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
-
 end
 
 function constructingNumericalDiscretisedEquationsMasked(config::Dict)
      # this technique should be used for boundary conditions, overlapped region, limited region of external sources etc.
-    @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities, maskedRegion = config
-    #exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-    #costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,fields,vars,modelPoints,utilities;initialCondition=0.0)
-
-
+    @unpack numOperator,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion, lhsORrhs = config
+  
+    costfunctions = nothing
+    if lhsORrhs === "rhs"
+        costfunctions=constructingNumericalDiscretisedEquations(numOperator,coordinates,models,extfields,extvars,modelPoints,utilities;initialCondition=0.0)
+    elseif lhsORrhs === "lhs"
+        costfunctions=constructingNumericalDiscretisedEquations(numOperator,coordinates,models,fields,vars,modelPoints,utilities;initialCondition=0.0)
+    end
+    numOperators=(costfunctions=costfunctions)
+    return @strdict(numOperators)
 end
 
 function constructingNumericalDiscretisedEquations(config::Dict)
     # just a wrapper
-    @unpack AjiννᶜU,coordinates,modelName,models,famousEquationType,modelPoints,utilities = config
-    exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
+    @unpack AjiννᶜU,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities = config
+
     costfunctions=constructingNumericalDiscretisedEquations(AjiννᶜU,coordinates,models,fields,vars,modelPoints,utilities;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions)
     return @strdict(numOperators)
