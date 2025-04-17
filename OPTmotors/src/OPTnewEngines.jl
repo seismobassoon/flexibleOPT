@@ -705,7 +705,7 @@ function constructingNumericalDiscretisedEquations(config::Dict)
     return @strdict(numOperators)
 end
 
-function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,fields,vars,modelPoints,utilities,maskedRegion;absorbingBoundaries=nothing,initialCondition=0.0)
+function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordinates,models,fields,vars,modelPoints,utilities,maskedRegionInSpace;absorbingBoundaries=nothing,initialCondition=0.0)
 
     #todo list
     # 
@@ -825,10 +825,6 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     end
 
     #endregion
-    
-    #region analysing maskedRegionForSourcesInSpace
-
-    #endregion
 
     #region construction of the fields
 
@@ -886,6 +882,23 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     conv=spaceCoordinatesConversionfunctions(absorbingBoundaries[:,1:end-1], Ndimension-1)
 
     #endregion 
+
+    #region check if maskedRegionInSpac is OK or not
+
+    maskingField=Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)) # maskingField is defined only for whole domain
+    if maskedRegionInSpace === nothing
+        maskingField .= 1.0
+    elseif typeof(maskedRegionInSpace) === Array{CartesianIndex,1}
+        maskingField .= 0.0
+        for iSpace in maskedRegionForSourcesInSpace
+            jSpace = model2whole(iSpace)
+            maskingField[jSpace] =1.0
+        end
+    else
+        @error "maskedRegionInSpace should be a 1D array of CartesianIndex (if it is CartesianIndices, you need to collect(Tuple()))"
+    end
+
+    #endregion
 
     #region relative ν to be considered, especially around the boundaries, useful for the following sections
 
@@ -1020,15 +1033,15 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
                     for iField in eachindex(fields)
                         if is_all_less_than_or_equal(CartesianIndex(ones(Int, Ndimension-1)...),whole2model(jPoint)) && is_all_less_than_or_equal(whole2model(jPoint),vec2car(ModelPoints[1:end-1]))
                             # when it is inside the model domain box
-                            tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
+                            tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*maskingField[jPoint]
 
                         elseif is_all_less_than_or_equal(νWhole[1],jPoint) && is_all_less_than_or_equal(jPoint,νWhole[end])
                             # if it is in the absorbing boundary zones we apply a simple Cerjan
                             if iT === timePointsUsedForOneStep # the last one (the future) will be using un-weighted operators
-                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]
+                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*maskingField[jPoint]
                             else
                                 distance2 = distance2_point_to_box(whole2model(jPoint),CartesianIndex(ones(Int, Ndimension-1)...), vec2car(ModelPoints[1:end-1]))
-                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*CerjanBoundaryCondition(distance2)
+                                tmpMapping[localFields[linearjPointTLocal,iField]] = 場[iField,iT][jPoint]*maskingField[jPoint]*CerjanBoundaryCondition(distance2)
                             end
                         else
                             tmpMapping[localFields[linearjPointTLocal,iField]]=0.
