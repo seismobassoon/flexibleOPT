@@ -1,28 +1,22 @@
-# New version as of March 2025 for OPT operators
+# New version from March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
-using  Pkg
+using  Pkg, BenchmarkTools
 
 cd(@__DIR__)
 Pkg.activate("../..")
-#Pkg.add("DrWatson") 
-#@quickactivate "flexibleDSM"
-
-
-#cd(Base.source_dir())       
-              # active the project, with a  static environment
-# Pkg.activate(; temp=true)    #  activate the project with a temporary environment
-#Pkg.update()     
 
 include("../src/imageReader.jl") # read 2D images for models
 include("../src/batchNewSymbolics.jl")
 include("../src/OPTnewEngines.jl") 
+include("../src/OPTwrappers.jl") 
 include("../src/famousEquations.jl")
+include("../src/famousSourceFunctions.jl")
 
 
 # important!!! You can call the coordinates as you like but if you want to make a timeMarching, then
 # the coordinate should be "t" and it should be a the last coordinate
 
-using BenchmarkTools
+
 
 
 #region Physics to choose, method to define material variable models
@@ -98,16 +92,12 @@ pointsInTime=2
 
 #region model configuration
 
-# this is the real Nt 
-Nt = 120
-
-
 # here we need to give a numerical values 
 
 #models = ((model.*0.5.+2), (1))
 
 models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
-models=push!(models, (model .* 0.5 .+ 2))
+models=push!(models, (model .* 0.5 .+ 0.5))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 
@@ -140,14 +130,38 @@ concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspa
 
 #region OPT symbolic derivation of objective functions to be minimised, first semi-symbolically then numerically
 
-f,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
 
-#operators = f["numOperators"]
-#costfunctions = operators
-#@show costfunctions[1,431]
+#endregion
+
+#region use the quasi-numerical operators to start computing
+
+operators = opt["numOperators"]
+costfunctions = operators
+#@show costfunctions[1,431] # check if we can see the source terms
+
+#specificication of parameters such as Nt (which can be 1 for no time-marching scheme) and source time function 
+
+# this is the real Nt 
+Nt = 300
+
+
+# making a small source
+
+# if you want to plot:
+# myRicker(x)=Ricker(x,20,0.03)
+# scatter(0:1:100,myRicker) or lines 
+
+# if it's not time marching t will give you just 0.0
+myRicker(x)=Ricker(x,50,0.03)
+a=collect(1:1:Nt)
+t=(a.-1).*Δnum[end] 
+sourceTime = myRicker.(t)
 
 
 
+
+#endregion
 
 #region je râle, je râle
 #
@@ -158,15 +172,6 @@ f,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadi
 
 
 
-
-#constructingEquations(AjiννᶜU,)
-
-#@show model
-
-#@show AjiννᶜU
-
-
-#endregion
 
 
 
