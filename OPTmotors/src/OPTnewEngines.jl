@@ -469,8 +469,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     multiOrdersIndices=CartesianIndices(orderTaylors)
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
 
-    NpointsMultiDim = length(multiPointsIndices)
-    NordersMultiDim = length(multiOrdersIndices)
+    #NpointsMultiDim = length(multiPointsIndices)
+    #NordersMultiDim = length(multiOrdersIndices)
 
     #endregion
 
@@ -606,7 +606,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
     #region outputs
     
-    utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
+    @show utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
     if testOnlyCentre
         smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
         smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
