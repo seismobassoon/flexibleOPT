@@ -1,12 +1,13 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
 using  Pkg
-Pkg.activate("../..")
+@show nowHere=@__DIR__
+Pkg.activate(nowHere*"/../..")
 #Pkg.add("DrWatson") 
 #@quickactivate "flexibleDSM"
 
 
-cd(Base.source_dir())       
+#cd(Base.source_dir())       
               # active the project, with a  static environment
 # Pkg.activate(; temp=true)    #  activate the project with a temporary environment
 #Pkg.update()     
@@ -138,10 +139,11 @@ concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspa
 
 #region OPT symbolic derivation of objective functions to be minimised, first semi-symbolically then numerically
 
-f,file=produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators"))
+f,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
 
-
-
+#operators = f["numOperators"]
+#costfunctions = operators
+#@show costfunctions[1,431]
 
 
 
