@@ -493,7 +493,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     L_MINUS_N = CartesianIndices(Tuple(l_minus_n))
     L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
 
-    AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices),NtypeofExpr)
+    
     # yes indeed, (νᶜ,) ν, i, j are the oder here
 
     Ulocal = Array{Num,2}(undef,length(multiPointsIndices),NtypeofFields)
@@ -502,8 +502,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         Ulocal[:,iField]=Symbolics.variables(Symbol(newstring),1:length(multiPointsIndices))
     end
 
-
-    AjiννᶜU .= 0
+    AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices),NtypeofExpr)
+    
     # the small dictionary map should be here (not inside the loop) but I am too tired that I let this go
     # why tired? since I need to prepare another set of theDiffNu that can run from minus to plus 
  
@@ -512,10 +512,12 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     if timeMarching
         midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
         tmpVecForMiddlePoint[end]=midTimeCoord
+        #AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices)÷(midTimeCoord+1),NtypeofExpr)
     end
     middleν=vec2car(tmpVecForMiddlePoint)
     middleLinearν = LinearIndices(multiPointsIndices)[middleν]
 
+    AjiννᶜU .= 0
 
     for iExpr in eachindex(exprs) # j in eq. 42
         for iField in eachindex(fields) # i in eq. 42
@@ -606,7 +608,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
     #region outputs
     
-    @show utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
+    utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
     if testOnlyCentre
         smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
         smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
