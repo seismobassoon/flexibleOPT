@@ -135,28 +135,9 @@ opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,data
 #endregion
 
 #region use the quasi-numerical operators to start computing
+Nt=300
 
-operators = opt["numOperators"]
-costfunctions = operators
-#@show costfunctions[1,431] # check if we can see the source terms
-
-#specificication of parameters such as Nt (which can be 1 for no time-marching scheme) and source time function 
-
-# this is the real Nt 
-Nt = 300
-
-
-# making a small source
-
-# if you want to plot:
-# myRicker(x)=Ricker(x,20,0.03)
-# scatter(0:1:100,myRicker) or lines 
-
-# if it's not time marching t will give you just 0.0
-myRicker(x)=Ricker(x,50,0.03)
-a=collect(1:1:Nt)
-t=(a.-1).*Δnum[end] 
-sourceTime = myRicker.(t)
+timeMarchingScheme(opt, Nt,maskedRegionForSourcesInSpace)
 
 
 
