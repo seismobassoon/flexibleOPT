@@ -1,8 +1,9 @@
 # New version as of March 2025 for OPT operators
 # Nobuaki Fuji @ IPGP/UPC/IUF
 using  Pkg
-@show nowHere=@__DIR__
-Pkg.activate(nowHere*"/../..")
+
+cd(@__DIR__)
+Pkg.activate("../..")
 #Pkg.add("DrWatson") 
 #@quickactivate "flexibleDSM"
 
