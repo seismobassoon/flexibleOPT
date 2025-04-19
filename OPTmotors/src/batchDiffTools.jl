@@ -35,24 +35,13 @@ function sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownFi
 end
 
 
-function timeStepOptimisation!(F, U,nEq)
-
-
-    # Sparsity pattern
-    input       = rand(ncx)
-    output      = similar(input)
-    Res_closed! = (F, U) -> Residual!(F, U, U0, U00, f, G, Gc, ρ, Δx, Δt, x, t)
-    sparsity    = Symbolics.jacobian_sparsity(Res_closed!, output, input)
-    J           = Float64.(sparse(sparsity))
-
-    # Makes coloring
-    colors      = matrix_colors(J)
-
+function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+    nEq = length(costfunctions)
     # normalisation by the number of equations
     normalisation = 1.0/nEq
     r1 = 1.0
     for iter in 1:10
-        Res_closed! = (F, U) -> Residual!(F, U)
+        Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
         r = norm(F)*normalisation
         
         if iter==1 r1 = r; end

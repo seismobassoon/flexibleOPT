@@ -8,11 +8,14 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     operators = opt["numOperators"]
     costfunctions,fieldLHS,fieldRHS,champsLimité = operators
+    costfunctions=reduce(vcat,costfunctions)
     #@show size(costfunctions),size(fieldLHS[1,1]),size(fieldRHS)
+
+    timePointsUsedForOneStep = size(fieldLHS)[2]
 
     itVec=collect(1:1:Nt)
     t=(itVec.-1).*Δnum[end] # time vector # if it's not time marching t will give you just 0.0 regardless of Δnum[end]
-
+    sourceTime = nothing
     #@show costfunctions[1,431] # check if we can see the source terms
 
     #specificication of parameters such as Nt (which can be 1 for no time-marching scheme) and source time function 
@@ -60,13 +63,17 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     knownField .= initialCondition
     knownForce .= initialCondition
 
-    sparseColouring(costfunctions[1:end],symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+    sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
     @show symbKnownForce
 
 
+    # source time function will be shifted with timePointsUsedForOneStep - 1
+
+    prepend!(sourceTime,zeros(timePointsUsedForOneStep))
+
     for it in itVec
+        knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
         
-        @show it
     end
 
 
