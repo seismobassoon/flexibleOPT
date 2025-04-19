@@ -1,19 +1,41 @@
 using SparseDiffTools,SparseArrays,Symbolics
 
 
-function buildNumericalFunctions(costfunctions,symbUnknownField,symbKnownField,symbKnownForce)
+function buildNumericalFunctions(a,b,c,costfunctions,symbUnknownField,symbKnownField,symbKnownForce)
     # this function will translate the costfunctions fully numerically
     knownInputs = vcat(reduce(vcat,reduce(vcat,symbKnownField) ),reduce(vcat,symbKnownForce))
     unknownInputs = reduce(vcat,symbUnknownField)
     all_inputs = vcat(unknownInputs,knownInputs)
+    
     residual_func=Array{Any,1}(undef,length(costfunctions))
     for i in eachindex(costfunctions)
         residual_func_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
         residual_func[i] = eval(residual_func_expr)
+        #residual_func[i]=Symbolics.compile(costfunctions[i],all_inputs)
     end
     return residual_func
 
     
+end
+
+
+function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField, symbKnownForce)
+    # Collect all known inputs (constants) and unknown inputs (variables)
+    knownInputs = vcat(reduce(vcat, reduce(vcat, symbKnownField)), reduce(vcat, symbKnownForce))
+    unknownInputs = reduce(vcat, symbUnknownField)
+    all_inputs = vcat(unknownInputs, knownInputs)
+
+    residual_func = Array{Any, 1}(undef, length(costfunctions))
+    
+    for i in eachindex(costfunctions)
+        # Create the symbolic function
+        residual_func_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
+        
+        # Evaluate the symbolic function and store it as a numerical function
+        residual_func[i] = eval(residual_func_expr)
+    end
+
+    return residual_func
 end
 
 
@@ -51,12 +73,13 @@ end
 function Residual!(F,f,unknownField,knownField,knownForce)
     all_inputs=makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
     for i in eachindex(f)
-        @show F[i]=f[i](all_inputs...)
+        F[i]=f[i](all_inputs)
     end
 end
 
 
 function sparseColouring(f,unknownField,knownField,knownForce)
+    # this function is colouring the matrix
     nCostfunctions = length(f)
     nUnknownField = length(unknownField)
     #input = Vector{Float64}(undef,nUnknownField)
@@ -64,8 +87,8 @@ function sparseColouring(f,unknownField,knownField,knownForce)
     #output = Vector{Float64}(undef,nCostfunctions)
     output = rand(nCostfunctions)
     F=zeros(nCostfunctions)
-    Res_closed! = (F,unknownField) -> Residual!(F,f,unknownField,knownField,knownForce)
-    sparsity    = Symbolics.jacobian_sparsity(Res_closed!,output, input)
+    Res_closed_look! = (F,input) -> Residual!(F,f,input,knownField,knownForce)
+    sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,input)
     J           = Float64.(sparse(sparsity))
     colors      = matrix_colors(J)
     return J,colors
@@ -83,11 +106,8 @@ function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,colors;
         
         #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
         Res_closed! = (F,unknownField) -> Residual!(F,f,unknownField,knownField,knownForce)
-        Res_closed!(F,unknownField)
-  
-        
-
-        @show r = norm(F)#*normalisation
+        @show Res_closed!(F,unknownField)
+        r = norm(F)#*normalisation
         
         if iter==1 r1 = r; end
         if r === 0.0 break end
