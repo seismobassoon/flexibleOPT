@@ -62,6 +62,8 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
 
 end
+
+#=
 function dummy()
 # Time loop
 for it=1:nt
@@ -107,3 +109,4 @@ for it=1:nt
     end
 end
 end
+=#
