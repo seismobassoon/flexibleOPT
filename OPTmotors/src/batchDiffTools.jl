@@ -22,17 +22,10 @@ function makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
 end
 
 function Residual!(F,f,unknownField,knownField,knownForce)
-    
     all_inputs=makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
-
-    residual_func = Vector{Function}(undef, length(costfunctions))
-    
-    for i in eachindex(costfunctions)
-        f_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
-        residual_func[i] = eval(f_expr)
+    for i in eachindex(f)
+        @show F[i]=f[i](all_inputs...)
     end
-    
-    return residual_func
 end
 
 
