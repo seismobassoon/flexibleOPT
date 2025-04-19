@@ -808,10 +808,11 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region making a maskingField (for limited source areas, boundary conditions, etc.)
 
     maskingField=Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)) # maskingField is defined only for whole domain
-    champsLimité = Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
+    champsLimité = nothing
     if maskedRegionInSpace === nothing
         maskingField .= 1.0
     elseif typeof(maskedRegionInSpace) === Array{CartesianIndex,1}
+        champsLimité = Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
         for it in 1:timePointsUsedForOneStep
             for iField in eachindex(fields)
                 newstring=split(string(fields[iField]),"(")[1]*"_mod_limited"*"_t="*string(it)
@@ -825,8 +826,9 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
             maskingField[jSpace] =1.0
             for it in 1:timePointsUsedForOneStep
                 for iField in eachindex(fields)
-                    tmpChampsLimitéContents= (jSpace,場[iField,it][jSpace])
-                    champsLimité[iField,it][tmpIndex]=tmpChampsLimitéContents
+                    
+                    #tmpChampsLimitéContents= (jSpace,場[iField,it][jSpace])
+                    champsLimité[iField,it][tmpIndex]=場[iField,it][jSpace]
                 end
             end
             tmpIndex += 1
