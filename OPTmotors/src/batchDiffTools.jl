@@ -12,6 +12,33 @@ function buildNumericalFunctions(costfunctions,symbUnknownField,symbKnownField,s
         residual_func[i] = eval(residual_func_expr)
     end
     return residual_func
+
+    
+end
+
+
+function Residual_OLD!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+
+    mapping = Dict()
+    
+    for k in eachindex(knownField)
+        for j in eachindex(knownField[k])
+            #mapping[symbKnownField[k][j]] = knownField[k][j]
+        end
+    end
+
+    for j in eachindex(unknownField)
+        #mapping[symbUnknownField[j]] = unknownField[j]
+    end
+
+    for j in eachindex(knownForce)
+        #mapping[symbKnownForce[j]] = knownForce[j]
+    end
+
+    for i in eachindex(F)
+        F[i] = substitute(costfunctions[i],mapping)
+    end
+    return
 end
 
 function makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
