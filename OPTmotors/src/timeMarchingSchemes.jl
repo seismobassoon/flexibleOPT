@@ -21,7 +21,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     timePointsUsedForOneStep = size(fieldLHS)[2]
     NField = size(fieldLHS)[1]
-    @show pointsField = size(fieldLHS[1,1])
+    pointsField = size(fieldLHS[1,1])
 
     itVec=collect(1:1:Nt)
     t=(itVec.-1).*Δnum[end] # time vector # if it's not time marching t will give you just 0.0 regardless of Δnum[end]
@@ -73,9 +73,16 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     #endregion
 
+    #region numerical operators
+
+    f= buildNumericalFunctions(costfunctions,symbUnknownField,symbKnownField,symbKnownForce)
+
+    #end
+
+
     #region sparse matrix colouring 
 
-    J,colors=sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+    J,colors=sparseColouring(f,unknownField,knownField,knownForce)
  
     #endregion
 
@@ -84,6 +91,9 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     # source time function will be shifted with timePointsUsedForOneStep - 1
 
     prepend!(sourceTime,zeros(timePointsUsedForOneStep))
+
+
+    @show J
 
     F = zeros(length(costfunctions))
     unknownField .= initialCondition
@@ -97,7 +107,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
         # this is not true!!! Just for debugging!
         knownForce[1:timePointsUsedForOneStep] .= 1.0
 
-        timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce,J,colors)
+        timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,colors)
 
         # update
         knownField[1:end-1] = knownField[2:end]

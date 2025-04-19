@@ -1,38 +1,50 @@
 using SparseDiffTools,SparseArrays,Symbolics
 
-function Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
 
-    mapping = Dict()
-    
-    for k ∈ eachindex(knownField)
-        for j ∈ eachindex(knownField[k])
-            mapping[symbKnownField[k][j]] = knownField[k][j]
-        end
+function buildNumericalFunctions(costfunctions,symbUnknownField,symbKnownField,symbKnownForce)
+    # this function will translate the costfunctions fully numerically
+    knownInputs = vcat(reduce(vcat,reduce(vcat,symbKnownField) ),reduce(vcat,symbKnownForce))
+    unknownInputs = reduce(vcat,symbUnknownField)
+    all_inputs = vcat(unknownInputs,knownInputs)
+    residual_func=Array{Any,1}(undef,length(costfunctions))
+    for i in eachindex(costfunctions)
+        residual_func_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
+        residual_func[i] = eval(residual_func_expr)
     end
-
-    for j ∈ eachindex(unknownField)
-        mapping[symbUnknownField[j]] = unknownField[j]
-    end
-
-    for j ∈ eachindex(knownForce)
-        mapping[symbKnownForce[j]] = knownForce[j]
-    end
-
-    for i ∈ eachindex(F)
-        F[i] = substitute(costfunctions[i],mapping)|> Symbolics.value
-    end
-    return
+    return residual_func
 end
 
-function sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-    nCostfunctions = length(costfunctions)
+function makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
+    knownInputs = vcat(reduce(vcat,reduce(vcat,knownField) ),reduce(vcat,knownForce))
+    unknownInputs = reduce(vcat,unknownField)
+    all_inputs = vcat(unknownInputs,knownInputs)
+    return all_inputs
+end
+
+function Residual!(F,f,unknownField,knownField,knownForce)
+    
+    all_inputs=makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
+
+    residual_func = Vector{Function}(undef, length(costfunctions))
+    
+    for i in eachindex(costfunctions)
+        f_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
+        residual_func[i] = eval(f_expr)
+    end
+    
+    return residual_func
+end
+
+
+function sparseColouring(f,unknownField,knownField,knownForce)
+    nCostfunctions = length(f)
     nUnknownField = length(unknownField)
     #input = Vector{Float64}(undef,nUnknownField)
     input = rand(nUnknownField)
     #output = Vector{Float64}(undef,nCostfunctions)
     output = rand(nCostfunctions)
     F=zeros(nCostfunctions)
-    Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+    Res_closed! = (F,unknownField) -> Residual!(F,f,unknownField,knownField,knownForce)
     sparsity    = Symbolics.jacobian_sparsity(Res_closed!,output, input)
     J           = Float64.(sparse(sparsity))
     colors      = matrix_colors(J)
@@ -40,9 +52,9 @@ function sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownFi
 end
 
 
-function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce,J,colors;nIteration=10,smallNumber =1.e-8)
+function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,colors;nIteration=10,smallNumber =1.e-8)
 
-    nEq = length(costfunctions)
+    nEq = length(f)
     # normalisation by the number of equations
     normalisation = 1.0/nEq
     r1 = 1.0
@@ -50,12 +62,12 @@ function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,sy
     for iter in 1:nIteration
         
         #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-        Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+        Res_closed! = (F,unknownField) -> Residual!(F,f,unknownField,knownField,knownForce)
         Res_closed!(F,unknownField)
   
-        @show F
+        
 
-        r = norm(F)*normalisation
+        @show r = norm(F)#*normalisation
         
         if iter==1 r1 = r; end
         if r === 0.0 break end
