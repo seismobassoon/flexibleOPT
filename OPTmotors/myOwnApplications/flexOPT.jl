@@ -10,7 +10,7 @@ include("../src/batchNewSymbolics.jl")
 include("../src/OPTnewEngines.jl") 
 include("../src/OPTwrappers.jl") 
 include("../src/famousEquations.jl")
-include("../src/famousSourceFunctions.jl")
+
 
 
 # important!!! You can call the coordinates as you like but if you want to make a timeMarching, then
@@ -137,7 +137,8 @@ opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,data
 #region use the quasi-numerical operators to start computing
 Nt=300
 
-timeMarchingScheme(opt, Nt,maskedRegionForSourcesInSpace)
+# for a non time marching scheme, put Nt=1 and  Δnum as a fake value (just put as it is)
+timeMarchingScheme(opt, Nt, Δnum, maskedRegionForSourcesInSpace)
 
 
 

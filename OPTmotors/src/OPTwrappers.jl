@@ -1,4 +1,7 @@
 using Symbolics,DrWatson
+
+include("../src/famousSourceFunctions.jl")
+
 function makeCompleteCostFunctions(concreteModelParameters::Dict)
     # This is a kind of big wrapper to construct an explicit numerical Cost functions to be minimised during the simulation
     
@@ -69,34 +72,4 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     costfunctions = costfunctionsLHS .- costfunctionsRHS
     #numOperators=(costfunctions=costfunctions)
     return costfunctions,fieldLHS,fieldRHS
-end
-
-function timeMarchingScheme(opt, Nt,maskedRegionForSourcesInSpace;sourceType="Ricker")
-
-    operators = opt["numOperators"]
-    costfunctions,fieldLHS,fieldRHS = operators
-    @show size(costfunctions),size(fieldLHS[1,1]),size(fieldRHS)
-
-    #@show costfunctions[1,431] # check if we can see the source terms
-
-    #specificication of parameters such as Nt (which can be 1 for no time-marching scheme) and source time function 
-
-
-    if sourceType === "Ricker"
-        # making a small source
-
-        # if you want to plot:
-        # myRicker(x)=Ricker(x,20,0.03)
-        # scatter(0:1:100,myRicker) or lines 
-
-        # if it's not time marching t will give you just 0.0
-        myRicker(x)=Ricker(x,50,0.03)
-        a=collect(1:1:Nt)
-        t=(a.-1).*Δnum[end] 
-        sourceTime = myRicker.(t)
-    end
-
-
-
-
 end
