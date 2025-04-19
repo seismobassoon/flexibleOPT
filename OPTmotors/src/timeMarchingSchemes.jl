@@ -12,6 +12,8 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     #@show size(costfunctions),size(fieldLHS[1,1]),size(fieldRHS)
 
     timePointsUsedForOneStep = size(fieldLHS)[2]
+    NField = size(fieldLHS)[1]
+    @show pointsField = size(fieldLHS[1,1])
 
     itVec=collect(1:1:Nt)
     t=(itVec.-1).*Δnum[end] # time vector # if it's not time marching t will give you just 0.0 regardless of Δnum[end]
@@ -40,7 +42,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     
     symbKnownField = Array{Any,1}(undef,timePointsUsedForOneStep-1)
     for iT in 1:timePointsUsedForOneStep-1
-        symbKnownField[iT] = reduce(vcat,fieldLHS[1:end,1:end-1][1:end])
+        symbKnownField[iT] = reduce(vcat,fieldLHS[1:end,iT][1:end])
     end
     symbUnknownField = reduce(vcat,fieldLHS[1:end,end][1:end])
 
@@ -61,24 +63,30 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     #region sparse matrix colouring 
 
-    sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-    @show symbKnownForce
-
+    J,colors=sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+ 
     #endregion
 
     #region time marching
 
     # source time function will be shifted with timePointsUsedForOneStep - 1
 
-    @show prepend!(sourceTime,zeros(timePointsUsedForOneStep))
+    prepend!(sourceTime,zeros(timePointsUsedForOneStep))
 
     F = zeros(length(costfunctions))
     for it in itVec
         knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
         #field to be shifted from the past
-        knownField[1:end-1] = knownField[2:end]
+        
 
-        timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+        timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce,J,colors)
+
+        # update
+        knownField[1:end-1] = knownField[2:end]
+        knownField[end] = unknownField
+
+        # reshape
+        @show newField = reshape(unknownField,NField,pointsField...)       
 
     end
 

@@ -36,13 +36,15 @@ function sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownFi
 end
 
 
-function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce;nIteration=10,smallNumber =1.e-8)
+function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce,J,colors;nIteration=10,smallNumber =1.e-8)
     nEq = length(costfunctions)
     # normalisation by the number of equations
     normalisation = 1.0/nEq
     r1 = 1.0
+    #unknownField .= 0.0
     for iter in 1:nIteration
         Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+        @show F
         r = norm(F)*normalisation
         
         if iter==1 r1 = r; end
@@ -50,14 +52,14 @@ function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,sy
         if r/r1 < smallNumber break end
             
         # Jacobian assembly
-        forwarddiff_color_jacobian!(J, Res_closed!, U, colorvec = colors)
+        forwarddiff_color_jacobian!(J, Res_closed!, unknownField, colorvec = colors)
 
         # Solve
-        δU   .= .-J\F
+        δunknownField   .= .-J\F
 
         # update
-        U    .+= δU
+        unknownField    .+= δunknownField
     end
 
-    return 
+    return unknownField
 end
