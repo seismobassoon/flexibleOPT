@@ -23,12 +23,12 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
     # constructing numerical operator (with still symbolic expression for time coordinates)
 
-    costfunctions,fieldLHS,fieldRHS = quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace) 
+    costfunctions,fieldLHS,fieldRHS,champsLimité = quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace) 
     
 
     # 
 
-    numOperators=(costfunctions=costfunctions,fieldLHS=fieldLHS,fieldRHS=fieldRHS)
+    numOperators=(costfunctions=costfunctions,fieldLHS=fieldLHS,fieldRHS=fieldRHS,champsLimité=champsLimité)
     
     return @strdict(numOperators)
 end
