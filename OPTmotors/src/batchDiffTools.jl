@@ -1,6 +1,6 @@
 using SparseDiffTools,SparseArrays,Symbolics
 
-function Residual!(F,costfunctions,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+function Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
 
     mapping = Dict()
 
@@ -8,30 +8,34 @@ function Residual!(F,costfunctions,unknownField,symbKnownField,knownField,symbKn
         mapping[symbKnownField[j]] = knownField[j]
     end
 
+    for j in eachindex(unknownField)
+        mapping[symbUnknownField[j]] = unknownField[j]
+    end
+
     for j in eachindex(knownForce)
         mapping[symbKnownForce[j]] = knownForce[j]
     end
     for i in eachindex(F)
-        @show F[i] = substitute(costfunctions[i],mapping)
+        F[i] = substitute(costfunctions[i],mapping)
     end
     return
 end
 
-function sparseColouring(costfunctions,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+function sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
     nCostfunctions = length(costfunctions)
     nUnknownField = length(unknownField)
     input = Vector{Float64}(undef,nUnknownField)
     output = Vector{Float64}(undef,nCostfunctions)
     F=zeros(nCostfunctions)
-    Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-    @show sparsity    = Symbolics.jacobian_sparsity(Res_closed!,output, input)
+    Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+    sparsity    = Symbolics.jacobian_sparsity(Res_closed!,output, input)
     J           = Float64.(sparse(sparsity))
     colors      = matrix_colors(J)
     return J,colors
 end
 
 
-function myForwarddiff_color_jacobian!(F, U,nEq)
+function timeStepOptimisation!(F, U,nEq)
 
 
     # Sparsity pattern

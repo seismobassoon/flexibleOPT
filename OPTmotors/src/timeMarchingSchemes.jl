@@ -38,8 +38,8 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     #@show champsLimité[1,1], fieldLHS[1:end,1:end-1][1:end]
 
     symbKnownField = reduce(vcat,fieldLHS[1:end,1:end-1][1:end])
-    unknownField = reduce(vcat,fieldLHS[1:end,end][1:end])
-    
+    symbUnknownField = reduce(vcat,fieldLHS[1:end,end][1:end])
+
     symbKnownForce = nothing
     if champsLimité === nothing
         symbKnownForce = reduce(vcat,fieldRHS[1:end,1:end][1:end])
@@ -49,6 +49,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
    
  
     knownField = similar(symbKnownField)
+    unknownField = copy(symbUnknownField)
     knownForce = similar(symbKnownForce)
     
      #endregion
@@ -57,14 +58,15 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     #region
 
     knownField .= initialCondition
-    knownForce .= 1.0
+    knownForce .= initialCondition
 
-    @show sparseColouring(costfunctions[1:end],unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-   
+    sparseColouring(costfunctions[1:end],symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+    @show symbKnownForce
 
 
     for it in itVec
-
+        
+        @show it
     end
 
 
