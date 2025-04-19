@@ -3,9 +3,10 @@ using SparseDiffTools,SparseArrays,Symbolics
 function Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
 
     mapping = Dict()
-
-    for j in eachindex(knownField)
-        mapping[symbKnownField[j]] = knownField[j]
+    for k in eachindex(knownField)
+        for j in eachindex(knownField[k])
+            mapping[symbKnownField[k][j]] = knownField[k][j]
+        end
     end
 
     for j in eachindex(unknownField)
@@ -35,18 +36,18 @@ function sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownFi
 end
 
 
-function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce;nIteration=10,smallNumber =1.e-8)
     nEq = length(costfunctions)
     # normalisation by the number of equations
     normalisation = 1.0/nEq
     r1 = 1.0
-    for iter in 1:10
+    for iter in 1:nIteration
         Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
         r = norm(F)*normalisation
         
         if iter==1 r1 = r; end
        
-        if r/r1 < 1e-8 break end
+        if r/r1 < smallNumber break end
             
         # Jacobian assembly
         forwarddiff_color_jacobian!(J, Res_closed!, U, colorvec = colors)

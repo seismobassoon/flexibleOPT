@@ -37,10 +37,11 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     #endregion
 
     #region 1Dvectorisation of knowns and unknowns
-
-    #@show champsLimité[1,1], fieldLHS[1:end,1:end-1][1:end]
-
-    symbKnownField = reduce(vcat,fieldLHS[1:end,1:end-1][1:end])
+    
+    symbKnownField = Array{Any,1}(undef,timePointsUsedForOneStep-1)
+    for iT in 1:timePointsUsedForOneStep-1
+        symbKnownField[iT] = reduce(vcat,fieldLHS[1:end,1:end-1][1:end])
+    end
     symbUnknownField = reduce(vcat,fieldLHS[1:end,end][1:end])
 
     symbKnownForce = nothing
@@ -54,26 +55,31 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     knownField = similar(symbKnownField)
     unknownField = copy(symbUnknownField)
     knownForce = similar(symbKnownForce)
-    
-     #endregion
-
-    
-    #region
-
     knownField .= initialCondition
     knownForce .= initialCondition
+    #endregion
+
+    #region sparse matrix colouring 
 
     sparseColouring(costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
     @show symbKnownForce
 
+    #endregion
+
+    #region time marching
 
     # source time function will be shifted with timePointsUsedForOneStep - 1
 
-    prepend!(sourceTime,zeros(timePointsUsedForOneStep))
+    @show prepend!(sourceTime,zeros(timePointsUsedForOneStep))
 
+    F = zeros(length(costfunctions))
     for it in itVec
         knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
-        
+        #field to be shifted from the past
+        knownField[1:end-1] = knownField[2:end]
+
+        timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+
     end
 
 
