@@ -49,9 +49,13 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     #region 1Dvectorisation of knowns and unknowns
     
     symbKnownField = Array{Any,1}(undef,timePointsUsedForOneStep-1)
+    knownField = Array{Any,1}(undef,timePointsUsedForOneStep-1)
     for iT in 1:timePointsUsedForOneStep-1
         symbKnownField[iT] = reduce(vcat,fieldLHS[1:end,iT][1:end])
+        knownField[iT] = similar(symbKnownField[iT])
+        knownField[iT] .= initialCondition
     end
+
     symbUnknownField = reduce(vcat,fieldLHS[1:end,end][1:end])
 
     symbKnownForce = nothing
@@ -62,11 +66,11 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     end
    
  
-    knownField = similar(symbKnownField)
+    
     unknownField = copy(symbUnknownField)
     knownForce = similar(symbKnownForce)
-    knownField .= initialCondition
     knownForce .= initialCondition
+
     #endregion
 
     #region sparse matrix colouring 
@@ -86,11 +90,13 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     fieldFile = jldopen(sequentialFileName, "w") # file open
 
 
-    
     for it in itVec
         knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
         #field to be shifted from the past
         
+        # this is not true!!! Just for debugging!
+        knownForce[1:timePointsUsedForOneStep] .= 1.0
+
 
         timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce,J,colors)
 
