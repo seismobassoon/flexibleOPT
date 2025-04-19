@@ -97,7 +97,6 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
         # this is not true!!! Just for debugging!
         knownForce[1:timePointsUsedForOneStep] .= 1.0
 
-
         timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce,J,colors)
 
         # update
