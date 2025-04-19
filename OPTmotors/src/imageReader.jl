@@ -53,7 +53,7 @@ function read2DimageModel(file; Ncolor=256, colorbar = [RGB(0.0, 0.0, 1.0), RGB(
     if showRecoveredImage
 
         newColorBar,newValues=regenerataionColorMap(colorbar,values,Ncolor)
-        scene = heatmap(transpose(float_array), colormap =  newColorBar,colorrange=(values[1],values[end]))
+        scene = heatmap(transpose(float_array[end:1,1:end]), colormap =  newColorBar,colorrange=(values[1],values[end]))
         display(scene)
     end
    

@@ -1,10 +1,18 @@
 include("../src/batchDiffTools.jl")
-
+using DrWatson,JLD2
+using GLMakie: Figure, Axis, heatmap!, Colorbar, record
 # I kind of use what Tibo did in ExactSolutions.jl
 
 function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03,initialCondition=0.0)
 
     #region reading data and source time functions
+    if !isdir(datadir("fieldResults"))
+        mkdir(datadir("fieldResults"))
+    end
+    @show sequentialFileName=datadir("fieldResults", savename((Nt,Δnum...,sourceType),"jld2"))
+    # filename that can be given by DrWatson
+    @show compactFileName=datadir("fieldResults", savename("compact",(Nt,Δnum...,sourceType),"jld2"))
+
 
     operators = opt["numOperators"]
     costfunctions,fieldLHS,fieldRHS,champsLimité = operators
@@ -74,6 +82,11 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     prepend!(sourceTime,zeros(timePointsUsedForOneStep))
 
     F = zeros(length(costfunctions))
+    unknownField .= initialCondition
+    fieldFile = jldopen(sequentialFileName, "w") # file open
+
+
+    
     for it in itVec
         knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
         #field to be shifted from the past
@@ -87,12 +100,32 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
         # reshape
         @show newField = reshape(unknownField,NField,pointsField...)       
-
+        fieldFile["timestep_$it"] = newField
     end
-
+    close(fieldFile)
 
     #endregion
 
 
+    #region making the file compact
+
+    # Reconstruct array from separate datasets
+    file = jldopen(sequentialFileName, "r")
+    a = [file["timestep_$it"] for it in itVec]
+    close(file)
+
+
+    #endregion
+
+    #region compact file
+    # Convert to single 3D array: a[N, L, K]
+    #a = permutedims(reshape(reduce(hcat, a), NField,pointsField...,Nt), (3, 1, 2))
+    
+    a=reduce(hcat,a)
+
+    # Now save as compact single dataset
+    @save compactFileName a compress=true
+
+    #endregion
 
 end

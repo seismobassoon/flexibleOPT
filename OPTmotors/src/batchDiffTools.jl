@@ -44,12 +44,13 @@ function timeStepOptimisation!(F, costfunctions,symbUnknownField,unknownField,sy
     #unknownField .= 0.0
     for iter in 1:nIteration
         Res_closed! = (F,unknownField) -> Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-        @show F
+  
         r = norm(F)*normalisation
         
         if iter==1 r1 = r; end
-       
+        if r === 0.0 break end
         if r/r1 < smallNumber break end
+      
             
         # Jacobian assembly
         forwarddiff_color_jacobian!(J, Res_closed!, unknownField, colorvec = colors)
