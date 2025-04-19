@@ -2,16 +2,22 @@ include("../src/batchDiffTools.jl")
 
 # I kind of use what Tibo did in ExactSolutions.jl
 
-function timeMarchingScheme(opt, Nt, Δnum, maskedRegionForSourcesInSpace;sourceType="Ricker",t₀=50,f₀=0.03)
+function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03,initialCondition=0.0)
 
-    #region initialisation and source time functions
+    #region reading data and source time functions
 
     operators = opt["numOperators"]
-    costfunctions,fieldLHS,fieldRHS = operators
-    @show size(costfunctions),size(fieldLHS[1,1]),size(fieldRHS)
+    costfunctions,fieldLHS,fieldRHS,champsLimité = operators
+    #@show size(costfunctions),size(fieldLHS[1,1]),size(fieldRHS)
+    @show champsLimité[1,1]
 
-    it=collect(1:1:Nt)
-    t=(it.-1).*Δnum[end] # time vector # if it's not time marching t will give you just 0.0 regardless of Δnum[end]
+    NField = size(costfunctions)[1]
+    NCostfunctions=size(costfunctions)[2]
+    if size(fieldLHS)[1]
+    end
+
+    itVec=collect(1:1:Nt)
+    t=(itVec.-1).*Δnum[end] # time vector # if it's not time marching t will give you just 0.0 regardless of Δnum[end]
 
     #@show costfunctions[1,431] # check if we can see the source terms
 
@@ -31,13 +37,32 @@ function timeMarchingScheme(opt, Nt, Δnum, maskedRegionForSourcesInSpace;source
         sourceTime = myRicker.(t)
     end
 
+    #endregion
+
+    #region initial condition
+
+    tmpField = similar(fieldLHS)
+    tmpSource = similar(fieldRHS)
+
+    
 
 
+    #endregion
+
+    
+    #region
+
+    for it in itVec
+
+    end
+
+
+    #endregion
 
 
 
 end
-
+function dummy()
 # Time loop
 for it=1:nt
     U00 .= U0
@@ -80,4 +105,5 @@ for it=1:nt
         # update
         U    .+= δU
     end
+end
 end

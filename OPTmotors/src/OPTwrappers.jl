@@ -1,6 +1,9 @@
 using Symbolics,DrWatson
-
+include("../src/batchNewSymbolics.jl")
+include("../src/OPTnewEngines.jl") 
 include("../src/famousSourceFunctions.jl")
+include("../src/famousEquations.jl")
+include("../src/timeMarchingSchemes.jl")
 
 function makeCompleteCostFunctions(concreteModelParameters::Dict)
     # This is a kind of big wrapper to construct an explicit numerical Cost functions to be minimised during the simulation
@@ -49,7 +52,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
 
     # left-hand side, which is far more recyclable than r.h.s.
     
-    costfunctionsLHS,fieldLHS=numOperators["numOperators"]
+    costfunctionsLHS,fieldLHS,dummy=numOperators["numOperators"]
     
 
     costfunctionsRHS = similar(costfunctionsLHS)
@@ -62,7 +65,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
         rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=((1.0)) fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
         numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(concreteModelParameters));filename = config -> savename("source",concreteModelParameters; ignores=["vars", "fields"]))
        
-        costfunctionsRHS,fieldRHS=numOperators["numOperators"]
+        costfunctionsRHS,fieldRHS,champsLimité=numOperators["numOperators"]
 
     end
   
@@ -71,5 +74,5 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     #costfunctions=0.#costfunctionsLHS[1,1]-costfunctionsLHS[1,1]
     costfunctions = costfunctionsLHS .- costfunctionsRHS
     #numOperators=(costfunctions=costfunctions)
-    return costfunctions,fieldLHS,fieldRHS
+    return costfunctions,fieldLHS,fieldRHS,champsLimité
 end

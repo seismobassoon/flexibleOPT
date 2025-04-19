@@ -6,10 +6,9 @@ cd(@__DIR__)
 Pkg.activate("../..")
 
 include("../src/imageReader.jl") # read 2D images for models
-include("../src/batchNewSymbolics.jl")
-include("../src/OPTnewEngines.jl") 
+
 include("../src/OPTwrappers.jl") 
-include("../src/famousEquations.jl")
+
 
 
 
@@ -138,7 +137,7 @@ opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,data
 Nt=300
 
 # for a non time marching scheme, put Nt=1 and  Δnum as a fake value (just put as it is)
-timeMarchingScheme(opt, Nt, Δnum, maskedRegionForSourcesInSpace)
+timeMarchingScheme(opt, Nt, Δnum)
 
 
 

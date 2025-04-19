@@ -7,8 +7,8 @@ include("../src/CerjanBoundary.jl")
 
 # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
 
-
-timeDimensionString="t" # if the user does not want to use "t" for the time marching scheme, it should be changed
+timeDimensionString="t" 
+# if the user does not want to use "t" for the time marching scheme, it should be changed
 # and this "t" should be the last element in coordinates
 
 function findCartesianDependency(expression,Ndimension)
@@ -626,8 +626,8 @@ function constructingNumericalDiscretisedEquations(config::Dict)
     # just a wrapper
     @unpack semiSymbolicOpt,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion = config
 
-    costfunctions,場=constructingNumericalDiscretisedEquations(semiSymbolicOpt,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
-    numOperators=(costfunctions=costfunctions,場=場)
+    costfunctions,場,champsLimité=constructingNumericalDiscretisedEquations(semiSymbolicOpt,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
+    numOperators=(costfunctions=costfunctions,場=場,champsLimité=champsLimité)
     return @strdict(numOperators)
 end
 
@@ -789,16 +789,13 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #emptyRegionPointsSpace=wholeRegionPointsSpace.+ 2 .* spacePointsUsed
 
     #場dummy=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
-    場=Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
+    場 = Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
+    
 
     for it in 1:timePointsUsedForOneStep
         for iField in eachindex(fields)
-            #newstring_dummy=split(string(fields[iField]),"(")[1]*"_mod_dummy"
             newstring=split(string(fields[iField]),"(")[1]*"_mod"*"_t="*string(it)
             場[iField,it]=Symbolics.variables(Symbol(newstring),Base.OneTo.(Tuple(wholeRegionPointsSpace))...)
-            #場dummy[iField,it]=string_as_varname(newstring_dummy, Array{Any,Ndimension-1}(undef,Tuple(emptyRegionPointsSpace)))
-            #場[iField,it]=Symbolics.variables(Symbol(newstring),
-            #string_as_varname(newstring, Array{Any,Ndimension-1}(empty,Tuple(wholeRegionPointsSpace)))
         end
     end
 
@@ -811,13 +808,28 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     #region making a maskingField (for limited source areas, boundary conditions, etc.)
 
     maskingField=Array{Any,Ndimension-1}(undef,Tuple(wholeRegionPointsSpace)) # maskingField is defined only for whole domain
+    champsLimité = Array{Any,2}(undef,NtypeofFields,timePointsUsedForOneStep)
     if maskedRegionInSpace === nothing
         maskingField .= 1.0
     elseif typeof(maskedRegionInSpace) === Array{CartesianIndex,1}
+        for it in 1:timePointsUsedForOneStep
+            for iField in eachindex(fields)
+                newstring=split(string(fields[iField]),"(")[1]*"_mod_limited"*"_t="*string(it)
+                champsLimité[iField,it] = Array{Any,1}(undef,length(maskedRegionInSpace))
+            end
+        end
         maskingField .= 0.0
+        tmpIndex=1
         for iSpace in maskedRegionInSpace
-            @show jSpace = conv.model2whole(iSpace)
+            jSpace = conv.model2whole(iSpace)
             maskingField[jSpace] =1.0
+            for it in 1:timePointsUsedForOneStep
+                for iField in eachindex(fields)
+                    tmpChampsLimitéContents= (jSpace,場[iField,it][jSpace])
+                    champsLimité[iField,it][tmpIndex]=tmpChampsLimitéContents
+                end
+            end
+            tmpIndex += 1
         end
     else
         @error "maskedRegionInSpace should be a 1D array of CartesianIndex (if it is CartesianIndices, you need to collect(Tuple()))"
@@ -1004,7 +1016,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
 
     #endregion
 
-    return costFunctions,場
+    return costFunctions,場,champsLimité
 
 end
 
