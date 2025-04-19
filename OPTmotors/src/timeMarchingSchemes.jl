@@ -33,13 +33,13 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     #endregion
 
-    #region initial condition, 1Dvectorisation of knowns and unknowns
+    #region 1Dvectorisation of knowns and unknowns
 
     #@show champsLimité[1,1], fieldLHS[1:end,1:end-1][1:end]
 
     knownField = fieldLHS[1:end,1:end-1][1:end]
     unknownField = fieldLHS[1:end,end][1:end]
-    knownSource = similar(fieldRHS)
+    knownForce = similar(fieldRHS)
     @show costfunctions[1:end]
 
     
@@ -49,6 +49,9 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     
     #region
+
+    knownField .= initialCondition
+    
 
     for it in itVec
 

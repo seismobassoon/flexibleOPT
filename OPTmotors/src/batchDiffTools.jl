@@ -1,7 +1,33 @@
-using SparseDiffTools,SparseArrays
+using SparseDiffTools,SparseArrays,Symbolics
 
-function sparseColouring()
+function Residual!(F,1dcostfunctions,unknownField,knownField,knownForce)
+    for i in eachindex(F)
+        mapping = Dict()
+        for j in eachindex(knownField)
+            mapping[symbKnownField[j]] = knownField[j]
+        end
+        for j in eachindex(knownForce)
+            mapping[symbKnownForce[j]] = knownForce[j]
+        end
+        F[i] = substitute(1dcostfunctions[i],mapping)
+    end
+    return
 end
+
+function sparseColouring(1dcostfunctions,unknownField,knownField,knownForce)
+    nCostfunctions = length(1dcostfunctions)
+    nUnknownField = length(unknownField)
+    input = rand(nUnknownField)
+    output = rand(nCostfunctions)
+    F=zeros(nCostfunctions)
+    Res_closed! = (F,U) -> Residual!(F,1dcostfunctions,unknownField,knownField,knownForce)
+    sparsity    = Symbolics.jacobian_sparsity(Res_closed!, output, input)
+    J           = Float64.(sparse(sparsity))
+    colors      = matrix_colors(J)
+    return J, colors
+end
+
+
 function myForwarddiff_color_jacobian!(F, U,nEq)
 
 
