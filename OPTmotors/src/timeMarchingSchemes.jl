@@ -16,19 +16,20 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     operators = opt["numOperators"]
     costfunctions,fieldLHS,fieldRHS,champsLimité = operators
-    costfunctions=reduce(vcat,costfunctions)
+    costfunctions=reduce(vcat,costfunctions) # we know that costfunctions is a 2D array
+
     #@show size(costfunctions),size(fieldLHS[1,1]),size(fieldRHS)
 
     timePointsUsedForOneStep = size(fieldLHS)[2]
     NField = size(fieldLHS)[1]
-    pointsField = size(fieldLHS[1,1])
+
+    pointsFieldSpace = size(fieldLHS[1,1]) # the list of points in space which is useful for reshaping
+    NpointsSpace = length(fieldLHS[1,1]) # the full number of points
 
     itVec=collect(1:1:Nt)
     t=(itVec.-1).*Δnum[end] # time vector # if it's not time marching t will give you just 0.0 regardless of Δnum[end]
     sourceTime = nothing
     #@show costfunctions[1,431] # check if we can see the source terms
-
-    #specificication of parameters such as Nt (which can be 1 for no time-marching scheme) and source time function 
 
 
     if sourceType === "Ricker"
@@ -48,29 +49,55 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     #region 1Dvectorisation of knowns and unknowns
     
-    symbKnownField = Array{Any,1}(undef,timePointsUsedForOneStep-1)
-    knownField = Array{Any,1}(undef,timePointsUsedForOneStep-1)
+    symbKnownField = Array{Num,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep-1)
+    knownField = Array{Number,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep-1)
+    Rcoord = CartesianIndices(pointsFieldSpace)
     for iT in 1:timePointsUsedForOneStep-1
-        symbKnownField[iT] = reduce(vcat,fieldLHS[1:end,iT][1:end])
-        knownField[iT] = similar(symbKnownField[iT])
-        knownField[iT] .= initialCondition
+        for iField in 1:NField
+            for j in Rcoord
+                linearJ = LinearIndices(Rcoord)[j]
+                symbKnownField[linearJ,iField,iT]=fieldLHS[iField,iT][j]
+                knownField[linearJ,iField,iT] = initialCondition
+            end
+        end
     end
 
-    symbUnknownField = reduce(vcat,fieldLHS[1:end,end][1:end])
+    symbUnknownField = Array{Num,2}(undef,NpointsSpace,NField)
+    unknownField = Array{Number,2}(undef,NpointsSpace,NField)
+    for iField in 1:NField
+        for j in Rcoord
+            linearJ = LinearIndices(Rcoord)[j]
+            symbUnknownField[linearJ,iField] = fieldLHS[iField,end][j]
+            unknownField[linearJ,iField] = initialCondition
+        end
+    end
 
     symbKnownForce = nothing
     if champsLimité === nothing
-        symbKnownForce = reduce(vcat,fieldRHS[1:end,1:end][1:end])
+        symbKnownForce=Array{Num,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep)
+        for iT in 1:timePointsUsedForOneStep
+            for iField in 1:NField
+                for j in Rcoord
+                    linearJ = LinearIndices(Rcoord)[j]
+                    symbKnownField[linearJ,iField,iT]=fieldLHS[iField,iT][j]
+                    knownField[linearJ,iField,iT] = initialCondition
+                end
+            end
+        end
     else
-        symbKnownForce = reduce(vcat,champsLimité[1:end,1:end][1:end])
+        NpointsLimités = length(champsLimité[1,1])
+        symbKnownForce=Array{Num,3}(undef,NpointsLimités,NField,timePointsUsedForOneStep)
+        knownForce=Array{Number,3}(undef,NpointsLimités,NField,timePointsUsedForOneStep)
+        for iT in 1:timePointsUsedForOneStep
+            for iField in 1:NField
+                for j in eachindex(NpointsLimités)
+                    symbKnownForce[j,iField,iT]=champsLimité[iField,iT][j]
+                    knownForce[j,iField,iT] = initialCondition
+                end
+            end
+        end
     end
    
- 
-    
-    unknownField = copy(symbUnknownField)
-    knownForce = similar(symbKnownForce)
-    knownForce .= initialCondition
-
     #endregion
 
     #region numerical operators

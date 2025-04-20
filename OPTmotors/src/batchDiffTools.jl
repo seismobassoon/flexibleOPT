@@ -1,7 +1,7 @@
 using SparseDiffTools,SparseArrays,Symbolics
 
 
-function buildNumericalFunctions(a,b,c,costfunctions,symbUnknownField,symbKnownField,symbKnownForce)
+function buildNumericalFunctionsOLD(a,b,c,costfunctions,symbUnknownField,symbKnownField,symbKnownForce)
     # this function will translate the costfunctions fully numerically
     knownInputs = vcat(reduce(vcat,reduce(vcat,symbKnownField) ),reduce(vcat,symbKnownForce))
     unknownInputs = reduce(vcat,symbUnknownField)
@@ -34,7 +34,7 @@ function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField
         # Evaluate the symbolic function and store it as a numerical function
         residual_func[i] = eval(residual_func_expr)
     end
-
+    @show residual_func[120]
     return residual_func
 end
 
@@ -64,7 +64,7 @@ function Residual_OLD!(F,costfunctions,symbUnknownField,unknownField,symbKnownFi
 end
 
 function makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
-    knownInputs = vcat(reduce(vcat,reduce(vcat,knownField) ),reduce(vcat,knownForce))
+    knownInputs = vcat(reduce(vcat,reduce(vcat,knownField) ),reduce(vcat,reduce(vcat,knownForce)))
     unknownInputs = reduce(vcat,unknownField)
     all_inputs = vcat(unknownInputs,knownInputs)
     return all_inputs
@@ -73,7 +73,7 @@ end
 function Residual!(F,f,unknownField,knownField,knownForce)
     all_inputs=makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
     for i in eachindex(f)
-        F[i]=f[i](all_inputs)
+        F[i]=f[i]((all_inputs))
     end
 end
 
@@ -106,7 +106,7 @@ function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,colors;
         
         #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
         Res_closed! = (F,unknownField) -> Residual!(F,f,unknownField,knownField,knownForce)
-        @show Res_closed!(F,unknownField)
+        Res_closed!(F,unknownField)
         r = norm(F)#*normalisation
         
         if iter==1 r1 = r; end
