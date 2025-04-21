@@ -115,61 +115,65 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     #region preparation for time marching
 
-    # source time function will be shifted with timePointsUsedForOneStep - 1
+    if !isfile(sequentialFileName)
 
-    prepend!(sourceTime,zeros(timePointsUsedForOneStep))
+        # source time function will be shifted with timePointsUsedForOneStep - 1
 
-    unknownField .= initialCondition
-    fieldFile = jldopen(sequentialFileName, "w") # file open
+        prepend!(sourceTime,zeros(timePointsUsedForOneStep))
 
-    #endregion
+        unknownField .= initialCondition
 
-    #region make figure
-    # reshape
-    newField = reshape(unknownField,NField,pointsFieldSpace...)
-    # Construct the full slice dynamically
-    ndim = ndims(newField)
-    slice = (1, ntuple(i -> Colon(), ndim - 1)...)  # (1, :, :, ..., :)
-    # Apply the slice
-    slice_for_field = view(newField, slice...)
-
-    fig = Figure()
-    ax = Axis(fig[1, 1])
-    hm = heatmap!(ax, Float32.(slice_for_field), colormap = :deep, colorrange = (-1e-5, 1e-5))
-    display(fig)
-    #endregion
-
-
-    #region time marching scheme
-
-    for it in itVec
-        knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
-        #field to be shifted from the past
         
-        # this is not true!!! Just for debugging!
-        #knownForce[1:timePointsUsedForOneStep] .= 1.0
+        fieldFile = jldopen(sequentialFileName, "w") # file open
 
-        timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace)
+        #endregion
 
-        # update
-        knownField[:,:,1:end-1] = knownField[:,:,2:end]
-        knownField[:,:,end] = unknownField[:,:]
-
+        #region make figure
         # reshape
         newField = reshape(unknownField,NField,pointsFieldSpace...)
         # Construct the full slice dynamically
         ndim = ndims(newField)
         slice = (1, ntuple(i -> Colon(), ndim - 1)...)  # (1, :, :, ..., :)
         # Apply the slice
-        slice_for_field = view(newField, slice...)
+        slice_for_field = newField[1,:,:]
 
-        fieldFile["timestep_$it"] = newField
+        fig = Figure()
+        ax = Axis(fig[1, 1])
+        hm = heatmap!(ax, Float32.(slice_for_field), colormap = :deep, colorrange = (-1e-5, 1e-5))
+        display(fig)
+        #endregion
+
+
+        #region time marching scheme
+
+        for it in itVec
+            knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
+            #field to be shifted from the past
+            
+            # this is not true!!! Just for debugging!
+            knownForce[1:timePointsUsedForOneStep] .= 1.0
+
+            timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace)
+
+            # update
+            knownField[:,:,1:end-1] = knownField[:,:,2:end]
+            knownField[:,:,end] = unknownField[:,:]
+
+            # reshape
+            newField = reshape(unknownField,NField,pointsFieldSpace...)
+
+            fieldFile["timestep_$it"] = newField
+
+            slice_for_field = Float32.(newField[1, :, :])
+
+            # ⚠️ Properly update the heatmap plot
+            hm[1] = slice_for_field
         
-        hm[1][] = Float32.(slice_for_field)  # update data
-        sleep(0.1)
-        
+            @show it
+        end
+        close(fieldFile)
+
     end
-    close(fieldFile)
 
     #endregion
 
@@ -177,11 +181,12 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     #region making the file compact
 
     # Reconstruct array from separate datasets
+
     file = jldopen(sequentialFileName, "r")
     a = [file["timestep_$it"] for it in itVec]
     close(file)
 
-
+    @show a[90]
     #endregion
 
     #region compact file

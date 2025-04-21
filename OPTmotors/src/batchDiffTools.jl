@@ -166,6 +166,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         # update
         α = 1.0
         U    .+= α .* δU
+        @show maximum(U)
     end
 
     unknownField = reshape(U,pointsFieldSpace)
