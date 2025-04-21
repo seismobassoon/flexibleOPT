@@ -141,13 +141,14 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
         @time δU = - invJac * F
         #@time δU   .= .-J\F
 
-        # update
         α = 1.0
         U    .+= α .* δU
   
     end
-    @show maximum(U)
+    #@show maximum(U)
+    
     unknownField .= reshape(U,NpointsSpace,NField)
+    @show reshape(unknownField,10,10)
     return 
 end
 
