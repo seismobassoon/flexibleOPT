@@ -96,7 +96,7 @@ pointsInTime=2
 #models = ((model.*0.5.+2), (1))
 
 models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
-models=push!(models, (model .* 0.2 .+ 5.0))
+models=push!(models, (model .* 0.1 .+ 0.5))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 

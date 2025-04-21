@@ -3,7 +3,7 @@ using DrWatson,JLD2
 using GLMakie: Figure, Axis, heatmap!, Colorbar, record
 # I kind of use what Tibo did in ExactSolutions.jl
 
-function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03,initialCondition=0.0)
+function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0)
 
     #region reading data and source time functions
     if !isdir(datadir("fieldResults"))
