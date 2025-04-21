@@ -140,11 +140,18 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
         knownField[:,:,end] = unknownField[:,:]
 
         # reshape
-        newField = reshape(unknownField,NField,carDropDim(pointsFieldSpace)...)       
-        fieldFile["timestep_$it"] = newField
-        scene = heatmap(Float32.(newField), colormap =  :deep,colorrange=(-1.e-5,1.e-5))
-        display(scene)
+        newField = reshape(unknownField,NField,pointsFieldSpace...)
+        # Construct the full slice dynamically
+        ndim = ndims(newField)
+        slice = (1, ntuple(i -> Colon(), ndim - 1)...)  # (1, :, :, ..., :)
+        # Apply the slice
+        slice_for_field = view(newField, slice...)
 
+        fieldFile["timestep_$it"] = newField
+        
+        scene = heatmap(Float32.(slice_for_field), colormap =  :deep,colorrange=(-1.e-5,1.e-5))
+        display(scene)
+        
     end
     close(fieldFile)
 

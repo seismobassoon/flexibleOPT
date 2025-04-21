@@ -150,14 +150,15 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         #cache=ForwardColorJacCache(Res_closed!, V)
         #@show V, cache
         # Jacobian assembly
-       
+    
         @time forwarddiff_color_jacobian!(J, f_specific!, U, cache)
         #@time handMadeJacobianComputation!(J, f_specific!, F, U, rows, cols)
 
         # Solve
         @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
-        
-        @time δU .= .- (factor \ F)
+        invJac=inv(factor)
+
+        @time δU = - invJac * F
         #@time δU   .= .-J\F
 
         # update
