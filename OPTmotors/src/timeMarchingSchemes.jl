@@ -147,17 +147,17 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
         #region time marching scheme
 
         for it in itVec
-            knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
+            knownForce[1:timePointsUsedForOneStep] .= sourceTime[it:it+timePointsUsedForOneStep-1]
             #field to be shifted from the past
             
             # this is not true!!! Just for debugging!
-            knownForce[1:timePointsUsedForOneStep] .= 1.0
+            #knownForce[1:timePointsUsedForOneStep] .= 1.0
 
             timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace)
 
             # update
-            knownField[:,:,1:end-1] = knownField[:,:,2:end]
-            knownField[:,:,end] = unknownField[:,:]
+            knownField[:,:,1:end-1] .= knownField[:,:,2:end]
+            knownField[:,:,end] .= unknownField[:,:]
 
             # reshape
             newField = reshape(unknownField,NField,pointsFieldSpace...)

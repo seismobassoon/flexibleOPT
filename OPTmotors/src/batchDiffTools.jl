@@ -106,29 +106,13 @@ end
 
 function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
 
-    nEq = length(f)
-    nUnknownField = length(unknownField)
-    #input = Vector{Float64}(undef,nUnknownField)
-    input = rand(nUnknownField)
-    #output = Vector{Float64}(undef,nCostfunctions)
-    output = zeros(nEq)
-    F=zeros(nEq)
-
-    U,knownInputs = makeInputsForNumericalFunctions(input,knownField,knownForce)
-
-    Res_closed_look! = (F,U) -> Residual!(F,f,U,knownInputs)
-    sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,U)
-    rows, cols, _ = findnz(sparse(sparsity))
-
-    J = spzeros(length(F), length(U))
-
-
-    
+    nEq = length(f)    
     # normalisation by the number of equations
     normalisation = 1.0/nEq
     r1 = 1.0
     unknownField .= 0.0
     U,knownInputs = makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
+    @show maximum(knownField)
     δU = U
     F=zeros(nEq)
     f_specific! = temporaryConstantResidualFunction(f,U,knownInputs)
@@ -144,12 +128,6 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         if r === 0.0 break end
         if r/r1 < smallNumber break end
       
-            
-
-        # coloring
-        #V=rand(length(U))
-        #cache=ForwardColorJacCache(Res_closed!, V)
-        #@show V, cache
         # Jacobian assembly
     
         @time forwarddiff_color_jacobian!(J, f_specific!, U, cache)
@@ -170,7 +148,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
     end
 
     unknownField = reshape(U,pointsFieldSpace)
-    return unknownField
+    return nothing
 end
 
 
