@@ -137,7 +137,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         #Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
         #Res_closed!(F,U)
         f_specific!(F,U)
-        @show r = norm(F)*normalisation
+        @show r = norm(F)
         
         if iter==1 r1 = r; end
         if r === 0.0 break end
@@ -156,6 +156,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
 
         # Solve
         @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
+        
         @time δU .= .- (factor \ F)
         #@time δU   .= .-J\F
 
