@@ -135,6 +135,7 @@ end
 
 function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
 
+
     nEq = length(f)
 
 
@@ -178,28 +179,14 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         if r === 0.0 break end
         if r/r1 < smallNumber break end
       
-            
+        compute_jacobian!(J, Res_closed!, F, U, sparsity)
 
         # coloring
         #V=rand(length(U))
         #cache=ForwardColorJacCache(Res_closed!, V)
         #@show V, cache
         # Jacobian assembly
-        for k in eachindex(rows)
-            i = rows[k]
-            j = cols[k]
-            
-            # Prepare direction vector
-            dU = zeros(length(U))
-            dU[j] = 1.0
-            dF = zeros(length(F))
-            
-            # Compute directional derivative
-            Enzyme.autodiff(Forward, wrapper, Duplicated(U, dU), Duplicated(dF, dF))
-            
-            # Store the relevant value
-            J[i,j] = dF[i]  # we just need the i-th component
-        end
+        
         # Solve
         @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
         @time δU .= - (factor \ F)
@@ -214,7 +201,37 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
     return unknownField
 end
 
-function residual_wrapper(F::Vector{Float64},U::Vector{Float64})
-    Res_closed!(F, U)
-    return nothing
+
+
+function compute_jacobian!(J, Res_closed!, F,U, sparsity)
+    # Define residual_wrapper inside the scope of this function
+    function residual_wrapper(F::Vector{Float64}, U::Vector{Float64})
+        Res_closed!(F, U)
+        return nothing
+    end
+
+    # Get the non-zero indices from the sparsity pattern
+    rows, cols, _ = findnz(sparsity)
+
+    # Clear the Jacobian (if needed)
+    J .= 0.0
+
+    # Loop through the non-zero entries of the Jacobian
+    for k in 1:length(rows)
+        i = rows[k]
+        j = cols[k]
+
+        # Prepare perturbation vector
+        dU = zeros(length(U))
+        dU[j] = 1.0
+        
+        # Output vector for the residuals
+        dF = zeros(length(F))
+
+        # Compute the directional derivative using Enzyme
+        Enzyme.autodiff(Enzyme.Forward, Const(residual_wrapper), Duplicated(U, dU), Duplicated(F, dF))
+
+        # Store the computed Jacobian entry
+        J[i, j] = dF[i]
+    end
 end
