@@ -104,7 +104,7 @@ function sparseColouring(f,unknownField,knownField,knownForce)
 end
 
 
-function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
+function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,NpointsSpace,NField;nIteration=10,smallNumber =1.e-8)
 
     nEq = length(f)    
     # normalisation by the number of equations
@@ -144,10 +144,10 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         # update
         α = 1.0
         U    .+= α .* δU
-        @show maximum(U)
+  
     end
 
-    unknownField = reshape(U,pointsFieldSpace)
+    unknownField = reshape(U,NpointsSpace,NField)
     return nothing
 end
 
