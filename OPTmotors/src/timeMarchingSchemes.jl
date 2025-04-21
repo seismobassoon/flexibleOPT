@@ -194,7 +194,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50
     fig = Figure()
     ax = Axis(fig[1, 1])
         
-    hm=heatmap!(ax,Float32.(a[1])[1,:,:],colormap = :plasma, colorrange = (-1e-3, 1e-3))
+    hm=heatmap!(ax,Float32.(a[5])[1,:,:],colormap = :plasma, colorrange = (-1e-15, 1e-15))
     Colorbar(fig[1, 2], hm)
     display(fig)
     #endregion
