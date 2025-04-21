@@ -144,6 +144,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
         fieldFile["timestep_$it"] = newField
         scene = heatmap(Float32.(newField), colormap =  :deep,colorrange=(-1.e-5,1.e-5))
         display(scene)
+        
     end
     close(fieldFile)
 

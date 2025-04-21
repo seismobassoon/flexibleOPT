@@ -106,6 +106,23 @@ end
 function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
 
     nEq = length(f)
+    nUnknownField = length(unknownField)
+    #input = Vector{Float64}(undef,nUnknownField)
+    input = rand(nUnknownField)
+    #output = Vector{Float64}(undef,nCostfunctions)
+    output = zeros(nEq)
+    F=zeros(nEq)
+
+    U,knownInputs = makeInputsForNumericalFunctions(input,knownField,knownForce)
+
+    Res_closed_look! = (F,U) -> Residual!(F,f,U,knownInputs)
+    sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,U)
+    rows, cols, _ = findnz(sparse(sparsity))
+
+    J = spzeros(length(F), length(U))
+
+
+    
     # normalisation by the number of equations
     normalisation = 1.0/nEq
     r1 = 1.0
@@ -135,10 +152,11 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         # Jacobian assembly
        
         @time forwarddiff_color_jacobian!(J, f_specific!, U, cache)
+        #@time handMadeJacobianComputation!(J, f_specific!, F, U, rows, cols)
 
         # Solve
         @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
-        @time δU .= - (factor \ F)
+        @time δU .= .- (factor \ F)
         #@time δU   .= .-J\F
 
         # update
@@ -151,3 +169,33 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
 end
 
 
+function handMadeJacobianComputation!(J, f_specific!, F, U, rows, cols)
+    # Define the residual wrapper function to give to Enzyme
+    #residual_wrapper(F::Vector{Float64}, U::Vector{Float64}) = f_specific(F, U)
+
+    # perturbation 
+    ΔU = maximum((1.e-8,maximum(U)))
+
+    # Loop through the non-zero entries
+    for k in eachindex(rows)
+        i = rows[k]
+        j = cols[k]
+
+        # Perturbation vector
+        dU = zeros(length(U))
+        dU[j] = ΔU
+
+        # dF: output for directional derivative
+        #dF = zeros(length(F))
+        
+        # Call Enzyme's forward-mode autodiff on the wrapper function
+        #Enzyme.autodiff(Enzyme.Forward,residual_wrapper,Const, Duplicated(F, dF), Duplicated(U, dU))
+        newU = U .+ dU
+        newF = similar(F)
+        f_specific!(newF, newU)
+        dF_i = newF[i]-F[i]
+
+        # Store entry in the sparse Jacobian
+        J[i, j] = dF_i/dU[j]
+    end
+end
