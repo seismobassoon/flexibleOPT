@@ -3,15 +3,15 @@ using DrWatson,JLD2
 using GLMakie: Figure, Axis, heatmap!, Colorbar, record
 # I kind of use what Tibo did in ExactSolutions.jl
 
-function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0)
+function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0)
 
     #region reading data and source time functions
     if !isdir(datadir("fieldResults"))
         mkdir(datadir("fieldResults"))
     end
-    @show sequentialFileName=datadir("fieldResults", savename((Nt,Δnum...,sourceType),"jld2"))
+    @show sequentialFileName=datadir("fieldResults", savename((Nt,Δnum...,modelName,sourceType),"jld2"))
     # filename that can be given by DrWatson
-    @show compactFileName=datadir("fieldResults", savename("compact",(Nt,Δnum...,sourceType),"jld2"))
+    @show compactFileName=datadir("fieldResults", savename("compact",(Nt,Δnum...,modelName,sourceType),"jld2"))
 
 
     operators = opt["numOperators"]
@@ -188,7 +188,13 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.04
     a = [file["timestep_$it"] for it in itVec]
     close(file)
 
-    @show a[90]
+
+    fig = Figure()
+    ax = Axis(fig[1, 1])
+        
+    hm=heatmap!(ax,Float32.(a[10])[1,:,:],colormap = :plasma, colorrange = (-1e-15, 1e-15))
+    Colorbar(fig[1, 2], hm)
+    display(fig)
     #endregion
 
     #region compact file

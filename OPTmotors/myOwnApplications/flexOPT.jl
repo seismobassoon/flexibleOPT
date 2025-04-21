@@ -25,7 +25,7 @@ include("../src/OPTwrappers.jl")
 famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
-modelName="marmousi"
+modelName="homo0.5"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
 model =nothing
@@ -52,7 +52,7 @@ if modelDefinitionMethod === "2DimageFile"
     imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
-    model=read2DimageModel(imagefile,colormap;Nwidth=42,Nheight=82,showRecoveredImage=false)
+    model=read2DimageModel(imagefile,colormap;Nwidth=21,Nheight=21,showRecoveredImage=false)
 
 end
 #endregion
@@ -96,7 +96,7 @@ pointsInTime=2
 #models = ((model.*0.5.+2), (1))
 
 models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
-models=push!(models, (model .* 0.1 .+ 0.5))
+models=push!(models, (model .* 0.0 .+ 0.5))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 
@@ -137,7 +137,7 @@ opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,data
 Nt=100
 
 # for a non time marching scheme, put Nt=1 and  Δnum as a fake value (just put as it is)
-timeMarchingScheme(opt, Nt, Δnum)
+timeMarchingScheme(opt, Nt, Δnum,modelName)
 
 
 

@@ -9,7 +9,7 @@ function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField
     all_inputs = vcat(unknownInputs, knownInputs)
     
     residual_func = Array{Function, 1}(undef, length(costfunctions))
-    
+    #@show costfunctions[length(costfunctions)÷2],symbKnownForce
     for i in eachindex(costfunctions)
         # Create the symbolic function
         residual_func_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
