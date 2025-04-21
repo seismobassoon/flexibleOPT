@@ -52,7 +52,7 @@ if modelDefinitionMethod === "2DimageFile"
     imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
-    model=read2DimageModel(imagefile,colormap;Nwidth=21,Nheight=41,showRecoveredImage=false)
+    model=read2DimageModel(imagefile,colormap;Nwidth=42,Nheight=82,showRecoveredImage=false)
 
 end
 #endregion
@@ -96,7 +96,7 @@ pointsInTime=2
 #models = ((model.*0.5.+2), (1))
 
 models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
-models=push!(models, (model .* 0.5 .+ 0.5))
+models=push!(models, (model .* 0.2 .+ 5.0))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 

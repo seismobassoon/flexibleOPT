@@ -156,10 +156,10 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
             timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,NpointsSpace,NField)
             @show maximum(unknownField)
             # update
-            newKnownField = similar(knownField)
-            newKnownField[:,:,1:end-1] .= knownField[:,:,2:end]
-            newKnownField[:,:,end] .= unknownField[:,:]
-            knownField .= newKnownField
+            #newKnownField = similar(knownField)
+            knownField[:,:,1:end-1] .= knownField[:,:,2:end]
+            knownField[:,:,end] .= unknownField[:,:]
+            #knownField .= newKnownField
 
             # reshape
             newField = reshape(unknownField,NField,pointsFieldSpace...)
