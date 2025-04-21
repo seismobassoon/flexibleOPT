@@ -82,20 +82,21 @@ end
 
 function sparseColouring(f,unknownField,knownField,knownForce)
     # this function is colouring the matrix
+    knownField .= 0.0
+    knownForce .= 0.0
+    U,knownInputs = makeInputsForNumericalFunctions(input,knownField,knownForce)
+
     nCostfunctions = length(f)
-    nUnknownField = length(unknownField)
-    #input = Vector{Float64}(undef,nUnknownField)
-    input = rand(nUnknownField)
+    nU = length(U)
+    input = rand(nU)
     #output = Vector{Float64}(undef,nCostfunctions)
     output = zeros(nCostfunctions)
     F=zeros(nCostfunctions)
 
-    U,knownInputs = makeInputsForNumericalFunctions(input,knownField,knownForce)
-
-    Res_closed_look! = (F,U) -> Residual!(F,f,U,knownInputs)
+    Res_closed_look! = (F,U) -> temporaryConstantResidualFunction(f,U,knownInputs)
     sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,U)
     J           = Float64.(sparse(sparsity))
-    V=rand(length(U))
+    V=rand(nU)
     cache=ForwardColorJacCache(Res_closed_look!, V)
     #J = (sparse(sparsity))
     #colors      = matrix_colors(J)
@@ -137,9 +138,11 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
         #@time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
         #invJac=inv(factor)
         invJac = myInv(J)
+        
 
         @time δU = - invJac * F
         #@time δU   .= .-J\F
+        heatmap(1:10,1:10,δU)
 
         α = 1.0
         U    .+= α .* δU

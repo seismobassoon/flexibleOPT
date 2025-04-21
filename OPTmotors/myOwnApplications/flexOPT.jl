@@ -134,7 +134,7 @@ opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,data
 #endregion
 
 #region use the quasi-numerical operators to start computing
-Nt=10
+Nt=1
 
 # for a non time marching scheme, put Nt=1 and  Δnum as a fake value (just put as it is)
 timeMarchingScheme(opt, Nt, Δnum,modelName)

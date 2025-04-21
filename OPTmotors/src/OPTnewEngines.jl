@@ -302,7 +302,7 @@ function OPTobj(operatorConfigurations::Dict)
     # if you do not want to apply external forces, it is possible to skip below
     if IneedExternalSources 
         @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
-        #Γg = operatorForceData[1]
+        #@show Γg = operatorForceData[1]
         #utilitiesForce = operatorForceData[2]
     end
     eqInfo=(exprs=exprs,fields=fields,vars=vars,extexprs=extexprs,extfields=extfields,extvars=extvars,coordinates=coordinates)
