@@ -29,7 +29,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50
     itVec=collect(1:1:Nt)
     t=(itVec.-1).*Δnum[end] # time vector # if it's not time marching t will give you just 0.0 regardless of Δnum[end]
     sourceTime = nothing
-    #@show costfunctions[1,431] # check if we can see the source terms
+    #@show costfunctions[45] # check if we can see the source terms
 
 
     if sourceType === "Ricker"

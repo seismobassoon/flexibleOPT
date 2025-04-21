@@ -148,7 +148,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
     #@show maximum(U)
     
     unknownField .= reshape(U,NpointsSpace,NField)
-    @show reshape(unknownField,10,10)
+    
     return 
 end
 
