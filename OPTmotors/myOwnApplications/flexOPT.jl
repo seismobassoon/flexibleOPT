@@ -25,7 +25,7 @@ include("../src/OPTwrappers.jl")
 famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
-modelName="homo0.5"
+modelName="homo0.5mini"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
 model =nothing
@@ -52,7 +52,7 @@ if modelDefinitionMethod === "2DimageFile"
     imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
-    model=read2DimageModel(imagefile,colormap;Nwidth=21,Nheight=21,showRecoveredImage=false)
+    model=read2DimageModel(imagefile,colormap;Nwidth=10,Nheight=10,showRecoveredImage=false)
 
 end
 #endregion
@@ -134,7 +134,7 @@ opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,data
 #endregion
 
 #region use the quasi-numerical operators to start computing
-Nt=100
+Nt=10
 
 # for a non time marching scheme, put Nt=1 and  Δnum as a fake value (just put as it is)
 timeMarchingScheme(opt, Nt, Δnum,modelName)
