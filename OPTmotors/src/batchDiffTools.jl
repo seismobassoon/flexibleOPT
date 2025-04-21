@@ -138,7 +138,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         #Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
         #Res_closed!(F,U)
         f_specific!(F,U)
-        r = norm(F)
+        r = norm(F)*normalisation
         @show iter, r
         if iter==1 r1 = r; end
         if r === 0.0 break end

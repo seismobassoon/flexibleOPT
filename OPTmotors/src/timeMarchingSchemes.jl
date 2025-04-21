@@ -113,18 +113,34 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
  
     #endregion
 
-    #region time marching
+    #region preparation for time marching
 
     # source time function will be shifted with timePointsUsedForOneStep - 1
 
     prepend!(sourceTime,zeros(timePointsUsedForOneStep))
 
-
-  
-
     unknownField .= initialCondition
     fieldFile = jldopen(sequentialFileName, "w") # file open
 
+    #endregion
+
+    #region make figure
+    # reshape
+    newField = reshape(unknownField,NField,pointsFieldSpace...)
+    # Construct the full slice dynamically
+    ndim = ndims(newField)
+    slice = (1, ntuple(i -> Colon(), ndim - 1)...)  # (1, :, :, ..., :)
+    # Apply the slice
+    slice_for_field = view(newField, slice...)
+
+    fig = Figure()
+    ax = Axis(fig[1, 1])
+    hm = heatmap!(ax, Float32.(slice_for_field), colormap = :deep, colorrange = (-1e-5, 1e-5))
+    display(fig)
+    #endregion
+
+
+    #region time marching scheme
 
     for it in itVec
         knownForce[1:timePointsUsedForOneStep] = sourceTime[it:it+timePointsUsedForOneStep-1]
@@ -149,8 +165,8 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
         fieldFile["timestep_$it"] = newField
         
-        scene = heatmap(Float32.(slice_for_field), colormap =  :deep,colorrange=(-1.e-5,1.e-5))
-        display(scene)
+        hm[1][] = Float32.(slice_for_field)  # update data
+        sleep(0.1)
         
     end
     close(fieldFile)
