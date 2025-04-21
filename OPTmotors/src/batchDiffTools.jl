@@ -1,5 +1,6 @@
 using SparseDiffTools,SparseArrays,Symbolics,Enzyme
 
+include("../src/batchUseful.jl")
 
 function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField, symbKnownForce)
     # Collect all known inputs (constants) and unknown inputs (variables)
@@ -155,8 +156,9 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         #@time handMadeJacobianComputation!(J, f_specific!, F, U, rows, cols)
 
         # Solve
-        @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
-        invJac=inv(factor)
+        #@time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
+        #invJac=inv(factor)
+        invJac = myInv(J)
 
         @time δU = - invJac * F
         #@time δU   .= .-J\F
