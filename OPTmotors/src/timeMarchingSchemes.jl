@@ -122,7 +122,6 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
   
 
-    F = zeros(length(costfunctions))
     unknownField .= initialCondition
     fieldFile = jldopen(sequentialFileName, "w") # file open
 

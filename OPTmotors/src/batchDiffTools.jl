@@ -7,7 +7,7 @@ function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField
     unknownInputs = reduce(vcat, symbUnknownField)
     all_inputs = vcat(unknownInputs, knownInputs)
     
-    residual_func = Array{Any, 1}(undef, length(costfunctions))
+    residual_func = Array{Function, 1}(undef, length(costfunctions))
     
     for i in eachindex(costfunctions)
         # Create the symbolic function
@@ -59,6 +59,24 @@ function Residual!(F,f,unknownInputs,knownInputs)
         F[i]=f[i]((all_inputs))
     end
 end
+function temporaryConstantResidualFunction(f::Vector{F}, U::AbstractVector, knownInputs::AbstractVector) where {F <: Function}
+    N_U = length(U)
+    N_K = length(knownInputs)
+    function f_specific!(Fout::AbstractVector{T}, unknownInputs::AbstractVector{T}) where {T}
+        all_inputs = Vector{T}(undef, N_U + N_K)
+        @inbounds begin
+            all_inputs[1:N_U] .= unknownInputs
+            for i in 1:N_K
+                all_inputs[N_U + i] = T(knownInputs[i])
+            end
+            for i in eachindex(f)
+                Fout[i] = f[i](all_inputs)
+            end
+        end
+        return nothing
+    end
+    return f_specific!
+end
 
 
 function sparseColouring(f,unknownField,knownField,knownForce)
@@ -85,7 +103,7 @@ function sparseColouring(f,unknownField,knownField,knownForce)
 end
 
 
-function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
+function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
 
     nEq = length(f)
     # normalisation by the number of equations
@@ -94,11 +112,14 @@ function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,cache,p
     unknownField .= 0.0
     U,knownInputs = makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
     δU = U
+    F=zeros(nEq)
+    f_specific! = temporaryConstantResidualFunction(f,U,knownInputs)
     for iter in 1:nIteration
         
         #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-        Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
-        Res_closed!(F,U)
+        #Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
+        #Res_closed!(F,U)
+        f_specific!(F,U)
         @show r = norm(F)*normalisation
         
         if iter==1 r1 = r; end
@@ -113,7 +134,7 @@ function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,cache,p
         #@show V, cache
         # Jacobian assembly
        
-        @time forwarddiff_color_jacobian!(J, Res_closed!, U, cache)
+        @time forwarddiff_color_jacobian!(J, f_specific!, U, cache)
 
         # Solve
         @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
@@ -121,7 +142,7 @@ function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,cache,p
         #@time δU   .= .-J\F
 
         # update
-        α = 0.5
+        α = 1.0
         U    .+= α .* δU
     end
 
@@ -130,108 +151,3 @@ function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,cache,p
 end
 
 
-
-
-
-function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
-
-
-    nEq = length(f)
-
-
-
-
-    nCostfunctions = length(f)
-    nUnknownField = length(unknownField)
-    #input = Vector{Float64}(undef,nUnknownField)
-    input = rand(nUnknownField)
-    #output = Vector{Float64}(undef,nCostfunctions)
-    output = zeros(nCostfunctions)
-    F=zeros(nCostfunctions)
-
-    U,knownInputs = makeInputsForNumericalFunctions(input,knownField,knownForce)
-
-    Res_closed_look! = (F,U) -> Residual!(F,f,U,knownInputs)
-    sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,U)
-    rows, cols, _ = findnz(sparse(sparsity))
-
-    J = spzeros(length(F), length(U))
-   
-
-
-    # start the simu
-
-    # normalisation by the number of equations
-    normalisation = 1.0/nEq
-    r1 = 1.0
-    unknownField .= 0.0
-    U,knownInputs = makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
-    δU = U
-
-    for iter in 1:nIteration
-        
-        #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-        Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
-        Res_closed!(F,U)
-        @show r = norm(F)*normalisation
-        
-        if iter==1 r1 = r; end
-        if r === 0.0 break end
-        if r/r1 < smallNumber break end
-      
-        compute_jacobian!(J, Res_closed!, F, U, sparsity)
-
-        # coloring
-        #V=rand(length(U))
-        #cache=ForwardColorJacCache(Res_closed!, V)
-        #@show V, cache
-        # Jacobian assembly
-        
-        # Solve
-        @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
-        @time δU .= - (factor \ F)
-        #@time δU   .= .-J\F
-
-        # update
-        α = 0.5
-        U    .+= α .* δU
-    end
-
-    unknownField = reshape(U,pointsFieldSpace)
-    return unknownField
-end
-
-
-
-function compute_jacobian!(J, Res_closed!, F,U, sparsity)
-    # Define residual_wrapper inside the scope of this function
-    function residual_wrapper(F::Vector{Float64}, U::Vector{Float64})
-        Res_closed!(F, U)
-        return nothing
-    end
-
-    # Get the non-zero indices from the sparsity pattern
-    rows, cols, _ = findnz(sparsity)
-
-    # Clear the Jacobian (if needed)
-    J .= 0.0
-
-    # Loop through the non-zero entries of the Jacobian
-    for k in 1:length(rows)
-        i = rows[k]
-        j = cols[k]
-
-        # Prepare perturbation vector
-        dU = zeros(length(U))
-        dU[j] = 1.0
-        
-        # Output vector for the residuals
-        dF = zeros(length(F))
-
-        # Compute the directional derivative using Enzyme
-        Enzyme.autodiff(Enzyme.Forward, Const(residual_wrapper), Duplicated(U, dU), Duplicated(F, dF))
-
-        # Store the computed Jacobian entry
-        J[i, j] = dF[i]
-    end
-end
