@@ -1,22 +1,4 @@
-using SparseDiffTools,SparseArrays,Symbolics
-
-
-function buildNumericalFunctionsOLD(a,b,c,costfunctions,symbUnknownField,symbKnownField,symbKnownForce)
-    # this function will translate the costfunctions fully numerically
-    knownInputs = vcat(reduce(vcat,reduce(vcat,symbKnownField) ),reduce(vcat,symbKnownForce))
-    unknownInputs = reduce(vcat,symbUnknownField)
-    all_inputs = vcat(unknownInputs,knownInputs)
-    
-    residual_func=Array{Any,1}(undef,length(costfunctions))
-    for i in eachindex(costfunctions)
-        residual_func_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
-        residual_func[i] = eval(residual_func_expr)
-        #residual_func[i]=Symbolics.compile(costfunctions[i],all_inputs)
-    end
-    return residual_func
-
-    
-end
+using SparseDiffTools,SparseArrays,Symbolics,Enzyme
 
 
 function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField, symbKnownForce)
@@ -24,7 +6,7 @@ function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField
     knownInputs = vcat(reduce(vcat, reduce(vcat, symbKnownField)), reduce(vcat, symbKnownForce))
     unknownInputs = reduce(vcat, symbUnknownField)
     all_inputs = vcat(unknownInputs, knownInputs)
-
+    
     residual_func = Array{Any, 1}(undef, length(costfunctions))
     
     for i in eachindex(costfunctions)
@@ -34,7 +16,7 @@ function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField
         # Evaluate the symbolic function and store it as a numerical function
         residual_func[i] = eval(residual_func_expr)
     end
-    @show residual_func[120]
+    #@show residual_func[120]
     return residual_func
 end
 
@@ -66,12 +48,13 @@ end
 function makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
     knownInputs = vcat(reduce(vcat,reduce(vcat,knownField) ),reduce(vcat,reduce(vcat,knownForce)))
     unknownInputs = reduce(vcat,unknownField)
-    all_inputs = vcat(unknownInputs,knownInputs)
-    return all_inputs
+    #all_inputs = vcat(unknownInputs,knownInputs)
+    #@show length(knownInputs),length(unknownInputs)
+    return unknownInputs,knownInputs
 end
 
-function Residual!(F,f,unknownField,knownField,knownForce)
-    all_inputs=makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
+function Residual!(F,f,unknownInputs,knownInputs)
+    all_inputs=vcat(unknownInputs,knownInputs)
     for i in eachindex(f)
         F[i]=f[i]((all_inputs))
     end
@@ -85,44 +68,155 @@ function sparseColouring(f,unknownField,knownField,knownForce)
     #input = Vector{Float64}(undef,nUnknownField)
     input = rand(nUnknownField)
     #output = Vector{Float64}(undef,nCostfunctions)
-    output = rand(nCostfunctions)
+    output = zeros(nCostfunctions)
     F=zeros(nCostfunctions)
-    Res_closed_look! = (F,input) -> Residual!(F,f,input,knownField,knownForce)
-    sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,input)
+
+    U,knownInputs = makeInputsForNumericalFunctions(input,knownField,knownForce)
+
+    Res_closed_look! = (F,U) -> Residual!(F,f,U,knownInputs)
+    sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,U)
     J           = Float64.(sparse(sparsity))
-    colors      = matrix_colors(J)
-    return J,colors
+    V=rand(length(U))
+    cache=ForwardColorJacCache(Res_closed_look!, V)
+    #J = (sparse(sparsity))
+    #colors      = matrix_colors(J)
+    #coloring_cache = ForwardColorJacCache(Res_closed_look!, J, U; sparsity = J)
+    return J,cache
 end
 
 
-function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,colors;nIteration=10,smallNumber =1.e-8)
+function timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
 
     nEq = length(f)
     # normalisation by the number of equations
     normalisation = 1.0/nEq
     r1 = 1.0
-    #unknownField .= 0.0
+    unknownField .= 0.0
+    U,knownInputs = makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
+    δU = U
     for iter in 1:nIteration
         
         #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
-        Res_closed! = (F,unknownField) -> Residual!(F,f,unknownField,knownField,knownForce)
-        Res_closed!(F,unknownField)
-        r = norm(F)#*normalisation
+        Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
+        Res_closed!(F,U)
+        @show r = norm(F)*normalisation
         
         if iter==1 r1 = r; end
         if r === 0.0 break end
         if r/r1 < smallNumber break end
       
             
+
+        # coloring
+        #V=rand(length(U))
+        #cache=ForwardColorJacCache(Res_closed!, V)
+        #@show V, cache
         # Jacobian assembly
-        forwarddiff_color_jacobian!(J, Res_closed!, unknownField, colorvec = colors)
+       
+        @time forwarddiff_color_jacobian!(J, Res_closed!, U, cache)
 
         # Solve
-        δunknownField   .= .-J\F
+        @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
+        @time δU .= - (factor \ F)
+        #@time δU   .= .-J\F
 
         # update
-        unknownField    .+= δunknownField
+        α = 0.5
+        U    .+= α .* δU
     end
 
+    unknownField = reshape(U,pointsFieldSpace)
     return unknownField
+end
+
+
+
+
+
+function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace;nIteration=10,smallNumber =1.e-8)
+
+    nEq = length(f)
+
+
+
+
+    nCostfunctions = length(f)
+    nUnknownField = length(unknownField)
+    #input = Vector{Float64}(undef,nUnknownField)
+    input = rand(nUnknownField)
+    #output = Vector{Float64}(undef,nCostfunctions)
+    output = zeros(nCostfunctions)
+    F=zeros(nCostfunctions)
+
+    U,knownInputs = makeInputsForNumericalFunctions(input,knownField,knownForce)
+
+    Res_closed_look! = (F,U) -> Residual!(F,f,U,knownInputs)
+    sparsity    = Symbolics.jacobian_sparsity(Res_closed_look!,output,U)
+    rows, cols, _ = findnz(sparse(sparsity))
+
+    J = spzeros(length(F), length(U))
+    for k in eachindex(rows)
+        i = rows[k]
+        j = cols[k]
+        
+        # Prepare direction vector
+        dU = zeros(length(U))
+        dU[j] = 1.0
+        dF = zeros(length(F))
+        
+        # Compute directional derivative
+        Enzyme.autodiff(Forward, wrapper, Duplicated(U, dU), Duplicated(dF, dF))
+        
+        # Store the relevant value
+        J[i,j] = dF[i]  # we just need the i-th component
+    end
+
+
+    # start the simu
+
+    # normalisation by the number of equations
+    normalisation = 1.0/nEq
+    r1 = 1.0
+    unknownField .= 0.0
+    U,knownInputs = makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
+    δU = U
+
+    for iter in 1:nIteration
+        
+        #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
+        Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
+        Res_closed!(F,U)
+        @show r = norm(F)*normalisation
+        
+        if iter==1 r1 = r; end
+        if r === 0.0 break end
+        if r/r1 < smallNumber break end
+      
+            
+
+        # coloring
+        #V=rand(length(U))
+        #cache=ForwardColorJacCache(Res_closed!, V)
+        #@show V, cache
+        # Jacobian assembly
+       
+        @time forwarddiff_color_jacobian!(J, Res_closed!, U, cache)
+
+        # Solve
+        @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
+        @time δU .= - (factor \ F)
+        #@time δU   .= .-J\F
+
+        # update
+        α = 0.5
+        U    .+= α .* δU
+    end
+
+    unknownField = reshape(U,pointsFieldSpace)
+    return unknownField
+end
+
+function residual_wrapper(F::Vector{Float64},U::Vector{Float64})
+    Res_closed!(F, U)
+    return nothing
 end

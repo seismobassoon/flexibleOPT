@@ -63,7 +63,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
     end
 
     symbUnknownField = Array{Num,2}(undef,NpointsSpace,NField)
-    unknownField = Array{Number,2}(undef,NpointsSpace,NField)
+    unknownField = Array{Float64,2}(undef,NpointsSpace,NField)
     for iField in 1:NField
         for j in Rcoord
             linearJ = LinearIndices(Rcoord)[j]
@@ -109,7 +109,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
 
     #region sparse matrix colouring 
 
-    J,colors=sparseColouring(f,unknownField,knownField,knownForce)
+    J,cache=sparseColouring(f,unknownField,knownField,knownForce)
  
     #endregion
 
@@ -134,15 +134,17 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
         # this is not true!!! Just for debugging!
         knownForce[1:timePointsUsedForOneStep] .= 1.0
 
-        timeStepOptimisation!(F, f,unknownField,knownField,knownForce,J,colors)
+        timeStepOptimisation!(F,f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace)
 
         # update
-        knownField[1:end-1] = knownField[2:end]
-        knownField[end] = unknownField
+        knownField[:,:,1:end-1] = knownField[:,:,2:end]
+        knownField[:,:,end] = unknownField[:,:]
 
         # reshape
-        @show newField = reshape(unknownField,NField,pointsField...)       
+        newField = reshape(unknownField,NField,pointsFieldSpace...)       
         fieldFile["timestep_$it"] = newField
+        scene = heatmap(Float32.(newField), colormap =  :deep,colorrange=(-1.e-5,1.e-5))
+        display(scene)
     end
     close(fieldFile)
 
