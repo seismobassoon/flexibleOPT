@@ -134,7 +134,7 @@ function timeMarchingScheme(opt, Nt, Δnum;sourceType="Ricker",t₀=50,f₀=0.03
         # this is not true!!! Just for debugging!
         knownForce[1:timePointsUsedForOneStep] .= 1.0
 
-        timeStepOptimisation!(F,f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace)
+        timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,pointsFieldSpace)
 
         # update
         knownField[:,:,1:end-1] = knownField[:,:,2:end]

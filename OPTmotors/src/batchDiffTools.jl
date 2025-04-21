@@ -155,21 +155,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
     rows, cols, _ = findnz(sparse(sparsity))
 
     J = spzeros(length(F), length(U))
-    for k in eachindex(rows)
-        i = rows[k]
-        j = cols[k]
-        
-        # Prepare direction vector
-        dU = zeros(length(U))
-        dU[j] = 1.0
-        dF = zeros(length(F))
-        
-        # Compute directional derivative
-        Enzyme.autodiff(Forward, wrapper, Duplicated(U, dU), Duplicated(dF, dF))
-        
-        # Store the relevant value
-        J[i,j] = dF[i]  # we just need the i-th component
-    end
+   
 
 
     # start the simu
@@ -199,9 +185,21 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,poin
         #cache=ForwardColorJacCache(Res_closed!, V)
         #@show V, cache
         # Jacobian assembly
-       
-        @time forwarddiff_color_jacobian!(J, Res_closed!, U, cache)
-
+        for k in eachindex(rows)
+            i = rows[k]
+            j = cols[k]
+            
+            # Prepare direction vector
+            dU = zeros(length(U))
+            dU[j] = 1.0
+            dF = zeros(length(F))
+            
+            # Compute directional derivative
+            Enzyme.autodiff(Forward, wrapper, Duplicated(U, dU), Duplicated(dF, dF))
+            
+            # Store the relevant value
+            J[i,j] = dF[i]  # we just need the i-th component
+        end
         # Solve
         @time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
         @time δU .= - (factor \ F)
