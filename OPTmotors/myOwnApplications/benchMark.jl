@@ -1,0 +1,35 @@
+# Nobuaki Fuji (April 2025)
+#
+# Here in this project, I will try to benchmark OPT operators with different configurations for a Poisson 1D problem
+
+using  Pkg, BenchmarkTools, Plots
+
+cd(@__DIR__)
+Pkg.activate("../..")
+
+include("../src/imageReader.jl") # read 2D images for models
+
+include("../src/OPTwrappers.jl") 
+
+
+famousEquationType="1DpoissonHetero"
+exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂²=famousEquations(famousEquationType)
+
+modelName="1D_for_Poisson"
+
+logsOfHinverse = [0.2*i for i in 0:5]
+
+cases=[]
+
+# manufactured ExactSolutions
+u(x) = cos(x)
+
+
+
+for tmpLogOfHinverse in logsOfHinverse
+    
+    Δx = 1.0/exp(tmpLogOfHinverse)
+    Δnum = (Δx)
+
+
+

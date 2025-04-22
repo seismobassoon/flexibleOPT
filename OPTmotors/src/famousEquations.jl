@@ -98,6 +98,23 @@ function famousEquations(name)
         extvars=nothing
 
         coordinates =(x,t)
+
+
+    elseif name==="1DpoissonHetero"
+
+        # 1D Poisson hetero
+        @variables κ(x) T(x) f(x)
+        expr = ∂x(κ*∂x(T))
+
+        exprs = mySimplify(expr)
+        vars = κ
+        fields = T
+
+        extexprs=f
+        extfields=f
+        extvars=f
+        coordinates =(x)
+        
     elseif name==="2DpoissonHomo"
 
         # 2D Poisson homo
@@ -136,24 +153,6 @@ function famousEquations(name)
         #@show CartesianOPTSymbolics(exprs,fields,vars,0,0) 
         #@show CartesianOPTSymbolics(exprs,fields,vars,extexprs,extfields) 
         # We need model for the variables
-
-       
-
-        
-    elseif name==="1DpoissonHetero"
-
-        # 1D Poisson hetero
-        @variables κ(x) T(x) f(x)
-        expr = ∂x(κ*∂x(T))
-
-        exprs = mySimplify(expr)
-        vars = κ
-        fields = T
-
-        extexprs=f
-        extfields=f
-        extvars=f
-        coordinates =(x)
         
     elseif name==="2DsismoTimeIsoHomo"
         # 2D wave equation with double couple source
