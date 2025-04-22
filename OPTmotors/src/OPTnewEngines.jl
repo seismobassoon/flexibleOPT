@@ -12,7 +12,6 @@ timeDimensionString="t"
 # and this "t" should be the last element in coordinates
 
 function findCartesianDependency(expression,Ndimension)
-    
     expressionDependency=ones(Int,Ndimension)
     for iDimension in 1:Ndimension
         if typeof(expand_derivatives(∂[iDimension](expression))==0) <: Bool 
@@ -698,9 +697,18 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     if !timeMarching
         localPointsIndices=CartesianIndices(Tuple([car2vec(localPointsIndices[end]);1]))
         middlepoint=CartesianIndex([car2vec(middlepoint);1]...)
-        coordinates = (coordinates...,t)
+        tmpT=Symbolics.variable(timeDimensionString)
+        coordinates = (coordinates...,tmpT)
         modelPoints = (modelPoints...,1)
+        tmp_del = Symbolics.variable("∂"*timeDimensionString)
+        tmp_del = Differential(tmpT)
+        ∂ .= push!(∂,tmp_del)
+        tmp_del_2 = Symbolics.variable("∂"*timeDimensionString*"²")
+        tmp_del_2 = Differential(tmpT)*Differential(tmpT)
+        ∂² .= push!(∂²,tmp_del_2)
     end
+
+    @show coordinates,∂,∂²
 
     localPointsSpaceIndices=CartesianIndices(Tuple(car2vec(localPointsIndices[end])[1:end-1]))
     Ndimension=length(coordinates)

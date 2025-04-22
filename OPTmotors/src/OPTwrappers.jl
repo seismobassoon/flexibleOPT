@@ -43,11 +43,13 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     exprs,fields,vars,extexprs,extfields,extvars,coordinates=eqInfo
 
     AjiννᶜU,utilities=operatorPDE
-    Γg,utilitiesForce=operatorForce
+    if IneedExternalSources 
+        Γg,utilitiesForce=operatorForce
+    end
 
     lhsConfigurations = @strdict semiSymbolicOpt=AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace 
 
-    numOperators,file = @produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(concreteModelParameters));filename = config -> savename(concreteModelParameters; ignores=["vars", "fields"]))
+    numOperators,file = @produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(lhsConfigurations));filename = config -> savename(lhsConfigurations; ignores=["vars", "fields"]))
 
 
     # left-hand side, which is far more recyclable than r.h.s.
@@ -60,10 +62,11 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     fieldRHS = similar(fieldLHS)
     fieldRHS .= 0.
     
+    champsLimité = nothing
 
     if IneedExternalSources 
         rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=((1.0)) fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
-        numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(concreteModelParameters));filename = config -> savename("source",concreteModelParameters; ignores=["vars", "fields"]))
+        numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(rhsConfigurations));filename = config -> savename("source",rhsConfigurations; ignores=["vars", "fields"]))
        
         costfunctionsRHS,fieldRHS,champsLimité=numOperators["numOperators"]
 

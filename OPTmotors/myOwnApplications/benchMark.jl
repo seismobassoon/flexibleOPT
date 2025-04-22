@@ -23,7 +23,7 @@ modelName="1D_for_Poisson"
 
 logsOfHinverse = [0.2*i for i in 0:5]
 
-numPointsX = [2:4]
+numPointsX = collect(2:4)
 
 cases=[]
 
@@ -63,6 +63,9 @@ for iPointsUsed in eachindex(numPointsX)
             IneedExternalSources = false
             maskedRegionForSourcesInSpace = nothing
 
+            force = [substitute(qₓ,Dict(x=>X[i])) for i ∈ range(1,Nx)]
+            
+
             #DrWatson configurations
 
             orderBtime=1
@@ -81,7 +84,7 @@ for iPointsUsed in eachindex(numPointsX)
             opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
             syntheticData=timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=false)
 
-            anayliticalData = [substitute(qₓ,Dict(x=>X[i])) for i ∈ range(1,Nx)]
+            anayliticalData = [substitute(u,Dict(x=>X[i])) for i ∈ range(1,Nx)]
 
             misfit[iH,iCase,iPointsUsed] = norm(syntheticData-anayliticalData)
 
