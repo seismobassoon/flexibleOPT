@@ -2,7 +2,7 @@
 #
 # Here in this project, I will try to benchmark OPT operators with different configurations for a Poisson 1D problem
 
-using  Pkg, BenchmarkTools, Plots
+using  Pkg, BenchmarkTools, Plots, Symbolics, UnPack
 
 cd(@__DIR__)
 Pkg.activate("../..")
@@ -21,15 +21,22 @@ logsOfHinverse = [0.2*i for i in 0:5]
 
 cases=[]
 
-# manufactured ExactSolutions
-u(x) = cos(x)
+# manufactured ExactSolutions (Cyrillic = analytical solution)
+У(x) = cos(x)
+Б(x) = sin(x) +2
+cases = push!(cases,(У,Б))
+
+#
 
 
-
-for tmpLogOfHinverse in logsOfHinverse
+for case in cases
+    @unpack У,Б = case
     
-    Δx = 1.0/exp(tmpLogOfHinverse)
-    Δnum = (Δx)
+    for tmpLogOfHinverse in logsOfHinverse
+        
+        Δx = 1.0/exp(tmpLogOfHinverse)
+        Δnum = (Δx)
 
-
+    end
+end
 
