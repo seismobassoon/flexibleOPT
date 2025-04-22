@@ -3,7 +3,7 @@ using DrWatson,JLD2
 using GLMakie: Figure, Axis, heatmap!, Colorbar, record
 # I kind of use what Tibo did in ExactSolutions.jl
 
-function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0)
+function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0)
 
     #region reading data and source time functions
     if !isdir(datadir("fieldResults"))
@@ -139,10 +139,12 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50
         # Apply the slice
         slice_for_field = newField[1,:,:]
 
-        fig = Figure()
-        ax = Axis(fig[1, 1])
-        hm = heatmap!(ax, Float32.(slice_for_field), colormap = :deep, colorrange = (-1e-5, 1e-5))
-        display(fig)
+        if videoMode
+            fig = Figure()
+            ax = Axis(fig[1, 1])
+            hm = heatmap!(ax, Float32.(slice_for_field), colormap = :deep, colorrange = (-1e-5, 1e-5))
+            display(fig)
+        end
         #endregion
 
 
@@ -168,12 +170,16 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50
 
             fieldFile["timestep_$it"] = newField
 
-            slice_for_field = Float32.(newField[1, :, :])
+            if videoMode
 
-            # properly update the heatmap plot
-            hm[1] = slice_for_field
-        
-            @show it
+                slice_for_field = Float32.(newField[1, :, :])
+
+                # properly update the heatmap plot
+                hm[1] = slice_for_field
+            
+                @show it
+
+            end
         end
         close(fieldFile)
 
@@ -190,13 +196,18 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50
     a = [file["timestep_$it"] for it in itVec]
     close(file)
 
+    # this is only for benchmark 1d
+    return a[1]
+    # only only for benchmark 1d
 
+    if videoMode
     fig = Figure()
     ax = Axis(fig[1, 1])
         
     hm=heatmap!(ax,Float32.(a[1])[1,:,:],colormap = :plasma, colorrange = (-1e-6, 1e-6))
     Colorbar(fig[1, 2], hm)
     display(fig)
+    end
     #endregion
 
     #region compact file
