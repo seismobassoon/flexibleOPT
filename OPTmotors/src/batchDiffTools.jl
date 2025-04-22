@@ -10,6 +10,9 @@ function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField
     
     residual_func = Array{Function, 1}(undef, length(costfunctions))
     #@show costfunctions[length(costfunctions)÷2],symbKnownForce
+    #@show costfunctions[44],costfunctions[45],costfunctions[46]
+    #@show costfunctions[54],costfunctions[55],costfunctions[56]
+    #@show costfunctions[64],costfunctions[65],costfunctions[66]
     for i in eachindex(costfunctions)
         # Create the symbolic function
         residual_func_expr = build_function(costfunctions[i], all_inputs; expression = Val{false})
@@ -137,15 +140,15 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
         #@time factor = lu(J)  # Or try `ldlt`, `cholesky`, or `qr` depending on J's properties
         #invJac=inv(factor)
         invJac = myInv(J)
-        
+        @show round.(F,sigdigits=2)
 
         @time δU = - invJac * F
         #@time δU   .= .-J\F
-        
+        @show round.(δU,sigdigits=2)
 
         α = 1.0
         U    .+= α .* δU
-  
+        
     end
     #@show maximum(U)
     
