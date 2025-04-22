@@ -25,7 +25,7 @@ include("../src/OPTwrappers.jl")
 famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
-modelName="homo0.5mini"
+modelName="marmousi"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
 model =nothing
@@ -52,8 +52,8 @@ if modelDefinitionMethod === "2DimageFile"
     imagefile = "../data/model/random/marmousi.png"
     colormap = "jet" #colormap can be RGB vector or predefined colormap
 
-    model=read2DimageModel(imagefile,colormap;Nwidth=10,Nheight=10,showRecoveredImage=false)
-
+    #model=read2DimageModel(imagefile,colormap;Nwidth=10,Nheight=10,showRecoveredImage=false)
+    model=read2DimageModel(imagefile,colormap;showRecoveredImage=false)
 end
 #endregion
 
@@ -96,7 +96,7 @@ pointsInTime=2
 #models = ((model.*0.5.+2), (1))
 
 models=[] # you might need to make this empty tuple first, otherwise one-member tuple can be misinterpreted
-models=push!(models, (model .* 0.0 .+ 0.5))
+models=push!(models, (model .* 0.2 .+ 0.4))
 # if the dimension is degenerated, it is OK if the coordinate dependency is respected. The order will be taken based on the "coordinates" vector 
 
 
