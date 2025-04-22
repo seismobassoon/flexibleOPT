@@ -153,7 +153,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;sourceType="Ricker",t₀=50
             #field to be shifted from the past
             
             # this is not true!!! Just for debugging!
-            knownForce[1:timePointsUsedForOneStep] .= 1.0
+            #knownForce[1:timePointsUsedForOneStep] .= 1.0
 
             timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,NpointsSpace,NField)
             @show maximum(unknownField)
