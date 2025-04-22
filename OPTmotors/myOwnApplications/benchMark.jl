@@ -31,11 +31,12 @@ cases = push!(cases,(У,Б))
 
 for case in cases
     @unpack У,Б = case
-    
     for tmpLogOfHinverse in logsOfHinverse
         
         Δx = 1.0/exp(tmpLogOfHinverse)
         Δnum = (Δx)
+
+        
 
     end
 end
