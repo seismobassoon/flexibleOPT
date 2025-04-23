@@ -44,8 +44,10 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
         
         sourceTime = myRicker.(t)
     else sourceType == "Explicit"
-        if size(sourceFull) === (pointsFieldSpace...,NField,Nt)
-            @error "Oh, this options really demands you a full description of the force for space and time! Cheers!"
+        @show size(sourceFull), (pointsFieldSpace...,NField,Nt)
+        if size(sourceFull) !== (pointsFieldSpace...,NField,Nt)
+            @error "Oh, this options really demands you a full description of the force for space and time for the points ! Cheers!"
+        else
             sourceFull=reshape(sourceFull,NpointsSpace,NField,Nt)
         end
     end
@@ -78,14 +80,16 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     end
 
     symbKnownForce = nothing
+    knownForce =nothing
     if champsLimité === nothing
         symbKnownForce=Array{Num,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep)
+        knownForce=Array{Num,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep)
         for iT in 1:timePointsUsedForOneStep
             for iField in 1:NField
                 for j in Rcoord
                     linearJ = LinearIndices(Rcoord)[j]
-                    symbKnownField[linearJ,iField,iT]=fieldLHS[iField,iT][j]
-                    knownField[linearJ,iField,iT] = initialCondition
+                    symbKnownForce[linearJ,iField,iT]=fieldRHS[iField,iT][j]
+                    knownForce[linearJ,iField,iT] = initialCondition
                 end
             end
         end
@@ -205,9 +209,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     a = [file["timestep_$it"] for it in itVec]
     close(file)
 
-    # this is only for benchmark 1d
-    return a[1]
-    # only only for benchmark 1d
+
 
     if videoMode
     fig = Figure()
@@ -229,5 +231,9 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     @save compactFileName a compress=true
 
     #endregion
+
+    # this is only for benchmark 1d
+    return a[1]
+    # only only for benchmark 1d
 
 end

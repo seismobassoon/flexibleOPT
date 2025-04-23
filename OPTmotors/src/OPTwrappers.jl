@@ -65,7 +65,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,forceMode
     champsLimité = nothing
 
     if IneedExternalSources 
-        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName forceModels=forceModels fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
+        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=forceModels fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
         numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(rhsConfigurations));filename = config -> savename("source",rhsConfigurations; ignores=["vars", "fields"]))
        
         costfunctionsRHS,fieldRHS,champsLimité=numOperators["numOperators"]

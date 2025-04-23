@@ -112,7 +112,7 @@ function famousEquations(name)
 
         extexprs=f
         extfields=f
-        extvars=f
+        extvars=1
         coordinates =(x)
         
     elseif name==="2DpoissonHomo"

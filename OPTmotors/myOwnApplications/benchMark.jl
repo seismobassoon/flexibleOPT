@@ -60,11 +60,11 @@ for iPointsUsed in eachindex(numPointsX)
             models=push!(models, model)
             
 
-            IneedExternalSources = false
+            IneedExternalSources = true
             maskedRegionForSourcesInSpace = nothing
 
             force = [substitute(qₓ,Dict(x=>X[i])) for i ∈ range(1,Nx)]
-
+            sourceFull=reshape(force,Nx,1,1)
 
             #DrWatson configurations
 

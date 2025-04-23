@@ -708,7 +708,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
         ∂² .= push!(∂²,tmp_del_2)
     end
 
-    @show coordinates,∂,∂²
+    #@show coordinates,∂,∂²
 
     localPointsSpaceIndices=CartesianIndices(Tuple(car2vec(localPointsIndices[end])[1:end-1]))
     Ndimension=length(coordinates)
@@ -741,6 +741,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
             tmpModel[vec2car(ones(Int, Ndimension))] = models[iVar]
             Models[iVar]=tmpModel
         else
+            @show models[iVar],iVar,CartesianDependency, vars[iVar]
             newCoords=expandVectors(size(models[iVar]),CartesianDependency)
             ModelPoints[:,iVar] = newCoords
  
