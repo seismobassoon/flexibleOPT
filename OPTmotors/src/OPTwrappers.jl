@@ -12,7 +12,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, maskedRegionForSourcesInSpace = concreteModelParameters
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, forceModels,maskedRegionForSourcesInSpace = concreteModelParameters
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
     global ∂,∂²
     
@@ -23,7 +23,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
 
     # constructing numerical operator (with still symbolic expression for time coordinates)
 
-    costfunctions,fieldLHS,fieldRHS,champsLimité = quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace) 
+    costfunctions,fieldLHS,fieldRHS,champsLimité = quasiNumericalOperatorConstruction(operators,modelName,models,forceModels,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace) 
     
 
     # 
@@ -33,7 +33,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     return @strdict(numOperators)
 end
 
-function quasiNumericalOperatorConstruction(operators,modelName,models,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForFieldInSpace = nothing,maskedRegionForSourcesInSpace=nothing)
+function quasiNumericalOperatorConstruction(operators,modelName,models,forceModels,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForFieldInSpace = nothing,maskedRegionForSourcesInSpace=nothing)
 
     # this is a big wrapper that reads the semi symbolic expressions to give a set of numerical operators (with symbolic expression in time)
     # which will call wrappers of onstructingNumericalDiscretisedEquations(Masked)
@@ -54,7 +54,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
 
     # left-hand side, which is far more recyclable than r.h.s.
     
-    costfunctionsLHS,fieldLHS,dummy=numOperators["numOperators"]
+    costfunctionsLHS,fieldLHS,_=numOperators["numOperators"]
     
 
     costfunctionsRHS = similar(costfunctionsLHS)
@@ -65,7 +65,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,famousEqu
     champsLimité = nothing
 
     if IneedExternalSources 
-        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=((1.0)) fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
+        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName forceModels=forceModels fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
         numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(rhsConfigurations));filename = config -> savename("source",rhsConfigurations; ignores=["vars", "fields"]))
        
         costfunctionsRHS,fieldRHS,champsLimité=numOperators["numOperators"]

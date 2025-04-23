@@ -3,7 +3,7 @@ using DrWatson,JLD2
 using GLMakie: Figure, Axis, heatmap!, Colorbar, record
 # I kind of use what Tibo did in ExactSolutions.jl
 
-function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0)
+function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0,sourceFull)
 
     #region reading data and source time functions
     if !isdir(datadir("fieldResults"))
@@ -43,6 +43,11 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
         myRicker(x)=Ricker(x,t₀,f₀)
         
         sourceTime = myRicker.(t)
+    else sourceType == "Explicit"
+        if size(sourceFull) === (pointsFieldSpace...,NField,Nt)
+            @error "Oh, this options really demands you a full description of the force for space and time! Cheers!"
+
+        end
     end
 
     #endregion

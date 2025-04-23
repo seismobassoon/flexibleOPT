@@ -118,8 +118,9 @@ maskedRegionForSourcesInSpace  = Array{CartesianIndex,1}(undef,0) # it is import
 maskedRegionForSourcesInSpace = push!(maskedRegionForSourcesInSpace, CartesianIndex(modelPoints[1:end-1].÷2))# in Ndimension (or Ndimension  - 1 if timeMarching)
 # in this example, I put a point source at the centre of the model space
 
+forceModels =((1.0)) # if your model does not have anything special material parameters then it's how it's written
 
-concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints maskedRegionForSourcesInSpace
+concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace
 
 #endregion
 

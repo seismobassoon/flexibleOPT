@@ -64,7 +64,7 @@ for iPointsUsed in eachindex(numPointsX)
             maskedRegionForSourcesInSpace = nothing
 
             force = [substitute(qₓ,Dict(x=>X[i])) for i ∈ range(1,Nx)]
-            
+
 
             #DrWatson configurations
 
@@ -78,11 +78,18 @@ for iPointsUsed in eachindex(numPointsX)
             modelPoints = (Nx)
             maskedRegionForSourcesInSpace =nothing
             
-            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints maskedRegionForSourcesInSpace
+
+            forceModels =((1.0)) # if your model does not have anything special material parameters then it's how it's written
+
+            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace
 
 
             opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
-            syntheticData=timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=false)
+
+
+            Nt = 1
+            
+            syntheticData=timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=false,sourceType="Explicit",sourceFull=sourceFull)
 
             anayliticalData = [substitute(u,Dict(x=>X[i])) for i ∈ range(1,Nx)]
 
