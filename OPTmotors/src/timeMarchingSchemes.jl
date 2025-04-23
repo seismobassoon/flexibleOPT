@@ -44,7 +44,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
         
         sourceTime = myRicker.(t)
     else sourceType == "Explicit"
-        @show size(sourceFull), (pointsFieldSpace...,NField,Nt)
+        #@show size(sourceFull), (pointsFieldSpace...,NField,Nt)
         if size(sourceFull) !== (pointsFieldSpace...,NField,Nt)
             @error "Oh, this options really demands you a full description of the force for space and time for the points ! Cheers!"
         else
@@ -128,9 +128,15 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
 
     if !isfile(sequentialFileName)
 
+
+        if sourceType === "Ricker" && timePointsUsedForOneStep !== 1
         # source time function will be shifted with timePointsUsedForOneStep - 1
 
-        prepend!(sourceTime,zeros(timePointsUsedForOneStep))
+            prepend!(sourceTime,zeros(timePointsUsedForOneStep))
+        else sourceType === "Explicit" && timePointsUsedForOneStep !==1
+            # prepend zeros for kindness but maybe it's aweful to code it
+        end
+
 
         unknownField .= initialCondition
 
@@ -158,7 +164,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
 
 
         #region time marching scheme
-
+   
         for it in itVec
             if sourceType === "Ricker"
                 knownForce[1:end,1:end,1:timePointsUsedForOneStep] .= sourceTime[it:it+timePointsUsedForOneStep-1]

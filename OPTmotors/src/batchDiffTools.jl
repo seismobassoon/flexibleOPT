@@ -4,7 +4,7 @@ include("../src/batchUseful.jl")
 
 function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField, symbKnownForce)
     # Collect all known inputs (constants) and unknown inputs (variables)
-    knownInputs = vcat(reduce(vcat, reduce(vcat, symbKnownField)), reduce(vcat, symbKnownForce))
+    knownInputs = vcat(reduce(vcat, reduce(vcat, symbKnownField;init=[]);init=[]), reduce(vcat, symbKnownForce))
     unknownInputs = reduce(vcat, symbUnknownField)
     all_inputs = vcat(unknownInputs, knownInputs)
     
@@ -50,7 +50,7 @@ function Residual_OLD!(F,costfunctions,symbUnknownField,unknownField,symbKnownFi
 end
 
 function makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
-    knownInputs = vcat(reduce(vcat,reduce(vcat,knownField) ),reduce(vcat,reduce(vcat,knownForce)))
+    knownInputs = vcat(reduce(vcat,reduce(vcat,knownField; init=[]); init=[] ),reduce(vcat,reduce(vcat,knownForce)))
     unknownInputs = reduce(vcat,unknownField)
     #all_inputs = vcat(unknownInputs,knownInputs)
     #@show length(knownInputs),length(unknownInputs)
@@ -115,7 +115,8 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
     r1 = 1.0
     unknownField .= 0.0
     U,knownInputs = makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
-    @show maximum(knownField)
+    #@show maximum(knownField)
+    @show U,knownInputs
     δU = U
     F=zeros(nEq)
     f_specific! = temporaryConstantResidualFunction(f,U,knownInputs)
@@ -124,6 +125,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
         #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
         #Res_closed! = (F,U) -> Residual!(F,f,U,knownInputs)
         #Res_closed!(F,U)
+
         f_specific!(F,U)
         r = norm(F)*normalisation
         @show iter, r

@@ -19,7 +19,8 @@ if length(coordinates)  !== 1
 end
 
 
-modelName="1D_for_Poisson"
+#modelName="1D_for_Poisson"
+
 
 logsOfHinverse = [0.2*i for i in 0:5]
 
@@ -29,12 +30,12 @@ cases=[]
 
 # manufactured ExactSolutions 
 
-cases = push!(cases,(name="samewavelength",u=cos(x),β=sin(x)+2))
-cases = push!(cases,(name="halfwavelength",u=cos(x),β=sin(x/2) + 2))
-cases = push!(cases,(name="samewavelength_shifted_thirdpi",u=cos(x),β=sin(x+π/3) + 2))
-cases = push!(cases,(name="twicewavelength",u=cos(x),β=cos(x).^2 + 1))
-cases = push!(cases,(name="parabols",u=cos(x),β=x^2 .+ 1))
-cases = push!(cases,(name="homogeneous",u=cos(x),β=1.0))
+cases = push!(cases,(name=famousEquationType*"samewavelength",u=cos(x),β=sin(x)+2))
+cases = push!(cases,(name=famousEquationType*"halfwavelength",u=cos(x),β=sin(x/2) + 2))
+cases = push!(cases,(name=famousEquationType*"samewavelength_shifted_thirdpi",u=cos(x),β=sin(x+π/3) + 2))
+cases = push!(cases,(name=famousEquationType*"twicewavelength",u=cos(x),β=cos(x).^2 + 1))
+cases = push!(cases,(name=famousEquationType*"parabols",u=cos(x),β=x^2 .+ 1))
+cases = push!(cases,(name=famousEquationType*"homogeneous",u=cos(x),β=1.0))
 #
 
 L = 10*π # the length of the segment
