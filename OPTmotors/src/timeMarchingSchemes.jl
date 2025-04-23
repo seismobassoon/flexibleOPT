@@ -46,7 +46,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     else sourceType == "Explicit"
         if size(sourceFull) === (pointsFieldSpace...,NField,Nt)
             @error "Oh, this options really demands you a full description of the force for space and time! Cheers!"
-
+            sourceFull=reshape(sourceFull,NpointsSpace,NField,Nt)
         end
     end
 
@@ -156,7 +156,11 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
         #region time marching scheme
 
         for it in itVec
-            knownForce[1:timePointsUsedForOneStep] .= sourceTime[it:it+timePointsUsedForOneStep-1]
+            if sourceType === "Ricker"
+                knownForce[1:end,1:end,1:timePointsUsedForOneStep] .= sourceTime[it:it+timePointsUsedForOneStep-1]
+            else sourceType === "Explicit"
+                knownForce[1:end,1:end,1:timePointsUsedForOneStep] .= sourceFull[1:end,1:end,it:it+timePointsUsedForOneStep-1]
+            end
             #field to be shifted from the past
             
             # this is not true!!! Just for debugging!
