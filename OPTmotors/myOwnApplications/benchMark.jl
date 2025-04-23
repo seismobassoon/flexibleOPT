@@ -2,7 +2,7 @@
 #
 # Here in this project, I will try to benchmark OPT operators with different configurations for a Poisson 1D problem
 
-using  Pkg, BenchmarkTools, Symbolics, UnPack
+using  Pkg, BenchmarkTools, Symbolics, UnPack,GLMakie
 
 cd(@__DIR__)
 Pkg.activate("../..")
@@ -91,8 +91,12 @@ for iPointsUsed in eachindex(numPointsX)
             
             syntheticData=timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=false,sourceType="Explicit",sourceFull=sourceFull)
 
-            anayliticalData = [substitute(u,Dict(x=>X[i])) for i ∈ range(1,Nx)]
+            analyticalData = [substitute(u,Dict(x=>X[i])) for i ∈ range(1,Nx)]
 
+            scatter(X,analyticalData)
+            scatter!(X,syntheticData)        
+
+    
             misfit[iH,iCase,iPointsUsed] = norm(syntheticData-anayliticalData)
 
 
