@@ -289,18 +289,18 @@ end
 
 function OPTobj(operatorConfigurations::Dict)
     # this is just a wrapper for the OPTobj function below, for DrWatson package
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources= operatorConfigurations
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources, iExperiment= operatorConfigurations
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
   
     trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
-    @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)
+    @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum,iExperiment=iExperiment)
     #AjiννᶜU=operatorData[1]
     #utilities=operatorData[2]   
 
     operatorForceData=nothing
     # if you do not want to apply external forces, it is possible to skip below
     if IneedExternalSources 
-        @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum)  
+        @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum,iExperiment=iExperiment)  
         #@show Γg = operatorForceData[1]
         #utilitiesForce = operatorForceData[2]
     end
@@ -309,7 +309,7 @@ function OPTobj(operatorConfigurations::Dict)
     return @strdict(operators)
 end
 
-function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing)
+function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing,iExperiment =nothing)
 
     #region General introduction, some cautions
 
@@ -741,7 +741,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
             tmpModel[vec2car(ones(Int, Ndimension))] = models[iVar]
             Models[iVar]=tmpModel
         else
-            @show models[iVar],iVar,CartesianDependency, vars[iVar]
+            #@show models[iVar],iVar,CartesianDependency, vars[iVar]
             newCoords=expandVectors(size(models[iVar]),CartesianDependency)
             ModelPoints[:,iVar] = newCoords
  

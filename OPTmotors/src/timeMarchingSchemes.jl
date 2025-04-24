@@ -3,16 +3,18 @@ using DrWatson,JLD2
 using GLMakie: Figure, Axis, heatmap!, Colorbar, record
 # I kind of use what Tibo did in ExactSolutions.jl
 
-function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0,sourceFull)
+function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="Ricker",t₀=50,f₀=0.04,initialCondition=0.0,sourceFull=nothing, iExperiment=nothing)
 
     #region reading data and source time functions
     if !isdir(datadir("fieldResults"))
         mkdir(datadir("fieldResults"))
     end
-    @show sequentialFileName=datadir("fieldResults", savename((Nt,Δnum...,modelName,sourceType),"jld2"))
+    @unpack iH, iCase, iPointsUsed = iExperiment
+    experiment_name = "$(iH)_$(iCase)_$(iPointsUsed)"
+    @show sequentialFileName=datadir("fieldResults", savename((Nt,Δnum...,modelName,sourceType,experiment_name),"jld2"))
     # filename that can be given by DrWatson
-    @show compactFileName=datadir("fieldResults", savename("compact",(Nt,Δnum...,modelName,sourceType),"jld2"))
-
+    @show compactFileName=datadir("fieldResults", savename("compact",(Nt,Δnum...,modelName,sourceType,experiment_name),"jld2"))
+ 
 
     operators = opt["numOperators"]
     costfunctions,fieldLHS,fieldRHS,champsLimité = operators
@@ -57,7 +59,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     #region 1Dvectorisation of knowns and unknowns
     
     symbKnownField = Array{Num,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep-1)
-    knownField = Array{Number,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep-1)
+    knownField = Array{Float64,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep-1)
     Rcoord = CartesianIndices(pointsFieldSpace)
     for iT in 1:timePointsUsedForOneStep-1
         for iField in 1:NField
@@ -83,7 +85,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     knownForce =nothing
     if champsLimité === nothing
         symbKnownForce=Array{Num,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep)
-        knownForce=Array{Num,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep)
+        knownForce=Array{Float64,3}(undef,NpointsSpace,NField,timePointsUsedForOneStep)
         for iT in 1:timePointsUsedForOneStep
             for iField in 1:NField
                 for j in Rcoord
@@ -96,7 +98,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     else
         NpointsLimités = length(champsLimité[1,1])
         symbKnownForce=Array{Num,3}(undef,NpointsLimités,NField,timePointsUsedForOneStep)
-        knownForce=Array{Number,3}(undef,NpointsLimités,NField,timePointsUsedForOneStep)
+        knownForce=Array{Float64,3}(undef,NpointsLimités,NField,timePointsUsedForOneStep)
         for iT in 1:timePointsUsedForOneStep
             for iField in 1:NField
                 for j in eachindex(NpointsLimités)
@@ -179,10 +181,11 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
             timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,NpointsSpace,NField)
             @show maximum(unknownField)
             # update
-            #newKnownField = similar(knownField)
-            knownField[:,:,1:end-1] .= knownField[:,:,2:end]
-            knownField[:,:,end] .= unknownField[:,:]
-            #knownField .= newKnownField
+            if length(itVec) > 1
+                knownField[:,:,1:end-1] .= knownField[:,:,2:end]
+                knownField[:,:,end] .= unknownField[:,:]
+            end
+   
 
             # reshape
             newField = reshape(unknownField,NField,pointsFieldSpace...)
@@ -215,7 +218,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     a = [file["timestep_$it"] for it in itVec]
     close(file)
 
-
+    
 
     if videoMode
     fig = Figure()
@@ -239,7 +242,7 @@ function timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=true,sourceType="
     #endregion
 
     # this is only for benchmark 1d
-    return a[1]
+    return a
     # only only for benchmark 1d
 
 end

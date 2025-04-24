@@ -12,18 +12,18 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, forceModels,maskedRegionForSourcesInSpace = concreteModelParameters
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, forceModels,maskedRegionForSourcesInSpace, iExperiment = concreteModelParameters
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
     global ∂,∂²
     
     # here we construct semi symbolic operators (with numerical Δnum)
-    operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources
+    operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources iExperiment
     operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
 
     # constructing numerical operator (with still symbolic expression for time coordinates)
 
-    costfunctions,fieldLHS,fieldRHS,champsLimité = quasiNumericalOperatorConstruction(operators,modelName,models,forceModels,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace) 
+    costfunctions,fieldLHS,fieldRHS,champsLimité = quasiNumericalOperatorConstruction(operators,modelName,models,forceModels,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForSourcesInSpace=maskedRegionForSourcesInSpace,iExperiment=iExperiment) 
     
 
     # 
@@ -33,7 +33,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     return @strdict(numOperators)
 end
 
-function quasiNumericalOperatorConstruction(operators,modelName,models,forceModels,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForFieldInSpace = nothing,maskedRegionForSourcesInSpace=nothing)
+function quasiNumericalOperatorConstruction(operators,modelName,models,forceModels,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForFieldInSpace = nothing,maskedRegionForSourcesInSpace=nothing,iExperiment=nothing)
 
     # this is a big wrapper that reads the semi symbolic expressions to give a set of numerical operators (with symbolic expression in time)
     # which will call wrappers of onstructingNumericalDiscretisedEquations(Masked)

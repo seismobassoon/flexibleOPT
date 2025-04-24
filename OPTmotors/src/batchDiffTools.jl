@@ -63,7 +63,7 @@ function Residual!(F,f,unknownInputs,knownInputs)
         F[i]=f[i]((all_inputs))
     end
 end
-function temporaryConstantResidualFunction(f::Vector{F}, U::AbstractVector, knownInputs::AbstractVector) where {F <: Function}
+function temporaryConstantResidualFunction(f::Vector{F}, U::AbstractVector, knownInputs::AbstractVector;boundaryConditionForced=false) where {F <: Function}
     N_U = length(U)
     N_K = length(knownInputs)
     function f_specific!(Fout::AbstractVector{T}, unknownInputs::AbstractVector{T}) where {T}
@@ -75,6 +75,11 @@ function temporaryConstantResidualFunction(f::Vector{F}, U::AbstractVector, know
             end
             for i in eachindex(f)
                 Fout[i] = f[i](all_inputs)
+            end
+            if boundaryConditionForced
+                
+                Fout[1]=unknownInputs[1]-1.0
+                Fout[end]=unknownInputs[end]-1.0
             end
         end
         return nothing
@@ -107,7 +112,15 @@ function sparseColouring(f,unknownField,knownField,knownForce)
 end
 
 
-function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,NpointsSpace,NField;nIteration=10,smallNumber =1.e-8)
+function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,NpointsSpace,NField;nIteration=10,smallNumber =1.e-8,boundaryConditionForced=false)
+
+
+    #danger !!! 
+    boundaryConditionForced = true
+    #danger!!!
+    # DANGER!!!
+
+
 
     nEq = length(f)    
     # normalisation by the number of equations
@@ -116,10 +129,10 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
     unknownField .= 0.0
     U,knownInputs = makeInputsForNumericalFunctions(unknownField,knownField,knownForce)
     #@show maximum(knownField)
-    @show U,knownInputs
+
     δU = U
     F=zeros(nEq)
-    f_specific! = temporaryConstantResidualFunction(f,U,knownInputs)
+    f_specific! = temporaryConstantResidualFunction(f,U,knownInputs;boundaryConditionForced=boundaryConditionForced)
     for iter in 1:nIteration
         
         #Residual!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
@@ -127,6 +140,8 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
         #Res_closed!(F,U)
 
         f_specific!(F,U)
+
+      
         r = norm(F)*normalisation
         @show iter, r
         if iter==1 r1 = r; end

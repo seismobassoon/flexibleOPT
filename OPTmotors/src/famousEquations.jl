@@ -95,7 +95,7 @@ function famousEquations(name)
 
         extexprs=f
         extfields=f
-        extvars=nothing
+        extvars=1
 
         coordinates =(x,t)
 

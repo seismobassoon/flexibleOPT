@@ -2,13 +2,22 @@
 #
 # Here in this project, I will try to benchmark OPT operators with different configurations for a Poisson 1D problem
 
-using  Pkg, BenchmarkTools, Symbolics, UnPack,GLMakie
+using  Pkg, BenchmarkTools, Symbolics, UnPack,Symbolics,JLD2
 
 cd(@__DIR__)
 Pkg.activate("../..")
 
 
 include("../src/OPTwrappers.jl") 
+
+
+# Choose backend depending on environment
+if isdefined(Main, :IJulia) || get(ENV, "JULIA_EDITOR", "") == "code"
+    # Use CairoMakie for inline if in notebook or VS Code
+    using CairoMakie
+else
+    using GLMakie
+end
 
 
 famousEquationType="1DpoissonHetero"
@@ -22,7 +31,7 @@ end
 #modelName="1D_for_Poisson"
 
 
-logsOfHinverse = [0.2*i for i in 0:5]
+logsOfHinverse = [0.5*i for i in 0:8]
 
 numPointsX = collect(2:4)
 
@@ -34,29 +43,32 @@ cases = push!(cases,(name=famousEquationType*"samewavelength",u=cos(x),β=sin(x)
 cases = push!(cases,(name=famousEquationType*"halfwavelength",u=cos(x),β=sin(x/2) + 2))
 cases = push!(cases,(name=famousEquationType*"samewavelength_shifted_thirdpi",u=cos(x),β=sin(x+π/3) + 2))
 cases = push!(cases,(name=famousEquationType*"twicewavelength",u=cos(x),β=cos(x).^2 + 1))
-cases = push!(cases,(name=famousEquationType*"parabols",u=cos(x),β=x^2 .+ 1))
+cases = push!(cases,(name=famousEquationType*"parabols",u=cos(x),β=x^2+ 1))
 cases = push!(cases,(name=famousEquationType*"homogeneous",u=cos(x),β=1.0))
 #
 
-L = 10*π # the length of the segment
+L = 10.0*π # the length of the segment
 
 misfit = Array{Float64,3}(undef,length(logsOfHinverse),length(cases),length(numPointsX))
+
 
 for iPointsUsed in eachindex(numPointsX)
     for iCase in eachindex(cases)
         @unpack name,u,β = cases[iCase]
-        q = -mySimplify(β*∂[1](u))
+        q = mySimplify(β*∂[1](u))
         @show qₓ = mySimplify(∂[1](q))
         for iH in eachindex(logsOfHinverse)
-            
-            Δx = 1.0/exp(logsOfHinverse[iH])
+            iExperiment = (iH=iH,iCase=iCase,iPointsUsed=iPointsUsed)
+            ΔxTry = 1.0/exp(logsOfHinverse[iH])
+            Nx = Int(L÷ΔxTry) +1
+            Δx = L/(Nx-1)
+        
+
             Δnum = (Δx)
-
-            Nx = Int(L÷Δx) + 2
-
             @show X = [Δx * (i-1) for i ∈ range(1,Nx)]
 
-            @show model=[substitute(β,Dict(x=>X[i])) for i ∈ range(1,Nx)]
+      
+            model=[Symbolics.value(substitute(β,Dict(x=>X[i]))) for i ∈ range(1,Nx)]
             models=[]
             models=push!(models, model)
             
@@ -64,7 +76,7 @@ for iPointsUsed in eachindex(numPointsX)
             IneedExternalSources = true
             maskedRegionForSourcesInSpace = nothing
 
-            force = [substitute(qₓ,Dict(x=>X[i])) for i ∈ range(1,Nx)]
+            force = [Symbolics.value(substitute(qₓ,Dict(x=>X[i]))) for i ∈ range(1,Nx)]
             sourceFull=reshape(force,Nx,1,1)
 
             #DrWatson configurations
@@ -82,29 +94,34 @@ for iPointsUsed in eachindex(numPointsX)
 
             forceModels =((1.0)) # if your model does not have anything special material parameters then it's how it's written
 
-            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace
+            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace iExperiment
 
 
             opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
 
-
             Nt = 1
             
-            syntheticData=timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=false,sourceType="Explicit",sourceFull=sourceFull)
+            
+            syntheticData=timeMarchingScheme(opt, Nt, Δnum,modelName;videoMode=false,sourceType="Explicit",sourceFull=sourceFull,iExperiment=iExperiment)
+            syntheticData=reduce(vcat,syntheticData)
+            analyticalData = [Symbolics.value(substitute(u,Dict(x=>X[i]))) for i ∈ range(1,Nx)]
 
-            analyticalData = [substitute(u,Dict(x=>X[i])) for i ∈ range(1,Nx)]
+            fig =Figure()
+            ax=Axis(fig[1,1]; title="Comparison for h=$Δx, model=$(cases[iCase].name), points=1+$iPointsUsed")
+            lines!(ax,X,analyticalData,color=:blue,label="analytical")
+            scatter!(ax,X,syntheticData,color=:red,marker=:circle,label="synthetic")        
+            axislegend(ax)
+            display(fig)
+            
+            #save("plot_$iH_$iCase_$iPointsUsed.png",fig)
+            sleep(0.5)
+            misfit[iH,iCase,iPointsUsed] = norm(syntheticData-analyticalData)
 
-            scatter(X,analyticalData)
-            scatter!(X,syntheticData)        
-
-    
-            misfit[iH,iCase,iPointsUsed] = norm(syntheticData-anayliticalData)
-
-
+            
 
         end
     end
 end
 
 
-@show misfit
+@save "tmp_misfit.jld2" misfit
