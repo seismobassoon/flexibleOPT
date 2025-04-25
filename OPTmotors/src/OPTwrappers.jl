@@ -35,6 +35,7 @@ end
 
 function quasiNumericalOperatorConstruction(operators,modelName,models,forceModels,famousEquationType,modelPoints,IneedExternalSources;maskedRegionForFieldInSpace = nothing,maskedRegionForSourcesInSpace=nothing,iExperiment=nothing)
 
+    NpointsUsed=iExperiment.iPointsUsed
     # this is a big wrapper that reads the semi symbolic expressions to give a set of numerical operators (with symbolic expression in time)
     # which will call wrappers of onstructingNumericalDiscretisedEquations(Masked)
 
@@ -47,7 +48,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,forceMode
         Γg,utilitiesForce=operatorForce
     end
 
-    lhsConfigurations = @strdict semiSymbolicOpt=AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace 
+    lhsConfigurations = @strdict semiSymbolicOpt=AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace NpointsUsed
 
     numOperators,file = @produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(lhsConfigurations));filename = config -> savename(lhsConfigurations; ignores=["vars", "fields"]))
 
@@ -65,7 +66,7 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,forceMode
     champsLimité = nothing
 
     if IneedExternalSources 
-        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=forceModels fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace 
+        rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=forceModels fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace NpointsUsed
         numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(rhsConfigurations));filename = config -> savename("source",rhsConfigurations; ignores=["vars", "fields"]))
        
         costfunctionsRHS,fieldRHS,champsLimité=numOperators["numOperators"]

@@ -78,8 +78,8 @@ function temporaryConstantResidualFunction(f::Vector{F}, U::AbstractVector, know
             end
             if boundaryConditionForced
                 
-                Fout[1]=unknownInputs[1]-1.0
-                Fout[end]=unknownInputs[end]-1.0
+                Fout[1]=unknownInputs[1]#-1.0
+                Fout[end]=unknownInputs[end]#-1.0
             end
         end
         return nothing

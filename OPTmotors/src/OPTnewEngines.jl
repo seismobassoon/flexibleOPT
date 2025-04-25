@@ -575,7 +575,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                                             l_n_field = Tuple(l-n)[iCoord]
                                             l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
                                             # here I take only the middle_value
-                                            kernelProducts*=integralBsplineTaylorKernels1D(1,Δ[iCoord],l_n_variable,l_n_field)[1]
+                                            kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
                                         end
                                         
                                         #nodeValue=Symbol(nodeValue)
@@ -623,7 +623,7 @@ end
 
 function constructingNumericalDiscretisedEquations(config::Dict)
     # just a wrapper
-    @unpack semiSymbolicOpt,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion = config
+    @unpack semiSymbolicOpt,coordinates,modelName,models,fields,vars,famousEquationType,modelPoints,utilities, maskedRegion, NpointsUsed = config
 
     costfunctions,場,champsLimité=constructingNumericalDiscretisedEquations(semiSymbolicOpt,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions,場=場,champsLimité=champsLimité)

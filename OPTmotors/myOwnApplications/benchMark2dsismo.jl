@@ -44,3 +44,5 @@ dₘ = 0.0 # shif in space
 
 cases=[]
 cases = push!(cases,(name=famousEquationType*"samewavelength",u=cos(k₀*x-ω₀*t),ρ=3.0+sin(kᵣ*x+dᵣ),μ=3.0+sin(kₘ*x+dₘ)))
+
+L = 10.0*π # the length of the segment

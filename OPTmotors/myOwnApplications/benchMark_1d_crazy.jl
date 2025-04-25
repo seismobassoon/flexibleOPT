@@ -33,25 +33,21 @@ end
 
 logsOfHinverse = [0.5*i for i in 0:8]
 
-numPointsX = collect(2:4)
+numPointsX = collect(2:2)
 
 cases=[]
 
 # manufactured ExactSolutions 
 
-cases = push!(cases,(name=famousEquationType*"samewavelength",u=cos(x),β=sin(x)+2))
-cases = push!(cases,(name=famousEquationType*"halfwavelength",u=cos(x),β=sin(x/2) + 2))
-cases = push!(cases,(name=famousEquationType*"samewavelength_shifted_thirdpi",u=cos(x),β=sin(x+π/3) + 2))
-cases = push!(cases,(name=famousEquationType*"twicewavelength",u=cos(x),β=cos(x).^2 + 1))
-cases = push!(cases,(name=famousEquationType*"parabols",u=cos(x),β=x^2+ 1))
-cases = push!(cases,(name=famousEquationType*"homogeneous",u=cos(x),β=1.0))
+cases = push!(cases,(name=famousEquationType*"crazy",u=(log(x/10.0+1)/log(2.0))-x/10.0,β=x/10.0+1.0))
+
 #
 
-L = 10.0*π # the length of the segment
+L = 10.0 # the length of the segment
 
 misfit = Array{Float64,3}(undef,length(logsOfHinverse),length(cases),length(numPointsX))
 
-
+if !isfile("tmp_misfit_crazy.jld2")
 for iPointsUsed in eachindex(numPointsX)
     for iCase in eachindex(cases)
         @unpack name,u,β = cases[iCase]
@@ -82,7 +78,7 @@ for iPointsUsed in eachindex(numPointsX)
             #DrWatson configurations
 
             orderBtime=1
-            orderBspace=1
+            orderBspace=-1
             pointsInSpace=numPointsX[iPointsUsed]
             pointsInTime=0
 
@@ -122,6 +118,27 @@ for iPointsUsed in eachindex(numPointsX)
         end
     end
 end
-
-
 @save "tmp_misfit.jld2" misfit
+end
+@load "tmp_misfit.jld2" misfit
+
+@show misfit
+
+fig =Figure()
+ax=Axis(fig[1,1]; title="Misfit")
+N=length(cases)+1
+colors = [get(Makie.colorschemes[:viridis], (i - 1) / (N - 1)) for i in 1:N]
+for iCase in eachindex(cases)
+    scatter!(ax,logsOfHinverse,log.(misfit[:,iCase,1]),color=colors[iCase],label=cases[iCase].name)
+end
+
+#O_1=log.(misfit[1,1,1]).-1.0*logsOfHinverse
+O_2=log.(misfit[1,1,1]).-2.0*logsOfHinverse
+O_4=log.(misfit[1,1,1]).-4.0*logsOfHinverse
+#O_8=log.(misfit[1,1,1]).-1.0*logsOfHinverse
+#lines!(ax,logsOfHinverse,O_1,color=:black,label="O1")
+lines!(ax,logsOfHinverse,O_2,color=:black,label="O2")
+lines!(ax,logsOfHinverse,O_4,color=:black,label="O4")
+#lines!(ax,logsOfHinverse,O_8,color=:black,label="O8")
+axislegend(ax,position=:lb)
+display(fig)
