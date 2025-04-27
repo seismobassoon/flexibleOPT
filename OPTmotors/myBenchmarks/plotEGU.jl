@@ -6,13 +6,13 @@ cases = push!(cases,(name="λᵤ",u=cos(x),β=sin(x)+2))
 cases = push!(cases,(name="2λᵤ",u=cos(x),β=sin(x/2) + 2))
 cases = push!(cases,(name="λᵤ, shifted",u=cos(x),β=sin(x+π/3) + 2))
 cases = push!(cases,(name="λᵤ/2",u=cos(x),β=cos(x).^2 + 1))
-cases = push!(cases,(name="quandratic",u=cos(x),β=x^2+ 1))
+cases = push!(cases,(name="quadratic",u=cos(x),β=x^2+ 1))
 cases = push!(cases,(name="homo",u=cos(x),β=1.0))
 #
 
 L = 10.0*π 
-fig=Figure()
-ax=Axis(fig[1,1];title="κ model")
+fig=Figure(size=(600,600))
+ax=Axis(fig[1,1];title="κ model",xlabel="x")
 for iCase in eachindex(cases)
     @unpack name,u,β = cases[iCase]
     Ncases=length(cases)+1
@@ -20,27 +20,29 @@ for iCase in eachindex(cases)
     Δx=L/Nx
     X=[(i-1)*Δx for i ∈ range(1,Nx)]
     κ=[Symbolics.value(substitute(β,Dict(x=>X[i]))) for i ∈ range(1,Nx)]
-    colors = [get(Makie.colorschemes[:viridis], (i - 1) / (Ncases - 1)) for i in 1:Ncases]    
+    colors = [get(Makie.colorschemes[:gist_rainbow], (i - 1) / (Ncases - 1)) for i in 1:Ncases]    
     lines!(ax,X,κ,color=colors[iCase],label=cases[iCase].name)
 end
-
+ylims!(0,4)
+axislegend(ax,position=:rb)
 display(fig)
 
 fig =Figure()
 ax=Axis(fig[1,1]; title="Misfit")
 
 
+config="FD_3points"
+filename1= "tmp_misfit_"*config*".jld2"
+filename2= config*".png"
+@load filename1 misfit
 
 
-@load "tmp_misfit.jld2" misfit
 
 
-
-
-fig =Figure()
-ax=Axis(fig[1,1]; title="Misfit")
+fig =Figure(size=(400,400))
+ax=Axis(fig[1,1]; title="CONV 4 points",ylabel="ln(error)",xlabel="-ln(Δx): minimum: 0.018")
 N=length(cases)+1
-colors = [get(Makie.colorschemes[:viridis], (i - 1) / (N - 1)) for i in 1:N]
+colors = [get(Makie.colorschemes[:gist_rainbow], (i - 1) / (N - 1)) for i in 1:N]
 for iCase in eachindex(cases)
     scatter!(ax,logsOfHinverse,log.(misfit[:,iCase,1]),color=colors[iCase],label=cases[iCase].name)
 end
@@ -50,8 +52,10 @@ O_2=.-2.0*logsOfHinverse
 O_4=.-4.0*logsOfHinverse
 #O_8=log.(misfit[1,1,1]).-1.0*logsOfHinverse
 #lines!(ax,logsOfHinverse,O_1,color=:black,label="O1")
-lines!(ax,logsOfHinverse,O_2,color=:black,label="O2")
-lines!(ax,logsOfHinverse,O_4,color=:black,label="O4")
+lines!(ax,logsOfHinverse,O_2,color=:pink,label="O2")
+lines!(ax,logsOfHinverse,O_4,color=:orange,label="O4")
 #lines!(ax,logsOfHinverse,O_8,color=:black,label="O8")
+ylims!(-18,5)
 #axislegend(ax,position=:lb)
 display(fig)
+save(filename2,fig)
