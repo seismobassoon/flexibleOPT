@@ -9,35 +9,78 @@ include("../src/OPTwrappers.jl")
 
 using Enzyme
 using SparseArrays
-using Enzyme
 
-_has_cuda = try
-    @eval using CUDA
-    CUDA.has_cuda()  # ✅ call the function, don't shadow or reassign
-catch
-    false
+
+function detect_backend()
+    _has_cuda = false
+    _has_metal = false
+
+    try
+        if Sys.isapple()
+            @eval using Metal
+            devs = Metal.devices()
+            _has_metal = !isempty(devs)
+        else
+            @eval using CUDA
+            _has_cuda = CUDA.has_cuda()
+        end
+    catch e
+        @warn "GPU backend not available: $e"
+    end
+
+    return (_has_cuda, _has_metal)
 end
 
+_has_cuda, _has_metal = detect_backend()
 
-function enzyme_column_jacobian!(J::SparseMatrixCSC, f!, u::CuArray, res::CuArray)
+
+"""
+    enzyme_column_jacobian!(J, f!, u; backend=:cpu)
+
+Computes the sparse Jacobian J of f!(res, u) by Enzyme autodiff, column-by-column.
+
+# Arguments
+- `J`: preallocated SparseMatrixCSC (m × n)
+- `f!`: in-place residual function f!(res, u)
+- `u`: input vector (Array, CuArray, MtlArray)
+- `backend`: `:cpu`, `:cuda`, or `:metal`
+
+# Notes
+- The result is stored in `J`
+- `f!(res, u)` must support the selected backend array type
+"""
+function enzyme_column_jacobian!(J::SparseMatrixCSC{T}, f!::Function, u::AbstractVector{T}; backend::Symbol = :cpu) where T
     n = length(u)
-    du = similar(u)
+    tmp_u = copy(u)
+    
+    res = similar(u)  # for shape
+    f!(res, u)
+    m = length(res)
+
+    tmp_res = similar(res)
     df = similar(res)
+    du = similar(u)
 
     for j in 1:n
-        CUDA.fill!(du, zero(eltype(u)))
-        du[j] = one(eltype(u))
-        CUDA.fill!(df, zero(eltype(res)))
+        fill!(du, zero(T))
+        du[j] = one(T)
+        fill!(df, zero(T))
 
-        Enzyme.autodiff(Enzyme.Reverse, f!, Duplicated(df, res), Duplicated(du, u))
+        Enzyme.autodiff(
+            Enzyme.Reverse,
+            f!,
+            Duplicated(df, tmp_res),
+            Duplicated(du, tmp_u)
+        )
 
-        # Now df contains the j-th column of J
-        for i in 1:length(res)
+        for i in 1:m
             if df[i] != 0
-                J[i,j] = df[i]
+                J[i, j] = df[i]
             end
         end
     end
+
+    return J
 end
 
 
@@ -73,6 +116,16 @@ function run()
     println("res = ", res)
 end
 
-run()
+#run()
 
 
+if _has_cuda
+    println("Running on CUDA GPU")
+    # use CUDA arrays
+elseif _has_metal
+    println("Running on Metal GPU")
+    # use Metal arrays (MetalArray or MtlArray)
+else
+    println("Running on CPU")
+    # use standard Array
+end
