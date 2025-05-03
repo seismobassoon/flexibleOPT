@@ -2,6 +2,15 @@ using SparseDiffTools,SparseArrays,Symbolics,Enzyme
 
 include("../src/batchUseful.jl")
 
+
+_has_cuda = try
+    @eval using CUDA
+    CUDA.has_cuda()  # ✅ call the function, don't shadow or reassign
+catch
+    false
+end
+
+
 function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField, symbKnownForce)
     # Collect all known inputs (constants) and unknown inputs (variables)
     knownInputs = vcat(reduce(vcat, reduce(vcat, symbKnownField;init=[]);init=[]), reduce(vcat, symbKnownForce))
@@ -23,6 +32,30 @@ function buildNumericalFunctions(costfunctions, symbUnknownField, symbKnownField
     #@show residual_func[120]
     return residual_func
 end
+
+
+
+function enzyme_column_jacobian!(J::SparseMatrixCSC, f!, u::CuArray, res::CuArray)
+    n = length(u)
+    du = similar(u)
+    df = similar(res)
+
+    for j in 1:n
+        CUDA.fill!(du, zero(eltype(u)))
+        du[j] = one(eltype(u))
+        CUDA.fill!(df, zero(eltype(res)))
+
+        Enzyme.autodiff(Enzyme.Reverse, f!, Duplicated(df, res), Duplicated(du, u))
+
+        # Now df contains the j-th column of J
+        for i in 1:length(res)
+            if df[i] != 0
+                J[i,j] = df[i]
+            end
+        end
+    end
+end
+
 
 
 function Residual_OLD!(F,costfunctions,symbUnknownField,unknownField,symbKnownField,knownField,symbKnownForce,knownForce)
@@ -116,7 +149,7 @@ function timeStepOptimisation!(f,unknownField,knownField,knownForce,J,cache,Npoi
 
 
     #danger !!! 
-    boundaryConditionForced = true
+    boundaryConditionForced = false
     #danger!!!
     # DANGER!!!
 
