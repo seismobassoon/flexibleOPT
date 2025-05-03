@@ -245,6 +245,15 @@ function famousEquations(name)
         extvars = nothing
 
         coordinates =(t)
+    elseif name==="JohnPDE"
+
+        @variables u(x,t) ξ(x)
+
+        #wikipedia 
+
+        #exprs = 
+
+        coordinates = (x,t)   
     end
 
     
