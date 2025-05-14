@@ -181,6 +181,7 @@ function famousEquations(name)
         @tullio derivMoment[i] := ∇₂[j](M[i,j])
 
         exprs = ρ* ∂t²(u[1]) - traction[1], ρ* ∂t²(u[2]) - traction[2]
+
         fields=u[1], u[2]
         vars = ρ, λ, μ
 
