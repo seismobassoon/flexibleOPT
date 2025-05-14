@@ -133,7 +133,7 @@ for file in wtrFiles[120:120]
 
     local hm=heatmap!(ax,fi,colormap=cgrad(:viridis))
     Colorbar(fig[:, 2], hm)
-    #display(fig)
+    display(fig)
 
 end
 
