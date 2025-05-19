@@ -46,7 +46,7 @@ boolFlat = true # we can read but for me it is better to have this information b
 
 # Cartesian grids and interpolation
 
-minX,maxX,nX = -6500e3, 6500e3, 131
+minX,maxX,nX = -6500e3, 6500e3, 521
 minY,maxY,nY = minX,maxX,nX
 minZ,maxZ,nZ = minX,maxX,nX
 dR = (maxX-minX)/(nX-1) # the interval in X, which we suppose to be the smallest grid interval
@@ -79,14 +79,16 @@ end
 
 
 # file types
-
+dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025/"
 compositionFiles=myListDir(dir; pattern=r"test_c\d");
 temperatureFiles=myListDir(dir; pattern=r"test_t\d");
+wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
+dir="/Users/nobuaki/Documents/MantleConvectionTakashi/op_first_run/"
 rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 
 
-dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025"
-wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
+
+
 
 # iTime definition
 
@@ -97,7 +99,7 @@ wtrField=nothing
 file1=rhoFiles[iTime]
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
 
-field1, Xnode, Ynode, rcmb = extendToCoreWithρ(field1, Xnode, Ynode, rcmb, dR)
+#field1, Xnode, Ynode, rcmb = extendToCoreWithρ(field1, Xnode, Ynode, rcmb, dR)
 
 fi1,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field1,correlationLength,epsilon2);
 rhoField = quarterDiskExtrapolation(fi1,nX,nY);
@@ -124,12 +126,13 @@ display(fig)
 
 # below is for making a video
 
-for file in wtrFiles[120:120]
+for file in wtrFiles[100:100]
     local field, Xnode, Ynode= readStagYYFiles(file)
     local fi,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
-    local fi = quarterDiskExtrapolation(fi,nX,nY);
+    #local fi = quarterDiskExtrapolation(fi,nX,nY);
     local fig = Figure()
-    local ax = Axis(fig[1,1])
+    local ax = Axis(fig[1,1],aspect = 1)
+   
 
     local hm=heatmap!(ax,fi,colormap=cgrad(:viridis))
     Colorbar(fig[:, 2], hm)
