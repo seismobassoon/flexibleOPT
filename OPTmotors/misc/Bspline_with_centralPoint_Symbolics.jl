@@ -37,7 +37,7 @@ append!(nodes, nodes[end]) # so that the last segment be {νᵣ}
 
 # colour bar
 
-colors = [get(Makie.colorschemes[:gist_rainbow], (i - 1) / (numberNodes - 1)) for i in 1:numberNodes]
+colors = [get(Makie.colorschemes[:Paired_5], (i - 1) / (numberNodes - 1)) for i in 1:numberNodes]
 
 # b-splines
 
@@ -71,12 +71,12 @@ for ι in 0:1:maximumOrder-1
             # for the upgoing part
 
             if ν - neighbour <= νᵣ && ν - neighbour >= νₗ
-                @show rightlimit = minimum((numberNodes, tmpν + floor))
-                @show leftlimit = maximum((1, tmpν - ceiling))
+                rightlimit = minimum((numberNodes, tmpν + floor))
+                leftlimit = maximum((1, tmpν - ceiling))
                 for νSegment in leftlimit:1:rightlimit
-                    tmpνSegment = νSegment - νₗ + 1
+                    tmpνSegment = νSegment #- νₗ + 1
                     numerator = x - (ν - ceiling) * Δy
-                    b[tmpνSegment, tmpν, ι+1] += numerator / denominator * b[tmpνSegment, tmpν-neighbour, ι]
+                    b[tmpνSegment, tmpν, ι+1] += mySimplify(numerator / denominator * b[tmpνSegment, tmpν-neighbour, ι])
                 end
             end
 
@@ -86,9 +86,9 @@ for ι in 0:1:maximumOrder-1
                 rightlimit = minimum((numberNodes, tmpν + floor + 1))
                 leftlimit = maximum((1, tmpν - ceiling + 1))
                 for νSegment in leftlimit:1:rightlimit
-                    tmpνSegment = νSegment - νₗ + 1
+                    tmpνSegment = νSegment #- νₗ + 1
                     numerator = (ν + floor + 1) * Δy - x
-                    b[tmpνSegment, tmpν, ι+1] += numerator / denominator * b[tmpνSegment, tmpν-neighbour+1, ι]
+                    b[tmpνSegment, tmpν, ι+1] += mySimplify(numerator / denominator * b[tmpνSegment, tmpν-neighbour+1, ι])
                 end
 
             end
@@ -101,10 +101,11 @@ for ι in 0:1:maximumOrder-1
             tmpνSegment = νSegment - νₗ + 1
             local xs = range(nodes[tmpνSegment], nodes[tmpνSegment+1], length=pointPerSegment)
             local ys = similar(xs)
-            for ix in eachindex(xs)
-                @show b[tmpνSegment, tmpν, ι+1],xs[ix]
-                ys[ix] = Symbolics.eval(b[tmpνSegment, tmpν, ι+1], Dict(x => xs[ix]))
-            end
+             # Precompute symbolic expression and turn into function
+            expr = b[tmpνSegment, tmpν, ι+1]
+            f_expr = Symbolics.build_function(expr, x; expression = false)
+            @show f = eval(f_expr)  # Now this works
+            ys =f.(xs)
             lines!(ax, xs, ys, color=color = colors[tmpν])
         end
     end
