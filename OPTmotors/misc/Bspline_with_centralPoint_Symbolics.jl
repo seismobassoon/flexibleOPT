@@ -4,7 +4,7 @@ include("../src/batchNewSymbolics.jl")
 
 # this is a home-made B-spline functions' plot in order to understand the validity of truncation at left and right extremeties
 
-@variables x Δx
+@variables x Δx ξ
 ∂x = Differential(x)
 
 # plot parameters
@@ -22,7 +22,7 @@ pointPerSegment = 20
 
 # maximum order of B-spline
 
-maximumOrder = 7 + 1
+maximumOrder = 3 + 1
 
 
 
@@ -124,8 +124,7 @@ for ι in 0:1:maximumOrder-1
     b[:,1,ι+1]=bX[:,1,ι+1]
     b[:,end,ι+1]=bX[:,end,ι+1]
 
-
-
+    
     # computing the derivatives 
 
     for i in 0:1:maximumOrder-1 
@@ -135,7 +134,11 @@ for ι in 0:1:maximumOrder-1
             b_deriv[:,:,i+1,ι+1] = mySimplify.(∂x.(b_deriv[:,:,i,ι+1]))
         
         end
+
     end
+
+   
+
 
     for i in 0:1:maximumOrder-1 
         local fig = Figure()
@@ -147,7 +150,7 @@ for ι in 0:1:maximumOrder-1
                 local xs = range(nodes[tmpνSegment], nodes[tmpνSegment+1], length=pointPerSegment)
                 local ys = similar(xs)
                 # Precompute symbolic expression and turn into function
-                expr = substitute(b_deriv[tmpνSegment, tmpν, i+1,ι+1],Dict(Δy=>Δx))
+                expr = substitute(b_deriv[tmpνSegment, tmpν, i+1,ι+1],Dict(Δx=>Δy))
                 #if ν === νₗ
                 #    expr = bX[tmpνSegment,1,ι+1]
                 #elseif ν === νᵣ
@@ -156,6 +159,7 @@ for ι in 0:1:maximumOrder-1
                 f_expr = Symbolics.build_function(expr, x; expression = false)
                 f = eval(f_expr)  # Now this works
                 ys =f.(xs)
+                
                 lines!(ax, xs, ys, color=color = colors[tmpν])
             end
         end
@@ -166,3 +170,20 @@ for ι in 0:1:maximumOrder-1
     end
 
 end
+
+b_deriv_ξ = similar(b_deriv)
+for ι in 0:1:maximumOrder-1
+    for i in 0:1:maximumOrder-1
+        for ν in nodeIndices # this will run for all the ν related to nodes
+            tmpν = ν - νₗ + 1
+            for νSegment in nodeIndices
+                tmpνSegment = νSegment - νₗ + 1
+                b_deriv_ξ[tmpνSegment,tmpν,i+1,ι+1]=substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>ξ+Δx*(tmpν-1)))
+            end
+        end
+    end
+end
+
+#display.(b_deriv)
+b_deriv_ξ=mySimplify.(b_deriv_ξ)
+export b_deriv_ξ
