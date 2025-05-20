@@ -22,7 +22,7 @@ pointPerSegment = 20
 
 # maximum order of B-spline
 
-maximumOrder = 5 + 1
+maximumOrder = 7 + 1
 
 
 
@@ -42,13 +42,16 @@ colors = [get(Makie.colorschemes[:Paired_5], (i - 1) / (numberNodes - 1)) for i 
 # b-splines
 
 b = zeros(Num, numberNodes, numberNodes, maximumOrder)
+bX = zeros(Num,numberNodes, 2, maximumOrder)
 
 
 
 for ι in 0:1:maximumOrder-1
     local fig = Figure()
     local ax = Axis(fig[1, 1]; title="B-spline function of $ι-th order")
-
+    local neighbour = Int((1 - (-1)^ι) / 2)
+    floor = Int((ι - neighbour) / 2)
+    @show ceiling = Int((ι + neighbour) / 2)
     if ι === 0
         for ν in nodeIndices # this will run for all the ν related to nodes
             tmpν = ν - νₗ + 1
@@ -59,11 +62,6 @@ for ι in 0:1:maximumOrder-1
 
         for ν in nodeIndices # this will run for all the ν related to nodes
             tmpν = ν - νₗ + 1
-
-            local neighbour = Int((1 - (-1)^ι) / 2)
-            floor = Int((ι - neighbour) / 2)
-            ceiling = Int((ι + neighbour) / 2)
-
             # the denominator for the ι>0
 
             denominator = ι * Δy
@@ -95,6 +93,33 @@ for ι in 0:1:maximumOrder-1
         end
     end
 
+    # unfortunately the νₗ and νᵣ related functions should recover the 'lost' amplitudes due to the trunctation 
+    # we need to re-build based on the residual
+
+    for ν in nodeIndices
+        tmpν = ν - νₗ + 1
+        
+        #b[:,tmpν,ι+1] .= 0
+        if ν===νₗ  # this loop runs only for the extremeties!!!!!
+            # the nodes involved at most are: νₗ, νₗ + 1, ⋯, νₗ + ceiling 
+            bX[1:ceiling+1,1,ι+1] .=1
+            for νSegment in 1:1:ceiling+1
+                for νFunction in 2:1:numberNodes
+                    bX[νSegment,1,ι+1] -= b[νSegment,νFunction,ι+1]
+                end
+            end
+        elseif ν===νᵣ
+            bX[numberNodes-ceiling-1:numberNodes,2,ι+1] .=1
+            for νSegment in numberNodes-ceiling-1:1:numberNodes
+                for νFunction in 1:1:numberNodes-1
+                    bX[νSegment,2,ι+1] -= b[νSegment,νFunction,ι+1]
+                end
+            end
+        end
+
+    end
+
+
     for ν in nodeIndices # this will run for all the ν related to nodes
         tmpν = ν - νₗ + 1
         for νSegment in nodeIndices
@@ -103,8 +128,13 @@ for ι in 0:1:maximumOrder-1
             local ys = similar(xs)
              # Precompute symbolic expression and turn into function
             expr = b[tmpνSegment, tmpν, ι+1]
+            if ν === νₗ
+                expr = bX[tmpνSegment,1,ι+1]
+            elseif ν === νᵣ
+                expr = bX[tmpνSegment,2,ι+1]
+            end
             f_expr = Symbolics.build_function(expr, x; expression = false)
-            @show f = eval(f_expr)  # Now this works
+            f = eval(f_expr)  # Now this works
             ys =f.(xs)
             lines!(ax, xs, ys, color=color = colors[tmpν])
         end
