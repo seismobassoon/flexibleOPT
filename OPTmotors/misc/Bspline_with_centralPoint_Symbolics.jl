@@ -184,6 +184,28 @@ for ι in 0:1:maximumOrder-1
     end
 end
 
+
+b_deriv_extremes = zeros(Num,numberNodes,maximumOrder,maximumOrder)
+@variables f(x)
+
+for ι in 0:1:maximumOrder-1
+    for i in 0:1:maximumOrder-1
+        for ν in nodeIndices # this will run for all the ν related to nodes
+            tmpν = ν - νₗ + 1
+            for νSegment in nodeIndices[1:end-1]
+                tmpνSegment = νSegment - νₗ + 1
+                for μSegment in nodeIndices[1:end-1]
+                    b_deriv_extremes[tmpνSegment,tmpν,i+1,ι+1]-=(-1)^(i)*(∂x^i)(f)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>μSegment*Δx))
+                    b_deriv_extremes[tmpνSegment,tmpν,i+1,ι+1]+=(-1)^(i)*(∂x^i)(f)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>(μSegment+1)*Δx))
+                #b_deriv_ξ[tmpνSegment,tmpν,i+1,ι+1]=substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>ξ+Δx*(tmpν-1)))
+                end
+            end
+        end
+    end
+end
+
 #display.(b_deriv)
 b_deriv_ξ=mySimplify.(b_deriv_ξ)
-export b_deriv_ξ
+b_deriv_extremes=mySimplify.(b_deriv_extremes)
+
+export b_deriv_ξ, b_deriv,b_deriv_extremes
