@@ -22,7 +22,7 @@ pointPerSegment = 20
 
 # maximum order of B-spline
 
-maximumOrder = 3 + 1
+maximumOrder = 1 + 1
 
 
 
@@ -157,7 +157,7 @@ for ι in 0:1:maximumOrder-1
                 #    expr = bX[tmpνSegment,2,ι+1]
                 #end
                 f_expr = Symbolics.build_function(expr, x; expression = false)
-                f = eval(f_expr)  # Now this works
+                local f = eval(f_expr)  # Now this works
                 ys =f.(xs)
                 
                 lines!(ax, xs, ys, color=color = colors[tmpν])
@@ -170,6 +170,7 @@ for ι in 0:1:maximumOrder-1
     end
 
 end
+
 
 b_deriv_ξ = similar(b_deriv)
 for ι in 0:1:maximumOrder-1
@@ -185,20 +186,24 @@ for ι in 0:1:maximumOrder-1
 end
 
 
-b_deriv_extremes = zeros(Num,numberNodes,maximumOrder,maximumOrder)
-@variables f(x)
+integral_b= zeros(Num,numberNodes)
+gvec = (@variables (g(x))[1:maximumOrder])[1]
 
 for ι in 0:1:maximumOrder-1
     for i in 0:1:maximumOrder-1
         for ν in nodeIndices # this will run for all the ν related to nodes
             tmpν = ν - νₗ + 1
-            for νSegment in nodeIndices[1:end-1]
+            for νSegment in nodeIndices
                 tmpνSegment = νSegment - νₗ + 1
-                for μSegment in nodeIndices[1:end-1]
-                    b_deriv_extremes[tmpνSegment,tmpν,i+1,ι+1]-=(-1)^(i)*(∂x^i)(f)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>μSegment*Δx))
-                    b_deriv_extremes[tmpνSegment,tmpν,i+1,ι+1]+=(-1)^(i)*(∂x^i)(f)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>(μSegment+1)*Δx))
-                #b_deriv_ξ[tmpνSegment,tmpν,i+1,ι+1]=substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>ξ+Δx*(tmpν-1)))
-                end
+                
+                diff = Δx * (tmpνSegment - tmpν)
+                tmpDic = Dict(x=>diff)
+                integral_b[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>tmpνSegment*Δx))
+
+                diff = Δx * (tmpνSegment - tmpν+1)
+                tmpDic = Dict(x=>diff)
+                integral_b[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>(tmpνSegment+1)*Δx))
+                
             end
         end
     end
@@ -207,5 +212,45 @@ end
 #display.(b_deriv)
 b_deriv_ξ=mySimplify.(b_deriv_ξ)
 b_deriv_extremes=mySimplify.(b_deriv_extremes)
+integral_b=mySimplify.(integral_b)
 
-export b_deriv_ξ, b_deriv,b_deriv_extremes
+# for special g(x) = C ξ^N 
+@variables C N
+
+
+dictionaryForSubstitute =Dict()
+
+
+for i in 0:1:maximumOrder-1
+    if i === 0
+        global expression=C*x^N
+    end
+    dictionaryForSubstitute[gvec[i+1]]=expression
+    expression = mySimplify(expression * x/(N+i))
+end
+@show dictionaryForSubstitute
+integral_b_polys= zeros(Num,numberNodes)
+for ι in 0:1:maximumOrder-1
+    for i in 0:1:maximumOrder-1
+        for ν in nodeIndices # this will run for all the ν related to nodes
+            tmpν = ν - νₗ + 1
+            for νSegment in nodeIndices
+                tmpνSegment = νSegment - νₗ + 1
+                
+                tmp_b_deriv = substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],dictionaryForSubstitute)
+
+                diff = Δx * (tmpνSegment - tmpν)
+                tmpDic = Dict(x=>diff)
+                integral_b_polys[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(tmp_b_deriv,Dict(x=>tmpνSegment*Δx))
+
+                diff = Δx * (tmpνSegment - tmpν+1)
+                tmpDic = Dict(x=>diff)
+                integral_b_polys[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(tmp_b_deriv,Dict(x=>(tmpνSegment+1)*Δx))
+                
+            end
+        end
+    end
+end
+
+
+export b_deriv_ξ, b_deriv,integral_b,integral_b_polys
