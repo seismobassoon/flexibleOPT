@@ -1,3 +1,5 @@
+# this programme should be well saved somewhere 
+
 using CairoMakie, Symbolics,Pkg
 cd(@__DIR__)
 Pkg.activate("../..")
@@ -25,7 +27,7 @@ pointPerSegment = 20
 
 # maximum order of B-spline
 
-maximumOrder = 5 + 1
+maximumOrder = 3 + 1
 
 
 
@@ -54,7 +56,7 @@ bX = zeros(Num,numberNodes, 2, maximumOrder)
 # b-splines derivatives
 
 b_deriv = zeros(Num,numberNodes, numberNodes,maximumOrder,maximumOrder)
-local figBig = Figure()
+local figBig = Figure(size = (500*maximumOrder, 500*maximumOrder))
 
 for ι in 0:1:maximumOrder-1
     
