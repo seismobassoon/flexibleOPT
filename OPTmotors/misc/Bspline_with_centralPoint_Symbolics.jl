@@ -54,6 +54,7 @@ bX = zeros(Num,numberNodes, 2, maximumOrder)
 # b-splines derivatives
 
 b_deriv = zeros(Num,numberNodes, numberNodes,maximumOrder,maximumOrder)
+local figBig = Figure()
 
 for ι in 0:1:maximumOrder-1
     
@@ -145,11 +146,12 @@ for ι in 0:1:maximumOrder-1
     end
 
    
-
+    
 
     for i in 0:1:maximumOrder-1 
         local fig = Figure()
         local ax = Axis(fig[1, 1]; title="B-spline function of $ι-th order, $i-th derivative")
+        local axBig=Axis(figBig[ι+1,i+1]; title="B-spline function of $ι-th order, $i-th derivative")
         for ν in nodeIndices # this will run for all the ν related to nodes
             tmpν = ν - νₗ + 1
             for νSegment in nodeIndices
@@ -167,7 +169,8 @@ for ι in 0:1:maximumOrder-1
                 local f = eval(f_expr)  # Now this works
                 ys =f.(xs)
                 
-                lines!(ax, xs, ys, color=color = colors[tmpν])
+                lines!(ax, xs, ys, color= colors[tmpν])
+                lines!(axBig,xs,ys,color=colors[tmpν])
             end
         end
         #axislegend(ax)
@@ -177,7 +180,7 @@ for ι in 0:1:maximumOrder-1
     end
 
 end
-
+display(figBig)
 
 b_deriv_ξ = similar(b_deriv)
 for ι in 0:1:maximumOrder-1
