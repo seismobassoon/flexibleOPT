@@ -82,7 +82,7 @@ for iPointsUsed in eachindex(numPointsX)
             #DrWatson configurations
 
             orderBtime=-1
-            orderBspace=-1
+            orderBspace=1
             pointsInSpace=numPointsX[iPointsUsed]
             pointsInTime=0
 

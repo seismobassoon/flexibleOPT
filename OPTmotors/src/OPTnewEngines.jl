@@ -234,7 +234,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
     # this will compute \int dx Bspline K_{l-n} K_{lᶜ-nᶜ}
     middle_value = 0
     extreme_value = 0
-    midPoint = BsplineIntegraters+2
+    midPoint = BsplineOrder+2
     maxPoint = (BsplineOrder+1)*2 + 3
     nearboundaries_values=Array{Any,1}(undef,maxPoint)
 
