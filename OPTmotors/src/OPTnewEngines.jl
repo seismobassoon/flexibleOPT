@@ -255,11 +255,11 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
         numberNodes,_,fns=output["BsplineIntegraters"]
        
         middleNode = numberNodes ÷ 2
-        middle_value = fns[middleNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field))
+        middle_value = fns[middleNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         
         for iNode in 1:midPoint+2
-            nearboundaries_values[iNode] = fns[iNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field))
-            nearboundaries_values[maxPoint-iNode+1] = fns[numberNodes-iNode+1,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field))
+            nearboundaries_values[iNode] = fns[iNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+            nearboundaries_values[maxPoint-iNode+1] = fns[numberNodes-iNode+1,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         end
     end
 
