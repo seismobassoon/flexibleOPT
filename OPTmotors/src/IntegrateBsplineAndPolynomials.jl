@@ -5,9 +5,9 @@ using Symbolics
 
 include("../src/batchNewSymbolics.jl")
 
-function BsplineTimesPolynomialsIntegrated(maximumOrder)
+function BsplineTimesPolynomialsIntegrated(params::Dict)
 
-
+    @unpack maximumOrder = params
     @variables x Δx ξ
     ∂x = Differential(x)
     
@@ -219,6 +219,8 @@ function BsplineTimesPolynomialsIntegrated(maximumOrder)
     end
     integral_b_polys=mySimplify.(integral_b_polys)
     integral_b_polys_function=eval.(build_function.(integral_b_polys,N,Δx))
-    return integral_b_polys,integral_b_polys_function
+   
+    BsplineIntegraters=(numberNodes=numberNodes,integral_b_polys=integral_b_polys,integral_b_polys_function=integral_b_polys_function)
+    return @strdict(BsplineIntegraters)
 end
     

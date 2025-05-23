@@ -4,6 +4,7 @@ include("../src/batchNewSymbolics.jl")
 include("../src/batchUseful.jl")
 include("../src/batchDrWatson.jl")
 include("../src/CerjanBoundary.jl")
+include("../src/IntegrateBsplineAndPolynomials.jl")
 
 # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
 
@@ -233,23 +234,43 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
     # this will compute \int dx Bspline K_{l-n} K_{lᶜ-nᶜ}
     middle_value = 0
     extreme_value = 0
+    midPoint = BsplineIntegraters+2
+    maxPoint = (BsplineOrder+1)*2 + 3
+    nearboundaries_values=Array{Any,1}(undef,maxPoint)
+
     if BsplineOrder=== -1
         # this is for a delta function
         if l_n_variable === 0 && l_n_field === 0
             middle_value=1
-            extreme_value=1
+            nearboundaries_values=ones(3)
         else
             middle_value=0
-            extreme_value=0
+            nearboundaries_values=zeros(3)
         end
 
+    elseif BsplineOrder >= 0
+        params=@strdict maximumOrder
+        BsplineIntegraters,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",concreteModelParameters))
+        fns=BsplineIntegraters["integral_b_polys_function"]
+        numberNodes=BsplineIntegraters["numberNodes"]
+        middleNode = numberNodes ÷ 2
+        middle_value = fns[middleNode,BsplineOrder-1](l_n_variable+l_n_field+1,Δ)/factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field))
+        
+        for iNode in 1:midPoint+2
+            nearboundaries_values[iNode] = fns[iNode,BsplineOrder-1](l_n_variable+l_n_field+1,Δ)/factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field))
+            nearboundaries_values[maxPoint-iNode+1] = fns[numberNodes-iNode+1,BsplineOrder-1](l_n_variable+l_n_field+1,Δ)/factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field))
+        end
+    end
+
+#=
     elseif BsplineOrder === 0
         #
     elseif BsplineOrder=== 1
         middle_value = (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         #extreme_value = (Δ^{l_n_variable+l_n_field+1})/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(l_n_variable)*factorial(l_n_field))
     end
-    return middle_value,extreme_value
+    =#
+    return middle_value,nearboundaries_values
 end
 
 function spaceCoordinatesConversionfunctions(absorbingBoundaries, NdimensionMinusTime)
