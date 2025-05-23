@@ -249,8 +249,9 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
         end
 
     elseif BsplineOrder >= 0
+        maximumOrder = BsplineOrder
         params=@strdict maximumOrder
-        BsplineIntegraters,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",concreteModelParameters))
+        BsplineIntegraters,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
         fns=BsplineIntegraters["integral_b_polys_function"]
         numberNodes=BsplineIntegraters["numberNodes"]
         middleNode = numberNodes ÷ 2
