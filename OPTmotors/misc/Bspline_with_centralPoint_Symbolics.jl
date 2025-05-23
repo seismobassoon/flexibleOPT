@@ -4,6 +4,8 @@ include("../src/batchNewSymbolics.jl")
 
 # this is a home-made B-spline functions' plot in order to understand the validity of truncation at left and right extremeties
 
+function makeBspline()
+
 @variables x Δx ξ
 ∂x = Differential(x)
 
@@ -15,14 +17,14 @@ pointPerSegment = 20
 
 # the left and right indices
 νₗ = 0
-νᵣ = 10
+νᵣ = 30
 
 # δy for plotting, Δy for the real discretisation
 Δy = 1.0
 
 # maximum order of B-spline
 
-maximumOrder = 1 + 1
+maximumOrder = 8 + 1
 
 
 
@@ -32,8 +34,12 @@ numberNodes = νᵣ - νₗ + 1 # [νₗ,νₗ + 1), ⋯, [νᵣ - 1 to νᵣ), 
 
 nodeIndices = collect(νₗ:1:νᵣ)
 
+nodesSymbolic = Δx .* nodeIndices
+append!(nodesSymbolic,nodesSymbolic[end])
+
 nodes = Δy .* nodeIndices
 append!(nodes, nodes[end]) # so that the last segment be {νᵣ}
+
 
 # colour bar
 
@@ -198,11 +204,11 @@ for ι in 0:1:maximumOrder-1
                 
                 diff = Δx * (tmpνSegment - tmpν)
                 tmpDic = Dict(x=>diff)
-                integral_b[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>tmpνSegment*Δx))
+                integral_b[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
 
                 diff = Δx * (tmpνSegment - tmpν+1)
                 tmpDic = Dict(x=>diff)
-                integral_b[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>(tmpνSegment+1)*Δx))
+                integral_b[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]*Δx))
                 
             end
         end
@@ -211,7 +217,7 @@ end
 
 #display.(b_deriv)
 b_deriv_ξ=mySimplify.(b_deriv_ξ)
-b_deriv_extremes=mySimplify.(b_deriv_extremes)
+#b_deriv_extremes=mySimplify.(b_deriv_extremes)
 integral_b=mySimplify.(integral_b)
 
 # for special g(x) = C ξ^N 
@@ -221,15 +227,15 @@ integral_b=mySimplify.(integral_b)
 dictionaryForSubstitute =Dict()
 
 
-for i in 0:1:maximumOrder-1
-    if i === 0
-        global expression=C*x^N
-    end
-    dictionaryForSubstitute[gvec[i+1]]=expression
-    expression = mySimplify(expression * x/(N+i))
+taylorNum = 1
+
+for i in 1:1:maximumOrder
+    @show taylorNum *= N+i
+    dictionaryForSubstitute[gvec[i]]=x^(N+i)/taylorNum
+    
 end
 @show dictionaryForSubstitute
-integral_b_polys= zeros(Num,numberNodes)
+integral_b_polys= zeros(Num,numberNodes,maximumOrder)
 for ι in 0:1:maximumOrder-1
     for i in 0:1:maximumOrder-1
         for ν in nodeIndices # this will run for all the ν related to nodes
@@ -237,20 +243,30 @@ for ι in 0:1:maximumOrder-1
             for νSegment in nodeIndices
                 tmpνSegment = νSegment - νₗ + 1
                 
-                tmp_b_deriv = substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],dictionaryForSubstitute)
+                tmp_b_deriv = b_deriv[tmpνSegment,tmpν,i+1,ι+1]
+                tmpG = substitute(gvec[i+1],dictionaryForSubstitute)
 
-                diff = Δx * (tmpνSegment - tmpν)
+                diff = nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]
                 tmpDic = Dict(x=>diff)
-                integral_b_polys[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(tmp_b_deriv,Dict(x=>tmpνSegment*Δx))
+                if tmpνSegment !== tmpν
+                    integral_b_polys[tmpν,ι+1] -= (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
+                end
 
-                diff = Δx * (tmpνSegment - tmpν+1)
+                diff = nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]
                 tmpDic = Dict(x=>diff)
-                integral_b_polys[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(tmp_b_deriv,Dict(x=>(tmpνSegment+1)*Δx))
+                if tmpνSegment+1 !== tmpν
+                    integral_b_polys[tmpν,ι+1] += (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                end
                 
             end
         end
     end
 end
+integral_b_polys=simplify.(integral_b_polys)
+
+return b_deriv_ξ, b_deriv,integral_b,integral_b_polys
+end
 
 
+b_deriv_ξ, b_deriv,integral_b,integral_b_polys=makeBspline()
 export b_deriv_ξ, b_deriv,integral_b,integral_b_polys
