@@ -159,11 +159,11 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                     
                     diff = Δx * (tmpνSegment - tmpν)
                     tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
+                    integral_b[tmpν] -= (-1)^(i+1)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
     
                     diff = Δx * (tmpνSegment - tmpν+1)
                     tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]*Δx))
+                    integral_b[tmpν] += (-1)^(i+1)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]*Δx))
                     
                 end
             end
@@ -204,13 +204,13 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                     diff = nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]
                     tmpDic = Dict(x=>diff)
                     if tmpνSegment !== tmpν
-                        integral_b_polys[tmpν,ι+1] -= (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
+                        integral_b_polys[tmpν,ι+1] -= (-1)^(i+1)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
                     end
     
                     diff = nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]
                     tmpDic = Dict(x=>diff)
                     if tmpνSegment+1 !== tmpν
-                        integral_b_polys[tmpν,ι+1] += (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                        integral_b_polys[tmpν,ι+1] += (-1)^(i+1)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
                     end
                     
                 end
