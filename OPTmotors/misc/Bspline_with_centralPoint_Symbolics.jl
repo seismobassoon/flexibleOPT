@@ -1,5 +1,6 @@
-using CairoMakie, Symbolics
-
+using CairoMakie, Symbolics,Pkg
+cd(@__DIR__)
+Pkg.activate("../..")
 include("../src/batchNewSymbolics.jl")
 
 # this is a home-made B-spline functions' plot in order to understand the validity of truncation at left and right extremeties
@@ -17,14 +18,14 @@ pointPerSegment = 20
 
 # the left and right indices
 νₗ = 0
-νᵣ = 30
+νᵣ = 20
 
 # δy for plotting, Δy for the real discretisation
 Δy = 1.0
 
 # maximum order of B-spline
 
-maximumOrder = 8 + 1
+maximumOrder = 5 + 1
 
 
 
@@ -71,7 +72,7 @@ for ι in 0:1:maximumOrder-1
             tmpν = ν - νₗ + 1
             # the denominator for the ι>0
 
-            denominator = ι * Δx
+            denominator = BigInt(ι) * Δx
 
             # for the upgoing part
 
@@ -80,7 +81,7 @@ for ι in 0:1:maximumOrder-1
                 leftlimit = maximum((1, tmpν - ceiling))
                 for νSegment in leftlimit:1:rightlimit
                     tmpνSegment = νSegment #- νₗ + 1
-                    numerator = x - (ν - ceiling) * Δx
+                    numerator = x - BigInt(ν - ceiling) * Δx
                     b[tmpνSegment, tmpν, ι+1] += mySimplify(numerator / denominator * b[tmpνSegment, tmpν-neighbour, ι])
                 end
             end
@@ -92,7 +93,7 @@ for ι in 0:1:maximumOrder-1
                 leftlimit = maximum((1, tmpν - ceiling + 1))
                 for νSegment in leftlimit:1:rightlimit
                     tmpνSegment = νSegment #- νₗ + 1
-                    numerator = (ν + floor + 1) * Δx - x
+                    numerator = BigInt(ν + floor + 1) * Δx - x
                     b[tmpνSegment, tmpν, ι+1] += mySimplify(numerator / denominator * b[tmpνSegment, tmpν-neighbour+1, ι])
                 end
 
