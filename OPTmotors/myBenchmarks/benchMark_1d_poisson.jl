@@ -143,8 +143,8 @@ for iPointsUsed in eachindex(numPointsX)
     end
 
     #O_1=log.(misfit[1,1,1]).-1.0*logsOfHinverse
-    O_2=log.(misfit[1,1,1]).-2.0*logsOfHinverse
-    O_4=log.(misfit[1,1,1]).-4.0*logsOfHinverse
+    O_2=log.(1.0).-2.0*logsOfHinverse
+    O_4=log.(1.0).-4.0*logsOfHinverse
     #O_8=log.(misfit[1,1,1]).-1.0*logsOfHinverse
     #lines!(ax,logsOfHinverse,O_1,color=:black,label="O1")
     lines!(ax,logsOfHinverse,O_2,color=:black,label="O2")
