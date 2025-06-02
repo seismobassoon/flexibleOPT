@@ -465,7 +465,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     # numbers of points to evaluate the integral for the governing equation filtered by the test functions
     
     # orderU is the maximal orders for the fields that we will use for OPT coefficients' exploration
-    orderU = (pointsUsedForFields.-1).*2 .+1 
+    orderU = (pointsUsedForFields.-1).+2 .+1 
     # we restore this orderU since we need to control this (we set this to the twice the size of the number of used points)
 
     #endregion

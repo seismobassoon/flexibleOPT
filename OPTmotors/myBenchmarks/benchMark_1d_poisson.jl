@@ -33,7 +33,7 @@ end
 
 logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(2:3)
+numPointsX = collect(2:2)
 tmpOrderBtime=1
 tmpOrderBspace=1
 
@@ -60,16 +60,16 @@ for iPointsUsed in eachindex(numPointsX)
     for iCase in eachindex(cases)
         @unpack name,u,β = cases[iCase]
         q = mySimplify(β*∂[1](u))
-        @show qₓ = mySimplify(∂[1](q))
+        qₓ = mySimplify(∂[1](q))
         for iH in eachindex(logsOfHinverse)
             iExperiment = (iH=iH,iCase=iCase,iPointsUsed=iPointsUsed)
-            ΔxTry = 1.0/exp(logsOfHinverse[iH])
+            ΔxTry = exp(-logsOfHinverse[iH])
             Nx = Int(L÷ΔxTry) +1
             Δx = L/(Nx-1)
         
 
             Δnum = (Δx)
-            @show X = [Δx * (i-1) for i ∈ range(1,Nx)]
+            X = [Δx * (i-1) for i ∈ range(1,Nx)]
 
       
             model=[Symbolics.value(substitute(β,Dict(x=>X[i]))) for i ∈ range(1,Nx)]
@@ -134,20 +134,22 @@ end
 @show misfit
 
 fig =Figure()
-ax=Axis(fig[1,1]; title="Misfit")
-N=length(cases)
-colors = [get(Makie.colorschemes[:viridis], (i - 1) / (N - 1)) for i in 1:N]
-for iCase in eachindex(cases)
-    scatter!(ax,logsOfHinverse,log.(misfit[:,iCase,1]),color=colors[iCase],label=cases[iCase].name)
-end
+for iPointsUsed in eachindex(numPointsX)
+    ax=Axis(fig[1,iPointsUsed]; title="Misfit")
+    N=length(cases)
+    colors = [get(Makie.colorschemes[:viridis], (i - 1) / (N - 1)) for i in 1:N]
+    for iCase in eachindex(cases)
+        scatter!(ax,logsOfHinverse,log.(misfit[:,iCase,iPointsUsed]),color=colors[iCase],label=cases[iCase].name)
+    end
 
-#O_1=log.(misfit[1,1,1]).-1.0*logsOfHinverse
-O_2=log.(misfit[1,1,1]).-2.0*logsOfHinverse
-O_4=log.(misfit[1,1,1]).-4.0*logsOfHinverse
-#O_8=log.(misfit[1,1,1]).-1.0*logsOfHinverse
-#lines!(ax,logsOfHinverse,O_1,color=:black,label="O1")
-lines!(ax,logsOfHinverse,O_2,color=:black,label="O2")
-lines!(ax,logsOfHinverse,O_4,color=:black,label="O4")
-#lines!(ax,logsOfHinverse,O_8,color=:black,label="O8")
-#axislegend(ax,position=:lb)
+    #O_1=log.(misfit[1,1,1]).-1.0*logsOfHinverse
+    O_2=log.(misfit[1,1,1]).-2.0*logsOfHinverse
+    O_4=log.(misfit[1,1,1]).-4.0*logsOfHinverse
+    #O_8=log.(misfit[1,1,1]).-1.0*logsOfHinverse
+    #lines!(ax,logsOfHinverse,O_1,color=:black,label="O1")
+    lines!(ax,logsOfHinverse,O_2,color=:black,label="O2")
+    lines!(ax,logsOfHinverse,O_4,color=:black,label="O4")
+    #lines!(ax,logsOfHinverse,O_8,color=:black,label="O8")
+    #axislegend(ax,position=:lb)
+end
 display(fig)
