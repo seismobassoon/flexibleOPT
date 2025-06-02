@@ -27,7 +27,7 @@ pointPerSegment = 20
 
 # maximum order of B-spline
 
-maximumOrder = 3 + 1
+maximumOrder = 1 + 1
 
 
 

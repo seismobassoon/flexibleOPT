@@ -230,6 +230,8 @@ end
 
 
 function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
+
+    call_new_fn(fn, args...) = Base.invokelatest(fn, args...)
     
     # this will compute \int dx Bspline K_{l-n} K_{lᶜ-nᶜ}
     middle_value = 0
@@ -251,16 +253,18 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
     elseif BsplineOrder >= 0
         maximumOrder = BsplineOrder
         params=@strdict maximumOrder
-        @show output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
-        numberNodes,_,fns=output["BsplineIntegraters"]
-       
+        output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
+        numberNodes,integral_b_polys,N,Δx=output["BsplineIntegraters"]
+        #fns=eval.(build_function.(integral_b_polys,N,Δx))
         middleNode = numberNodes ÷ 2
-        @show fns[middleNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)
-        middle_value = fns[middleNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
-        
+        #@show call_new_fn(fns[middleNode, BsplineOrder+1], l_n_variable + l_n_field + 1, Δ)
+        #@show middle_value = call_new_fn(fns[middleNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ))/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+        #@show integral_b_polys[middleNode, BsplineOrder+1]
+        middle_value = Symbolics.substitute(integral_b_polys[middleNode, BsplineOrder+1],Dict(N=>l_n_variable+l_n_field,Δx => Δ))
+        #@show (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         for iNode in 1:midPoint+2
-            nearboundaries_values[iNode] = fns[iNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
-            nearboundaries_values[maxPoint-iNode+1] = fns[numberNodes-iNode+1,BsplineOrder+1](l_n_variable+l_n_field+1,Δ)/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+            nearboundaries_values[iNode] = Symbolics.substitute(integral_b_polys[iNode, BsplineOrder+1],Dict(N=>l_n_variable+l_n_field,Δx => Δ))/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+            nearboundaries_values[maxPoint-iNode+1] = Symbolics.substitute(integral_b_polys[numberNodes-iNode+1, BsplineOrder+1],Dict(N=>l_n_variable+l_n_field,Δx => Δ))/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         end
     end
 

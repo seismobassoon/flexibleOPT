@@ -185,11 +185,11 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     taylorNum = 1
     
     for i in 1:1:maximumOrder
-        @show taylorNum *= N+i
+        taylorNum *= N+i
         dictionaryForSubstitute[gvec[i]]=x^(N+i)/taylorNum
         
     end
-    @show dictionaryForSubstitute
+    #@show dictionaryForSubstitute
     integral_b_polys= zeros(Num,numberNodes,maximumOrder)
     for ι in 0:1:maximumOrder-1
         for i in 0:1:maximumOrder-1
@@ -204,13 +204,13 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                     diff = nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]
                     tmpDic = Dict(x=>diff)
                     if tmpνSegment !== tmpν
-                        integral_b_polys[tmpν,ι+1] -= (-1)^(i+1)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
+                        integral_b_polys[tmpν,ι+1] -= (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
                     end
     
                     diff = nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]
                     tmpDic = Dict(x=>diff)
                     if tmpνSegment+1 !== tmpν
-                        integral_b_polys[tmpν,ι+1] += (-1)^(i+1)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                        integral_b_polys[tmpν,ι+1] += (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
                     end
                     
                 end
@@ -218,9 +218,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
         end
     end
     integral_b_polys=mySimplify.(integral_b_polys)
-    integral_b_polys_function=eval.(build_function.(integral_b_polys,N,Δx))
-   
-    BsplineIntegraters=(numberNodes=numberNodes,integral_b_polys=integral_b_polys,integral_b_polys_function=integral_b_polys_function)
+    BsplineIntegraters=(numberNodes=numberNodes,integral_b_polys=integral_b_polys,N=N,Δx =Δx)
     return @strdict(BsplineIntegraters)
 end
     
