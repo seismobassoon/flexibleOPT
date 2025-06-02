@@ -33,7 +33,7 @@ end
 
 logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(2:3)
+numPointsX = collect(3:3)
 tmpOrderBtime=2
 tmpOrderBspace=2
 
