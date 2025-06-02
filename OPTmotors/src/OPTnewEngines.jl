@@ -260,8 +260,8 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
         #@show call_new_fn(fns[middleNode, BsplineOrder+1], l_n_variable + l_n_field + 1, Δ)
         #@show middle_value = call_new_fn(fns[middleNode,BsplineOrder+1](l_n_variable+l_n_field+1,Δ))/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         #@show integral_b_polys[middleNode, BsplineOrder+1]
-        middle_value = Symbolics.substitute(integral_b_polys[middleNode, BsplineOrder+1],Dict(N=>l_n_variable+l_n_field,Δx => Δ))
-        middle_value =(Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+        @show middle_value = Symbolics.substitute(integral_b_polys[middleNode, BsplineOrder+1],Dict(N=>l_n_variable+l_n_field,Δx => Δ))
+        @show (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         for iNode in 1:midPoint+2
             nearboundaries_values[iNode] = Symbolics.substitute(integral_b_polys[iNode, BsplineOrder+1],Dict(N=>l_n_variable+l_n_field,Δx => Δ))/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
             nearboundaries_values[maxPoint-iNode+1] = Symbolics.substitute(integral_b_polys[numberNodes-iNode+1, BsplineOrder+1],Dict(N=>l_n_variable+l_n_field,Δx => Δ))/(factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
