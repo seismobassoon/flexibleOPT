@@ -35,7 +35,7 @@ logsOfHinverse = [1.0*i for i in 0:3]
 
 numPointsX = collect(2:3)
 tmpOrderBtime=1
-tmpOrderBspace=-1
+tmpOrderBspace=1
 
 cases=[]
 
