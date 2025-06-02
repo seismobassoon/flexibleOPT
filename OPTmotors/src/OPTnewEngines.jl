@@ -231,7 +231,7 @@ end
 
 function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 
-    call_new_fn(fn, args...) = Base.invokelatest(fn, args...)
+    #call_new_fn(fn, args...) = Base.invokelatest(fn, args...)
     
     # this will compute \int dx Bspline K_{l-n} K_{lᶜ-nᶜ}
     middle_value = 0
@@ -465,7 +465,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     # numbers of points to evaluate the integral for the governing equation filtered by the test functions
     
     # orderU is the maximal orders for the fields that we will use for OPT coefficients' exploration
-    orderU = (pointsUsedForFields.-1) .+1 .+2
+    orderU = (pointsUsedForFields.-1).*2 .+1 
     # we restore this orderU since we need to control this (we set this to the twice the size of the number of used points)
 
     #endregion
@@ -654,6 +654,8 @@ function constructingNumericalDiscretisedEquations(config::Dict)
 
     costfunctions,場,champsLimité=constructingNumericalDiscretisedEquations(semiSymbolicOpt,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions,場=場,champsLimité=champsLimité)
+
+    @show costfunctions
     return @strdict(numOperators)
 end
 

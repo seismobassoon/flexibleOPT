@@ -1,4 +1,4 @@
-# Nobuaki Fuji (April 2025)
+# Nobuaki Fuji (April-june 2025)
 #
 # Here in this project, I will try to benchmark OPT operators with different configurations for a Poisson 1D problem
 
@@ -31,18 +31,20 @@ end
 #modelName="1D_for_Poisson"
 
 
-logsOfHinverse = [0.5*i for i in 0:8]
+logsOfHinverse = [1.0*i for i in 0:0]
 
-numPointsX = collect(3:3)
+numPointsX = collect(2:2)
+tmpOrderBtime=1
+tmpOrderBspace=1
 
 cases=[]
 
 # manufactured ExactSolutions 
-prefix="FD4pt"
-cases = push!(cases,(name=prefix*"samewavelength",u=cos(x),β=sin(x)+2))
-cases = push!(cases,(name=prefix*"twicewavelength",u=cos(x),β=sin(x/2) + 2))
-cases = push!(cases,(name=prefix*"samewavelength_shifted_thirdpi",u=cos(x),β=sin(x+π/3) + 2))
-cases = push!(cases,(name=prefix*"halfwavelength",u=cos(x),β=cos(x).^2 + 1))
+prefix="FD2pt"
+cases = push!(cases,(name=prefix*"sameλ",u=cos(x),β=sin(x)+2))
+cases = push!(cases,(name=prefix*"twiceλ",u=cos(x),β=sin(x/2) + 2))
+cases = push!(cases,(name=prefix*"sameλ_shifted_π/3",u=cos(x),β=sin(x+π/3) + 2))
+cases = push!(cases,(name=prefix*"λ/2",u=cos(x),β=cos(x).^2 + 1))
 cases = push!(cases,(name=prefix*"parabols",u=cos(x),β=x^2+ 1))
 cases = push!(cases,(name=prefix*"homogeneous",u=cos(x),β=1.0))
 #
@@ -81,8 +83,8 @@ for iPointsUsed in eachindex(numPointsX)
 
             #DrWatson configurations
 
-            orderBtime=1
-            orderBspace=1
+            orderBtime=tmpOrderBtime
+            orderBspace=tmpOrderBspace
             pointsInSpace=numPointsX[iPointsUsed]
             pointsInTime=0
 
