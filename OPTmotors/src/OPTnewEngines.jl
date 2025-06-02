@@ -655,7 +655,7 @@ function constructingNumericalDiscretisedEquations(config::Dict)
     costfunctions,場,champsLimité=constructingNumericalDiscretisedEquations(semiSymbolicOpt,coordinates,models,fields,vars,modelPoints,utilities, maskedRegion;initialCondition=0.0)
     numOperators=(costfunctions=costfunctions,場=場,champsLimité=champsLimité)
 
-    @show costfunctions
+    #@show costfunctions
     return @strdict(numOperators)
 end
 

@@ -31,20 +31,20 @@ end
 #modelName="1D_for_Poisson"
 
 
-logsOfHinverse = [1.0*i for i in 0:0]
+logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(2:2)
+numPointsX = collect(2:3)
 tmpOrderBtime=2
 tmpOrderBspace=2
 
 cases=[]
 
 # manufactured ExactSolutions 
-prefix="FD2pt"
+prefix=string(tmpOrderBspace)*"_"
 cases = push!(cases,(name=prefix*"sameλ",u=cos(x),β=sin(x)+2))
 cases = push!(cases,(name=prefix*"twiceλ",u=cos(x),β=sin(x/2) + 2))
-cases = push!(cases,(name=prefix*"sameλ_shifted_π/3",u=cos(x),β=sin(x+π/3) + 2))
-cases = push!(cases,(name=prefix*"λ/2",u=cos(x),β=cos(x).^2 + 1))
+cases = push!(cases,(name=prefix*"sameλ_shifted_π_3",u=cos(x),β=sin(x+π/3) + 2))
+cases = push!(cases,(name=prefix*"λ_2",u=cos(x),β=cos(x).^2 + 1))
 cases = push!(cases,(name=prefix*"parabols",u=cos(x),β=x^2+ 1))
 cases = push!(cases,(name=prefix*"homogeneous",u=cos(x),β=1.0))
 #
