@@ -33,7 +33,7 @@ end
 
 logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(2:2)
+numPointsX = collect(3:3)
 tmpOrderBtime=1
 tmpOrderBspace=2
 
@@ -41,11 +41,11 @@ cases=[]
 
 # manufactured ExactSolutions 
 prefix="B"*string(tmpOrderBspace)*"_"
-cases = push!(cases,(name=prefix*"sameλ",u=cos(x),β=sin(x)+2))
-cases = push!(cases,(name=prefix*"twiceλ",u=cos(x),β=sin(x/2) + 2))
-cases = push!(cases,(name=prefix*"sameλ_shifted_π_3",u=cos(x),β=sin(x+π/3) + 2))
+#cases = push!(cases,(name=prefix*"sameλ",u=cos(x),β=sin(x)+2))
+#cases = push!(cases,(name=prefix*"twiceλ",u=cos(x),β=sin(x/2) + 2))
+#cases = push!(cases,(name=prefix*"sameλ_shifted_π_3",u=cos(x),β=sin(x+π/3) + 2))
 cases = push!(cases,(name=prefix*"λ_2",u=cos(x),β=cos(x).^2 + 1))
-cases = push!(cases,(name=prefix*"parabols",u=cos(x),β=x^2+ 1))
+#cases = push!(cases,(name=prefix*"parabols",u=cos(x),β=x^2+ 1))
 cases = push!(cases,(name=prefix*"homogeneous",u=cos(x),β=1.0))
 #
 
@@ -109,7 +109,7 @@ for iPointsUsed in eachindex(numPointsX)
             analyticalData = [Symbolics.value(substitute(u,Dict(x=>X[i]))) for i ∈ range(1,Nx)]
 
             fig =Figure()
-            ax=Axis(fig[1,1]; title="Comparison for h=$Δx, model=$(cases[iCase].name), points=1+$iPointsUsed")
+            ax=Axis(fig[1,1]; title="Comparison for h=$Δx, model=$(cases[iCase].name), points=1+$pointsInSpace")
             lines!(ax,X,analyticalData,color=:blue,label="analytical")
             scatter!(ax,X,syntheticData,color=:red,marker=:circle,label="synthetic")        
             axislegend(ax)
