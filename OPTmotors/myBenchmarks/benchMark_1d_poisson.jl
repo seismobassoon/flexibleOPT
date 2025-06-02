@@ -33,9 +33,9 @@ end
 
 logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(3:3)
+numPointsX = collect(2:3)
 tmpOrderBtime=1
-tmpOrderBspace=2
+tmpOrderBspace=-1
 
 cases=[]
 
@@ -53,7 +53,9 @@ L = 10.0*π # the length of the segment
 
 misfit = Array{Float64,3}(undef,length(logsOfHinverse),length(cases),length(numPointsX))
 
-if !isfile("tmp_misfit.jld2")
+fileMisfit="misfit_B"*string(tmpOrderBspace)*string(numPointsX[end])*".jld2"
+
+if !isfile(fileMisfit)
 for iPointsUsed in eachindex(numPointsX)
     for iCase in eachindex(cases)
         @unpack name,u,β = cases[iCase]
@@ -124,9 +126,10 @@ for iPointsUsed in eachindex(numPointsX)
         end
     end
 end
-@save "tmp_misfit.jld2" misfit
+
+@save fileMisfit misfit
 end
-@load "tmp_misfit.jld2" misfit
+@load fileMisfit misfit
 
 @show misfit
 
