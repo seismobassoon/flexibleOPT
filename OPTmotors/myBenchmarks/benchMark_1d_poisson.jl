@@ -34,8 +34,8 @@ end
 logsOfHinverse = [1.0*i for i in 0:0]
 
 numPointsX = collect(2:2)
-tmpOrderBtime=1
-tmpOrderBspace=1
+tmpOrderBtime=2
+tmpOrderBspace=2
 
 cases=[]
 
