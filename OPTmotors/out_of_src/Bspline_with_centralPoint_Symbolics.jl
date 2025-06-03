@@ -235,11 +235,14 @@ dictionaryForSubstitute =Dict()
 
 taylorNum = 1
 
+gPolynoms=zeros(Num,maximumOrder)
+
 for i in 1:1:maximumOrder
     @show taylorNum *= N+i
     dictionaryForSubstitute[gvec[i]]=x^(N+i)/taylorNum
+    gPolynoms[i]= x^(N+i)/taylorNum
 end
-@show dictionaryForSubstitute
+
 integral_b_polys= zeros(Num,numberNodes,maximumOrder)
 for ι in 0:1:maximumOrder-1
     for i in 0:1:maximumOrder-1
@@ -249,14 +252,16 @@ for ι in 0:1:maximumOrder-1
                 tmpνSegment = νSegment - νₗ + 1
                 
                 tmp_b_deriv = b_deriv[tmpνSegment,tmpν,i+1,ι+1]
-                tmpG = substitute(gvec[i+1],dictionaryForSubstitute)
-
+                #tmpG = substitute(gvec[i+1],dictionaryForSubstitute)
+                tmpG = gPolynoms[i+1]
                 
                 if 1 <= tmpνSegment <= numberNodes-1
                     
                     diff = nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]
                     tmpDic = Dict(x=>diff)
+                    
 
+                    
                     integral_b_polys[tmpν,ι+1] -= (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
 
                     diff = nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]
@@ -264,9 +269,13 @@ for ι in 0:1:maximumOrder-1
 
                     integral_b_polys[tmpν,ι+1] += (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
 
+
+                    if i === 2 && tmpν === 5 &&  3< tmpνSegment < 8 && ι == 2
+                        @show tmp_b_deriv,  -(-1)^(i)*substitute(tmpG,Dict(x=>nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]))*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment])), (-1)^(i)*substitute(tmpG,Dict(x=>nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]))*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                    end
+                    
                 end
 
-             
                 
             end
         end

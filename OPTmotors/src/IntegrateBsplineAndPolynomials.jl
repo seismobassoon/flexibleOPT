@@ -239,6 +239,14 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
         end
     end
 
+    individualIntegral_b_polys = copy(integral_b_polys)
+
+    for ι in 0:1:maximumOrder-1
+        for ν in nodeIndices # this will run for all the ν related to nodes
+            tmpν = ν - νₗ + 1
+            integral_b_polys[tmpν,ι]=sum([individualIntegral_b_polys[tmpν,1:ι+1]])
+        end
+    end
 
     integral_b_polys=mySimplify.(integral_b_polys)
     BsplineIntegraters=(numberNodes=numberNodes,integral_b_polys=integral_b_polys,N=N,Δx =Δx)
