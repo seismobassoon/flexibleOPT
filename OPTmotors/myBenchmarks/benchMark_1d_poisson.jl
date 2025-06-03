@@ -33,9 +33,9 @@ end
 
 logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(2:3)
+numPointsX = collect(2:4)
 tmpOrderBtime=1
-tmpOrderBspace=1
+tmpOrderBspace=2
 
 cases=[]
 
@@ -143,12 +143,12 @@ for iPointsUsed in eachindex(numPointsX)
     end
 
     #O_1=log.(misfit[1,1,1]).-1.0*logsOfHinverse
-    O_2=log.(1.0).-2.0*logsOfHinverse
-    O_4=log.(1.0).-4.0*logsOfHinverse
+    local O_2=log.(1.0).-2.0*logsOfHinverse
+    local O_4=log.(1.0).-4.0*logsOfHinverse
     #O_8=log.(misfit[1,1,1]).-1.0*logsOfHinverse
     #lines!(ax,logsOfHinverse,O_1,color=:black,label="O1")
-    lines!(ax,logsOfHinverse,O_2,color=:black,label="O2")
-    lines!(ax,logsOfHinverse,O_4,color=:black,label="O4")
+    lines!(ax,logsOfHinverse,O_2,color=:pink,label="O2")
+    lines!(ax,logsOfHinverse,O_4,color=:pink,label="O4")
     #lines!(ax,logsOfHinverse,O_8,color=:black,label="O8")
     #axislegend(ax,position=:lb)
 end

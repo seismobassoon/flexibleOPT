@@ -27,7 +27,7 @@ pointPerSegment = 20
 
 # maximum order of B-spline
 
-maximumOrder = 1 + 1
+maximumOrder = 2 + 1
 
 
 
@@ -238,7 +238,6 @@ taylorNum = 1
 for i in 1:1:maximumOrder
     @show taylorNum *= N+i
     dictionaryForSubstitute[gvec[i]]=x^(N+i)/taylorNum
-    
 end
 @show dictionaryForSubstitute
 integral_b_polys= zeros(Num,numberNodes,maximumOrder)
@@ -252,17 +251,22 @@ for ι in 0:1:maximumOrder-1
                 tmp_b_deriv = b_deriv[tmpνSegment,tmpν,i+1,ι+1]
                 tmpG = substitute(gvec[i+1],dictionaryForSubstitute)
 
-                diff = nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]
-                tmpDic = Dict(x=>diff)
-                if tmpνSegment !== tmpν
+                
+                if 1 <= tmpνSegment <= numberNodes-1
+                    
+                    diff = nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]
+                    tmpDic = Dict(x=>diff)
+
                     integral_b_polys[tmpν,ι+1] -= (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
+
+                    diff = nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]
+                    tmpDic = Dict(x=>diff)
+
+                    integral_b_polys[tmpν,ι+1] += (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
+
                 end
 
-                diff = nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]
-                tmpDic = Dict(x=>diff)
-                if tmpνSegment+1 !== tmpν
-                    integral_b_polys[tmpν,ι+1] += (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
-                end
+             
                 
             end
         end
