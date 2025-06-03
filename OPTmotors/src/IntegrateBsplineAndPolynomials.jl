@@ -239,6 +239,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
         end
     end
 
+    #=
     individualIntegral_b_polys = copy(integral_b_polys)
     integral_b_polys= zeros(Num,numberNodes,maximumOrder)
 
@@ -250,6 +251,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
             end
         end
     end
+    =#
 
     integral_b_polys=mySimplify.(integral_b_polys)
     BsplineIntegraters=(numberNodes=numberNodes,integral_b_polys=integral_b_polys,N=N,Δx =Δx)
