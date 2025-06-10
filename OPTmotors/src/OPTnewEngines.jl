@@ -569,7 +569,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
    
     #endregion
 
-    #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
+
+    #region obtaining the semi-symbolic expression of cost function based on eqns. 52 and 53.
+
+    # before calling AuSymbolic we can manipulate pointsIndices for various boundary configurations
+
 
     if CˡηSymbolicInversion # this seems super cool but it takes time
         #Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,timeMarching=timeMarching)
@@ -578,8 +582,40 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         Δ = Δnum
     end
 
+    
+
+    AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic()
+
+
+    #endregion
+
+
+
+    #region outputs
+    
+    utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
+    if testOnlyCentre
+        smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
+        smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
+        return smallAjiννᶜU,utilities
+    else
+        return AjiννᶜU,utilities
+    end
+
+    #endregion
+    
+end
+
+
+function AuSymbolic()
+
+    # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
+
+    #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
+
+
     coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
-    CˡηGlobal, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
+    Cˡη, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
    
 
     #endregion
@@ -617,8 +653,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
     AjiννᶜU .= 0
 
-    for iExpr in eachindex(exprs) # j in eq. 42
-        for iField in eachindex(fields) # i in eq. 42
+    for iExpr in eachindex(exprs) # j in eq. 52
+        for iField in eachindex(fields) # i in eq. 52
             α = bigα[iExpr,iField]
             
             for ν in multiPointsIndices # the relative centre of the local coordinates ν
@@ -701,21 +737,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
 
     #endregion
+    return AjiννᶜU,middleν,middleLinearν,varM,Ulocal
 
-    #region outputs
-    
-    utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
-    if testOnlyCentre
-        smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
-        smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
-        return smallAjiννᶜU,utilities
-    else
-        return AjiννᶜU,utilities
-    end
 
-    #endregion
-    
-end
+end 
+
 
 
 function constructingNumericalDiscretisedEquations(config::Dict)
