@@ -153,10 +153,77 @@ function PDECoefFinder(pointsUsed,coordinates,expr,field,vars)
     return alpha, varM # varM: iVar and linearised cartesian indices
 end 
 
+
+
+
+function TaylorCoefInversion(coefInversionDict::Dict)
+
+    # the user might want to have a look on illposedTaylorCoefficientsInversion_legend, which is deprecated as of 10/06/2025.
+
+
+    # based on the equation 27 (of the version 10/06/2025 FD2025 : \psi_{;\mu,\nu}^{(l)}[\nu+\mu]=\sum_\eta C_{\mu+\eta;\mu,\nu}^{(l)} \psi[\nu+\mu+\eta]), we need to perform this inversion anyways for all the point \mu inside L(\nu) (the concerned points for \nu)
+
+
+    # be careful that pointsIndices is now a 1D array of integer vectors!!
+
+    @unpack coordinates,multiOrdersIndices,pointsIndices, Δ = coefInversionDict
+
+    Ndimension=length(coordinates)
+
+    if length(Δ) !== Ndimension
+        @error "the numerical delta increment has not the same dimension!"
+    end
+
+
+    numberOfEtas = length(pointsIndices)
+    numberOfLs   = length(multiOrdersIndices)
+
+    CˡηGlobal = Array{Any,3}(undef,numberOfEtas,numberOfLs,numberOfEtas)
+
+    # this is the C^{(l)}_{\mu+\eta; \mu, \nu}
+   
+    for k in eachindex(pointsIndices)
+        CˡηGlobal[:,:,k]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,k)
+    end 
+
+    return CˡηGlobal
+
+end
+
+function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,k)
+    # the old version is : illposedTaylorCoefficientsInversionSingleCentre
+    TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
+    for i in eachindex(pointsIndices)
+        η = pointsIndices[i]-pointsIndices[k]
+        distances= η .* Δ
+        for j in multiOrdersIndices
+            linearJ = LinearIndices(multiOrdersIndices)[j]
+            orders = car2vec(j).-1
+            numerator = prod(distances .^orders)
+            denominator=prod(factorial.(orders))
+            tmpTaylorCoeffs = numerator/denominator
+            TaylorExpansionCoeffs[linearJ,linearI]=tmpTaylorCoeffs 
+
+        end
+    end
+
+    # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
+    
+    aa=transpose(TaylorExpansionCoeffs)*TaylorExpansionCoeffs
+    invaa= myInv(aa)
+    Cˡηlocal=invaa*transpose(TaylorExpansionCoeffs)
+    return Cˡηlocal
+end
+
+
+
 function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=true,Δ=nothing,timeMarching=false)
+
+    # this function is deprecated, no more testOnlyCentre/timeMarching options are allowed (nor Symbolics Δ)
 
     # here we propose a big Taylor expansion matrix with Δcoordinates, symbolically (when Δ=nothing or Δ as a symbolic array)
     #   or numerically otherwise
+
 
     Ndimension=length(coordinates)
 
@@ -204,6 +271,9 @@ function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,mult
 end
 
 function illposedTaylorCoefficientsInversionSingleCentre(numberOfLs,numberOfEtas,multiOrdersIndices,multiPointsIndices,Δ,k)
+
+    # this function is deprecated as of 10/06/2025
+
     # this should be completely numerical
     TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
     for i in multiPointsIndices
@@ -495,17 +565,19 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
     multiOrdersIndices=CartesianIndices(orderTaylors)
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
-
-    #NpointsMultiDim = length(multiPointsIndices)
-    #NordersMultiDim = length(multiOrdersIndices)
-
+    pointsIndices=car2vec.(multiPointsIndices)
+   
     #endregion
 
     #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
 
     if CˡηSymbolicInversion # this seems super cool but it takes time
-        Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,timeMarching=timeMarching)
+        #Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,timeMarching=timeMarching)
+        Δ = Symbolics.variables(:Δ,1:Ndimension)
+        coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
+        CˡηGlobal,_ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
     else
+        coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ=Δnum
         Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,Δ=Δnum,timeMarching=timeMarching)
         # this clause can work only if the user gives Δcoordinates in advance!
     end

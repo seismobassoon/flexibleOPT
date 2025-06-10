@@ -18,7 +18,7 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     
     # here we construct semi symbolic operators (with numerical Δnum)
     operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources iExperiment
-    operators,file=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
+    operators,_=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
 
     # constructing numerical operator (with still symbolic expression for time coordinates)
