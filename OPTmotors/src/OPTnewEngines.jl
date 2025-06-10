@@ -567,13 +567,25 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     availablePointsConfigurations = []
     centrePointConfigurations=[]
 
-    # Cartesian indices that can be available to use (normally)
+    #endregion
+
+    #region Cartesian indices that can be available to use (normally: iGeometry=1)
 
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
-    pointsIndices=car2vec.(multiPointsIndices)
-    availablePointsConfigurations=push!(availablePointsConfigurations,pointsIndices)
+    
 
-    # write the centre position in terms of pointsIndices (middleν) 
+    tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    midTimeCoord = nothing
+    if timeMarching
+        midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
+        tmpVecForMiddlePoint[end]=midTimeCoord
+        #AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices)÷(midTimeCoord+1),NtypeofExpr)
+    end
+    middleν=vec2car(tmpVecForMiddlePoint)
+
+
+    availablePointsConfigurations=push!(availablePointsConfigurations,car2vec.(multiPointsIndices))
+    centrePointConfigurations=push!(centrePointConfigurations,LinearIndices(multiPointsIndices)[middleν])
 
     #endregion
 
@@ -590,10 +602,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         Δ = Δnum
     end
 
-    for pointsIndices in availablePointsConfigurations 
-
+    for iConfigGeometry in eachindex(availablePointsConfigurations) 
+        pointsIndices=availablePointsConfigurations[iConfigGeometry]
+        middleLinearν=centrePointConfigurations[iConfigGeometry]
         #varM is given above but this should change ....
-        AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic()
+        AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic(pointsIndices,middleLinearν,Δ)
 
     end
 
@@ -652,15 +665,7 @@ function AuSymbolic()
     # the small dictionary map should be here (not inside the loop) but I am too tired that I let this go
     # why tired? since I need to prepare another set of theDiffNu that can run from minus to plus 
  
-    tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
-    midTimeCoord = nothing
-    if timeMarching
-        midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
-        tmpVecForMiddlePoint[end]=midTimeCoord
-        #AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices)÷(midTimeCoord+1),NtypeofExpr)
-    end
-    middleν=vec2car(tmpVecForMiddlePoint)
-    middleLinearν = LinearIndices(multiPointsIndices)[middleν]
+    
 
     AjiννᶜU .= 0
 
