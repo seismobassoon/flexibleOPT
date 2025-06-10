@@ -561,12 +561,20 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     orderTaylors=Array{Any,Ndimension}(undef,Tuple(orderU))
     pointsInSpaceTime=Array{Any,Ndimension}(undef,Tuple(pointsUsedForFields))
     
-    # Cartesian indices that can be interesting to use
-
+    
     multiOrdersIndices=CartesianIndices(orderTaylors)
+
+    availablePointsConfigurations = []
+    centrePointConfigurations=[]
+
+    # Cartesian indices that can be available to use (normally)
+
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
     pointsIndices=car2vec.(multiPointsIndices)
-   
+    availablePointsConfigurations=push!(availablePointsConfigurations,pointsIndices)
+
+    # write the centre position in terms of pointsIndices (middleν) 
+
     #endregion
 
 
@@ -582,9 +590,12 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         Δ = Δnum
     end
 
-    
+    for pointsIndices in availablePointsConfigurations 
 
-    AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic()
+        #varM is given above but this should change ....
+        AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic()
+
+    end
 
 
     #endregion
