@@ -574,14 +574,13 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     if CˡηSymbolicInversion # this seems super cool but it takes time
         #Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,timeMarching=timeMarching)
         Δ = Symbolics.variables(:Δ,1:Ndimension)
-        coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
-        CˡηGlobal,_ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
     else
-        coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ=Δnum
-        Cˡη,Δ,multiLCar = illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices;testOnlyCentre=testOnlyCentre,Δ=Δnum,timeMarching=timeMarching)
-        # this clause can work only if the user gives Δcoordinates in advance!
+        Δ = Δnum
     end
 
+    coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
+    CˡηGlobal, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
+   
 
     #endregion
 
@@ -634,11 +633,9 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
                     tmpCˡη=nothing
 
-                    if testOnlyCentre # Cⁿη size is not the same
-                        tmpCˡη=Cˡη
-                    else
-                        tmpCˡη=Cˡη[:,:,linearν]
-                    end
+                
+                    tmpCˡη=Cˡη[:,:,linearν]
+        
 
                     for νᶜ in multiPointsIndices 
 
@@ -667,9 +664,9 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
                                 end
                               
                                 for l in n .+ L_MINUS_N
-                                    linearl = LinearIndices(multiLCar)[l]
+                                    linearl = LinearIndices(multiOrdersIndices)[l]
                                     for lᶜ in nᶜ.+L_MINUS_N
-                                        linearlᶜ = LinearIndices(multiLCar)[lᶜ]
+                                        linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
                                         kernelProducts = 1
                                         for iCoord in eachindex(coordinates)
                                             l_n_field = Tuple(l-n)[iCoord]
