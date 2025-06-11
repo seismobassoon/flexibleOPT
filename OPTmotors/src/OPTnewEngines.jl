@@ -153,9 +153,6 @@ function PDECoefFinder(pointsUsed,coordinates,expr,field,vars)
     return alpha, varM # varM: iVar and linearised cartesian indices
 end 
 
-
-
-
 function TaylorCoefInversion(coefInversionDict::Dict)
 
     # the user might want to have a look on illposedTaylorCoefficientsInversion_legend, which is deprecated as of 10/06/2025.
@@ -670,69 +667,69 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
             α = bigα[iExpr,iField]
             
 
+            # this is the ν point in space-time domain
+
             linearν = middleLinearν
             CoefU = 0
 
-                
             
 
-            tmpCˡη=nothing
-            
-            tmpCˡη=Cˡη[:,:,linearν]
-    
+            for linearμ in eachindex(pointsIndices)
 
-            for νᶜ in multiPointsIndices 
+                tmpCˡημᶜ=Cˡη[:,:,linearμ] # C^{(l)}_{μ+η;μ,ν}
 
-                linearνᶜ = LinearIndices(multiPointsIndices)[νᶜ]
-                #relativeDistanceνᶜ = Δ .* car2vec(νᶜ-ν)
-                #relativeDistanceνᶜ = car2vec(νᶜ-ν)
-                #localmapνᶜ = Dict(zip(coordinates, relativeDistanceνᶜ))
-                
-                #U_HERE = substitute(fields[iField],localmapνᶜ)
-                U_HERE = Ulocal[linearνᶜ,iField]
-                
-                for eachα in α
-                    nodeValue=eachα.node
-                    nᶜ = eachα.nᶜ
-                    n = eachα.n
+                for linearμᶜ in eachindex(pointsIndices)
+                    
+                    tmpCˡημᶜ=Cˡη[:,:,linearμᶜ] # C^{(l')}_{μ'+η';μ',ν}
 
-                    for ηᶜ in multiPointsIndices
+                    for linearνᶜ in eachindex(pointsIndices)
 
-                        linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
-                        #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
-                        #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
-                        #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
-                        localmapηᶜ=Dict()
-                        for iVar in eachindex(vars)
-                            localmapηᶜ[vars[iVar]]=varM[iVar,linearηᶜ][]
-                        end
+                        vectorνᶜ_ν = pointsIndices[linearνᶜ]-pointsIndices[linearν] # this is μ+η
+                        vectorη = vectorνᶜ_ν-pointsIndices(linearμ)
+
+                        U_HERE = Ulocal[linearνᶜ,iField]
                         
-                        for l in n .+ L_MINUS_N
-                            linearl = LinearIndices(multiOrdersIndices)[l]
-                            for lᶜ in nᶜ.+L_MINUS_N
-                                linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
-                                kernelProducts = 1
-                                for iCoord in eachindex(coordinates)
-                                    l_n_field = Tuple(l-n)[iCoord]
-                                    l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
-                                    # here I take only the middle_value
-                                    kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+                        for eachα in α
+                            nodeValue=eachα.node
+                            nᶜ = eachα.nᶜ
+                            n = eachα.n
+
+                            for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
+
+                                #linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
+                                #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
+                                #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
+                                #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
+                                localmapηᶜ=Dict()
+                                for iVar in eachindex(vars)
+                                    localmapηᶜ[vars[iVar]]=varM[iVar,linearηᶜ][]
                                 end
                                 
-                                #nodeValue=Symbol(nodeValue)
-                                #@show localExpression=substitute(nodeValue,localmap)
-                                #@show typeof(nodeValue)
-                                #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
-                                
-                                substitutedValue = substitute(nodeValue, localmapηᶜ)
+                                for l in n .+ L_MINUS_N
+                                    linearl = LinearIndices(multiOrdersIndices)[l]
+                                    for lᶜ in nᶜ.+L_MINUS_N
+                                        linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
+                                        kernelProducts = 1
+                                        for iCoord in eachindex(coordinates)
+                                            l_n_field = Tuple(l-n)[iCoord]
+                                            l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
+                                            # here I take only the middle_value
+                                            kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+                                        end
+                                        
+                                        #nodeValue=Symbol(nodeValue)
+                                        #@show localExpression=substitute(nodeValue,localmap)
+                                        #@show typeof(nodeValue)
+                                        #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
+                                        
+                                        substitutedValue = substitute(nodeValue, localmapηᶜ)
 
-                                CoefU +=tmpCˡη[linearηᶜ,linearlᶜ]*tmpCˡη[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
+                                        CoefU +=tmpCˡη[linearηᶜ,linearlᶜ]*tmpCˡη[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
+                                    end
+                                end
                             end
                         end
                     end
-
-                    
-
                 end
             end
        
