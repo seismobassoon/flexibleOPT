@@ -53,18 +53,20 @@ function makeMixPartials(orders,coordinates;field=identity)
     return ∇
 end
 
-function PDECoefFinder(pointsUsed,coordinates,expr,field,vars)
+function PDECoefFinder(orders,coordinates,expr,field,vars)
     # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
     # I know how to do it, but eq. 40 should be then more generalised (kind of the product of partials of different materials)
 
     # maxPolynomialOrderMaterial is also a chelou thing, that I need to work on more systematically
     # like the powers of partials should also be included but here search for Rm[1], yeah, that's what I am doing
 
+
+
     Ndimension = length(coordinates)
     alpha=[]
     
-    maxPolynomialOrderMaterial = 2*(maximum(pointsUsed)-1)
-    ∇=makeMixPartials(pointsUsed,coordinates;field=field)
+    maxPolynomialOrderMaterial = 2*(maximum(orders)-1)
+    ∇=makeMixPartials(orders,coordinates;field=field)
     R=CartesianIndices(∇)
     expr=mySimplify(expr)
 
@@ -98,7 +100,7 @@ function PDECoefFinder(pointsUsed,coordinates,expr,field,vars)
             isTmpCoeffAConstant=true
             for iVar in eachindex(vars)
                 
-                ∇m=makeMixPartials(pointsUsed,coordinates;field=vars[iVar]) # material partials
+                ∇m=makeMixPartials(orders,coordinates;field=vars[iVar]) # material partials
                 Rm=CartesianIndices(∇m)
                 for j in Rm
                     term_material_searched = ∇m[j]
@@ -110,7 +112,7 @@ function PDECoefFinder(pointsUsed,coordinates,expr,field,vars)
                         # This is to avoid partials of other material 
                         for jVar in eachindex(vars)
                             if jVar !== iVar
-                                ∇n = makeMixPartials(pointsUsed,coordinates;field=vars[jVar]) 
+                                ∇n = makeMixPartials(orders,coordinates;field=vars[jVar]) 
                                 for jj in Rm
                                     if jj !== Rm[1]
                                         term_material_searched_plus = ∇n[jj]
@@ -529,6 +531,9 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
     # the number of points used in the vicinity of the node, which is independent of the order of B-spline functions (see our paper)
     pointsUsedForFields=(pointsUsed.-1).*fieldDependency.+1
+
+    # orderExpressions is the maximal orders of partials that we could expect in the expressions
+    orderExpressions=pointsUsedForFieldsed
     
     # numbers of points to evaluate the integral for the governing equation filtered by the test functions
     
@@ -545,7 +550,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     for iExpr in eachindex(exprs)
         for iField in eachindex(fields)
             
-            tmpNonZeroAlphas,varM=PDECoefFinder(pointsUsedForFields,coordinates,exprs[iExpr],fields[iField],vars) 
+            tmpNonZeroAlphas,varM=PDECoefFinder(orderExpressions,coordinates,exprs[iExpr],fields[iField],vars) 
             # we assume that the pointsUsedForFields represent the highest order of partials
             bigα[iField,iExpr]=unique(tmpNonZeroAlphas)
         end
@@ -603,7 +608,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         pointsIndices=availablePointsConfigurations[iConfigGeometry]
         middleLinearν=centrePointConfigurations[iConfigGeometry]
         #varM is given above but this should change ...
-        AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ)
+        AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ,varM,bigα)
 
     end
 
@@ -628,7 +633,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 end
 
 
-function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ)
+function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ,varM,bigα)
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
@@ -695,6 +700,9 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
                             n = eachα.n
 
                             for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
+
+                                vectorηᶜ = pointsIndices(linearμᶜ_plus_ηᶜ) - pointsIndices(linearμᶜ)
+                                # we need to check if this is inside L(ν)
 
                                 #linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
                                 #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
