@@ -692,47 +692,51 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
                         vectorνᶜ_ν = pointsIndices[linearνᶜ]-pointsIndices[linearν] # this is μ+η
                         vectorη = vectorνᶜ_ν-pointsIndices(linearμ)
 
+
+                        if vectorη ∈ pointsIndices
+
                         U_HERE = Ulocal[linearνᶜ,iField]
-                        
-                        for eachα in α
-                            nodeValue=eachα.node
-                            nᶜ = eachα.nᶜ
-                            n = eachα.n
+                            
+                            for eachα in α
+                                nodeValue=eachα.node
+                                nᶜ = eachα.nᶜ
+                                n = eachα.n
 
-                            for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
+                                for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
 
-                                vectorηᶜ = pointsIndices(linearμᶜ_plus_ηᶜ) - pointsIndices(linearμᶜ)
-                                # we need to check if this is inside L(ν)
+                                    vectorηᶜ = pointsIndices(linearμᶜ_plus_ηᶜ) - pointsIndices(linearμᶜ)
+                                    # we need to check if this is inside L(ν)
 
-                                #linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
-                                #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
-                                #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
-                                #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
-                                localmapηᶜ=Dict()
-                                for iVar in eachindex(vars)
-                                    localmapηᶜ[vars[iVar]]=varM[iVar,linearηᶜ][]
-                                end
-                                
-                                for l in n .+ L_MINUS_N
-                                    linearl = LinearIndices(multiOrdersIndices)[l]
-                                    for lᶜ in nᶜ.+L_MINUS_N
-                                        linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
-                                        kernelProducts = 1
-                                        for iCoord in eachindex(coordinates)
-                                            l_n_field = Tuple(l-n)[iCoord]
-                                            l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
-                                            # here I take only the middle_value
-                                            kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+                                    #linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
+                                    #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
+                                    #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
+                                    #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
+                                    localmapηᶜ=Dict()
+                                    for iVar in eachindex(vars)
+                                        localmapηᶜ[vars[iVar]]=varM[iVar,linearηᶜ][]
+                                    end
+                                    
+                                    for l in n .+ L_MINUS_N
+                                        linearl = LinearIndices(multiOrdersIndices)[l]
+                                        for lᶜ in nᶜ.+L_MINUS_N
+                                            linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
+                                            kernelProducts = 1
+                                            for iCoord in eachindex(coordinates)
+                                                l_n_field = Tuple(l-n)[iCoord]
+                                                l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
+                                                # here I take only the middle_value
+                                                kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+                                            end
+                                            
+                                            #nodeValue=Symbol(nodeValue)
+                                            #@show localExpression=substitute(nodeValue,localmap)
+                                            #@show typeof(nodeValue)
+                                            #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
+                                            
+                                            substitutedValue = substitute(nodeValue, localmapηᶜ)
+
+                                            CoefU +=tmpCˡη[linearηᶜ,linearlᶜ]*tmpCˡη[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
                                         end
-                                        
-                                        #nodeValue=Symbol(nodeValue)
-                                        #@show localExpression=substitute(nodeValue,localmap)
-                                        #@show typeof(nodeValue)
-                                        #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
-                                        
-                                        substitutedValue = substitute(nodeValue, localmapηᶜ)
-
-                                        CoefU +=tmpCˡη[linearηᶜ,linearlᶜ]*tmpCˡη[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
                                     end
                                 end
                             end
