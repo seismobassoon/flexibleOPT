@@ -605,8 +605,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     for iConfigGeometry in eachindex(availablePointsConfigurations) 
         pointsIndices=availablePointsConfigurations[iConfigGeometry]
         middleLinearν=centrePointConfigurations[iConfigGeometry]
-        #varM is given above but this should change ....
-        AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic(pointsIndices,middleLinearν,Δ)
+        #varM is given above but this should change ...
+        AjiννᶜU,middleν,middleLinearν,varM,Ulocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ)
 
     end
 
@@ -631,7 +631,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 end
 
 
-function AuSymbolic()
+function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ)
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
@@ -645,26 +645,22 @@ function AuSymbolic()
     #endregion
 
     #region making the (symbolic-numerical-hybrid) operator calling the factorial kernels and test functions
-    
-    l_minus_n = pointsUsedForFields # half the orderU 
 
-    L_MINUS_N = CartesianIndices(Tuple(l_minus_n))
+    L_MINUS_N = multiOrdersIndices
     L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
 
     
-    # yes indeed, (νᶜ,) ν, i, j are the oder here
+    # the order is: (νᶜ,) ν, i, j  here
 
-    Ulocal = Array{Num,2}(undef,length(multiPointsIndices),NtypeofFields)
+    Ulocal = Array{Num,2}(undef,length(pointsIndices),NtypeofFields)
     for iField in eachindex(fields)
         newstring=split(string(fields[iField]),"(")[1]
-        Ulocal[:,iField]=Symbolics.variables(Symbol(newstring),1:length(multiPointsIndices))
+        Ulocal[:,iField]=Symbolics.variables(Symbol(newstring),1:length(pointsIndices))
     end
 
-    AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices),NtypeofExpr)
+    AjiννᶜU = Array{Num,1}(undef,NtypeofExpr)
     
-    # the small dictionary map should be here (not inside the loop) but I am too tired that I let this go
-    # why tired? since I need to prepare another set of theDiffNu that can run from minus to plus 
- 
+    # this is the cost function for ν point so the number of elements is just the number of expressions (governing equations)
     
 
     AjiννᶜU .= 0
@@ -673,80 +669,76 @@ function AuSymbolic()
         for iField in eachindex(fields) # i in eq. 52
             α = bigα[iExpr,iField]
             
-            for ν in multiPointsIndices # the relative centre of the local coordinates ν
 
-                linearν = LinearIndices(multiPointsIndices)[ν]
-                CoefU = 0
-                
-                if !testOnlyCentre || ν === middleν || (timeMarching && car2vec(ν)[end]=== midTimeCoord && !testOnlyCentre) 
-                    # the first two ifs are trivial but the third () ifs are due to the fact that we cannot predict more than one future
-                    # (or at least it has no sense ...) 
-                    
-
-                    tmpCˡη=nothing
+            linearν = middleLinearν
+            CoefU = 0
 
                 
-                    tmpCˡη=Cˡη[:,:,linearν]
-        
+            
 
-                    for νᶜ in multiPointsIndices 
+            tmpCˡη=nothing
+            
+            tmpCˡη=Cˡη[:,:,linearν]
+    
 
-                        linearνᶜ = LinearIndices(multiPointsIndices)[νᶜ]
-                        #relativeDistanceνᶜ = Δ .* car2vec(νᶜ-ν)
-                        #relativeDistanceνᶜ = car2vec(νᶜ-ν)
-                        #localmapνᶜ = Dict(zip(coordinates, relativeDistanceνᶜ))
+            for νᶜ in multiPointsIndices 
+
+                linearνᶜ = LinearIndices(multiPointsIndices)[νᶜ]
+                #relativeDistanceνᶜ = Δ .* car2vec(νᶜ-ν)
+                #relativeDistanceνᶜ = car2vec(νᶜ-ν)
+                #localmapνᶜ = Dict(zip(coordinates, relativeDistanceνᶜ))
+                
+                #U_HERE = substitute(fields[iField],localmapνᶜ)
+                U_HERE = Ulocal[linearνᶜ,iField]
+                
+                for eachα in α
+                    nodeValue=eachα.node
+                    nᶜ = eachα.nᶜ
+                    n = eachα.n
+
+                    for ηᶜ in multiPointsIndices
+
+                        linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
+                        #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
+                        #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
+                        #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
+                        localmapηᶜ=Dict()
+                        for iVar in eachindex(vars)
+                            localmapηᶜ[vars[iVar]]=varM[iVar,linearηᶜ][]
+                        end
                         
-                        #U_HERE = substitute(fields[iField],localmapνᶜ)
-                        U_HERE = Ulocal[linearνᶜ,iField]
-                        
-                        for eachα in α
-                            nodeValue=eachα.node
-                            nᶜ = eachα.nᶜ
-                            n = eachα.n
-
-                            for ηᶜ in multiPointsIndices
-
-                                linearηᶜ = LinearIndices(multiPointsIndices)[ηᶜ]
-                                #relativeDistanceηᶜ = Δ .* car2vec(ηᶜ-ν)
-                                #relativeDistanceηᶜ = car2vec(ηᶜ-ν)
-                                #localmapηᶜ = Dict(zip(coordinates, relativeDistanceηᶜ))
-                                localmapηᶜ=Dict()
-                                for iVar in eachindex(vars)
-                                    localmapηᶜ[vars[iVar]]=varM[iVar,linearηᶜ][]
+                        for l in n .+ L_MINUS_N
+                            linearl = LinearIndices(multiOrdersIndices)[l]
+                            for lᶜ in nᶜ.+L_MINUS_N
+                                linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
+                                kernelProducts = 1
+                                for iCoord in eachindex(coordinates)
+                                    l_n_field = Tuple(l-n)[iCoord]
+                                    l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
+                                    # here I take only the middle_value
+                                    kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
                                 end
-                              
-                                for l in n .+ L_MINUS_N
-                                    linearl = LinearIndices(multiOrdersIndices)[l]
-                                    for lᶜ in nᶜ.+L_MINUS_N
-                                        linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
-                                        kernelProducts = 1
-                                        for iCoord in eachindex(coordinates)
-                                            l_n_field = Tuple(l-n)[iCoord]
-                                            l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
-                                            # here I take only the middle_value
-                                            kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
-                                        end
-                                        
-                                        #nodeValue=Symbol(nodeValue)
-                                        #@show localExpression=substitute(nodeValue,localmap)
-                                        #@show typeof(nodeValue)
-                                        #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
-                                        
-                                        substitutedValue = substitute(nodeValue, localmapηᶜ)
+                                
+                                #nodeValue=Symbol(nodeValue)
+                                #@show localExpression=substitute(nodeValue,localmap)
+                                #@show typeof(nodeValue)
+                                #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
+                                
+                                substitutedValue = substitute(nodeValue, localmapηᶜ)
 
-                                        CoefU +=tmpCˡη[linearηᶜ,linearlᶜ]*tmpCˡη[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
-                                    end
-                                end
+                                CoefU +=tmpCˡη[linearηᶜ,linearlᶜ]*tmpCˡη[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
                             end
-
-                            
-
                         end
                     end
-                end
 
-                AjiννᶜU[linearν,iExpr] += CoefU
+                    
+
+                end
             end
+       
+
+            AjiννᶜU[iExpr] += CoefU
+            
         end
     end
 
