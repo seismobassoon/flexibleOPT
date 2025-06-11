@@ -687,7 +687,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
 
                 for linearμ in eachindex(pointsIndices)
 
-                    tmpCˡημᶜ=Cˡη[:,:,linearμ] # C^{(l)}_{μ+η;μ,ν}
+                    tmpCˡημ=Cˡη[:,:,linearμ] # C^{(l)}_{μ+η;μ,ν}
 
                     for linearηᶜ in eachindex(pointsIndices.-pointsIndices[linearμᶜ])
 
@@ -712,6 +712,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
                                         #vectorηᶜ = pointsIndices(linearμᶜ_plus_ηᶜ) - pointsIndices(linearμᶜ)
                                                 
                                         localmapηᶜ=Dict()
+
                                         for iVar in eachindex(vars)
                                             localmapηᶜ[vars[iVar]]=varM[iVar,linearμᶜ_plus_ηᶜ][]
                                         end
@@ -737,7 +738,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
                                                         
                                                         substitutedValue = substitute(nodeValue, localmapηᶜ)
 
-                                                        CoefU +=tmpCˡη[linearηᶜ,linearlᶜ]*tmpCˡη[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
+                                                        CoefU +=tmpCˡημᶜ[linearμᶜ_plus_ηᶜ,linearlᶜ]*tmpCˡημ[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
                                                     end
                                                 end
                                             end
