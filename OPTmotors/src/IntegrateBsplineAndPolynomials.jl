@@ -12,13 +12,19 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
 
     @unpack maximumOrder, numberNodes = params
     @variables x Δx ξ
+    @variables extFns[numberNodes+1,maximumOrder+1] # piecewise external functions
+
+    # maximum order of B-spline
+    
+    maximumOrder = maximumOrder + 1
+
+    
+
     ∂x = Differential(x)
     
     # input parameters
     
-    # maximum order of B-spline
-    
-    maximumOrder = maximumOrder + 1
+  
     
     # the left and right indices
     νₗ = 1
@@ -136,8 +142,11 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     
     
     integral_b= zeros(Num,numberNodes)
-    gvec = (@variables (g(x))[1:maximumOrder])[1]
+
+    #gvec = (@variables (g(x))[1:maximumOrder])[1]
     
+    
+
     for ι in 0:1:maximumOrder-1
         for i in 0:1:maximumOrder-1
             for ν in nodeIndices # this will run for all the ν related to nodes
@@ -145,13 +154,9 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                 for νSegment in nodeIndices
                     tmpνSegment = νSegment - νₗ + 1
                     
-                    diff = Δx * (tmpνSegment - tmpν)
-                    tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
+                    integral_b[tmpν] -= (-1)^(i)*extFns[νSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
     
-                    diff = Δx * (tmpνSegment - tmpν+1)
-                    tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]*Δx))
+                    integral_b[tmpν] += (-1)^(i)*extFns[νSegment+1,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
                     
                 end
             end
@@ -161,7 +166,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     
     integral_b=mySimplify.(integral_b)
     
-    BsplineIntegraters=(nodeIndices=nodeIndices,localB=b,integral_b=integral_b,N=N,Δx=Δx,gvec=gvec)
+    BsplineIntegraters=(nodeIndices=nodeIndices,nodesSymbolic=nodesSymbolic,b_deriv=b_deriv,integral_b=integral_b,Δx=Δx,extFns=extFns)
     return @strdict(BsplineIntegraters)
 
 end
