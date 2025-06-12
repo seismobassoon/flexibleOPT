@@ -12,7 +12,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
 
     @unpack maximumOrder, numberNodes = params
     @variables x Δx ξ
-    @variables extFns[numberNodes+1,maximumOrder+1] # piecewise external functions
+    @variables extFns[numberNodes+1,maximumOrder+1] # piecewise external functions at nodes (the end point doubles)
 
     # maximum order of B-spline
     
@@ -154,9 +154,9 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                 for νSegment in nodeIndices
                     tmpνSegment = νSegment - νₗ + 1
                     
-                    integral_b[tmpν] -= (-1)^(i)*extFns[νSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
+                    integral_b[tmpν] -= (-1)^(i)*extFns[tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
     
-                    integral_b[tmpν] += (-1)^(i)*extFns[νSegment+1,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                    integral_b[tmpν] += (-1)^(i)*extFns[tmpνSegment+1,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
                     
                 end
             end
@@ -166,7 +166,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     
     integral_b=mySimplify.(integral_b)
     
-    BsplineIntegraters=(nodeIndices=nodeIndices,nodesSymbolic=nodesSymbolic,b_deriv=b_deriv,integral_b=integral_b,Δx=Δx,extFns=extFns)
+    BsplineIntegraters=(nodeIndices=nodeIndices,nodesSymbolic=nodesSymbolic,b_deriv=b_deriv,integral_b=integral_b,Δx=Δx,extFns=extFns,x=x)
     return @strdict(BsplineIntegraters)
 
 end
