@@ -53,22 +53,11 @@ function makeMixPartials(orders,coordinates;field=identity)
     return ∇
 end
 
-function PDECoefFinder(orders,coordinates,expr,field,vars)
-    # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
-    # I know how to do it, but eq. 40 should be then more generalised (kind of the product of partials of different materials)
-
-    # maxPolynomialOrderMaterial is also a chelou thing, that I need to work on more systematically
-    # like the powers of partials should also be included but here search for Rm[1], yeah, that's what I am doing
-
-
-
+function varMmaker(maxPointsUsed,coordinates,vars) 
+    # this will make an array of material coeffs for with a local Cartesian grid (max points used for a node)
     Ndimension = length(coordinates)
-    alpha=[]
-    
-    maxPolynomialOrderMaterial = 2*(maximum(orders)-1)
-    ∇=makeMixPartials(orders,coordinates;field=field)
-    R=CartesianIndices(∇)
-    expr=mySimplify(expr)
+
+    R = CartesianIndices(Tuple(maxPointsUsed))
 
     varM=Array{Any,2}(undef,length(vars),length(R))
    
@@ -90,6 +79,24 @@ function PDECoefFinder(orders,coordinates,expr,field,vars)
         varM[iVar,:]=smallVarM
     end
     
+    return varM
+end
+
+function PDECoefFinder(orders,coordinates,expr,field,vars)
+    # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
+    # I know how to do it, but eq. 40 should be then more generalised (kind of the product of partials of different materials)
+
+    # maxPolynomialOrderMaterial is also a chelou thing, that I need to work on more systematically
+    # like the powers of partials should also be included but here search for Rm[1], yeah, that's what I am doing
+
+
+    Ndimension = length(coordinates)
+    alpha=[]
+    
+    maxPolynomialOrderMaterial = 2*(maximum(orders)-1)
+    ∇=makeMixPartials(orders,coordinates;field=field)
+    R=CartesianIndices(∇)
+    expr=mySimplify(expr)
 
 
     for i in R
@@ -152,7 +159,7 @@ function PDECoefFinder(orders,coordinates,expr,field,vars)
     alpha=unique(alpha)
 
 
-    return alpha, varM # varM: iVar and linearised cartesian indices
+    return alpha # varM: iVar and linearised cartesian indices
 end 
 
 function TaylorCoefInversion(coefInversionDict::Dict)
@@ -529,11 +536,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         orderBspline[1:Ndimension]=orderBspace*fieldDependency[1:Ndimension]
     end
     
-    # the number of points used in the vicinity of the node, which is independent of the order of B-spline functions (see our paper)
+    # the maximum number of points used in the vicinity of the node, which is independent of the order of B-spline functions (see our paper)
     pointsUsedForFields=(pointsUsed.-1).*fieldDependency.+1
 
     # orderExpressions is the maximal orders of partials that we could expect in the expressions
-    orderExpressions=pointsUsedForFieldsed
+    orderExpressions=pointsUsedForFields
     
     # numbers of points to evaluate the integral for the governing equation filtered by the test functions
     
@@ -550,12 +557,13 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     for iExpr in eachindex(exprs)
         for iField in eachindex(fields)
             
-            tmpNonZeroAlphas,varM=PDECoefFinder(orderExpressions,coordinates,exprs[iExpr],fields[iField],vars) 
+            tmpNonZeroAlphas=PDECoefFinder(orderExpressions,coordinates,exprs[iExpr],fields[iField],vars) 
             # we assume that the pointsUsedForFields represent the highest order of partials
             bigα[iField,iExpr]=unique(tmpNonZeroAlphas)
         end
     end
-    @show bigα
+    varM=varMmaker(pointsUsedForFields,coordinates,vars)
+    @show bigα,varM
     #endregion
 
     #region Preparation for Taylor expansion
@@ -574,7 +582,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     #region Cartesian indices that can be available to use (normally: iGeometry=1)
 
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
-    
+    # this is the whole local Cartesian grids (without any lacking points)
 
     tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
     midTimeCoord = nothing
@@ -610,8 +618,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     for iConfigGeometry in eachindex(availablePointsConfigurations) 
         pointsIndices=availablePointsConfigurations[iConfigGeometry]
         middleLinearν=centrePointConfigurations[iConfigGeometry]
-        #varM is given above but this should change ...
-        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ,varM,bigα)
+        #varM is given above for the max number of points used 
+        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα)
         AjiννᶜU=push!(AjiννᶜU,tmpAjiννᶜU)
         Ulocal=push!(Ulocal,tmpUlocal)
     end
@@ -637,7 +645,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 end
 
 
-function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ,varM,bigα)
+function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα)
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
@@ -691,7 +699,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
 
                     for linearμ_plus_η in eachindex(pointsIndices) # relative position νᶜ-ν
 
-                        U_HERE = Ulocal[linearνᶜ,iField]
+                        U_HERE = Ulocal[linearμ_plus_η,iField]
                         
                         for eachα in α
                             
@@ -700,11 +708,13 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
                             n = eachα.n
 
                             for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
-                                        
+                                
+                                linearμᶜ_plus_ηᶜ_in_the_whole = LinearIndices(multiOrdersIndices)[vec2car(pointsIndices[linearμᶜ_plus_ηᶜ])]
+
                                 localmapηᶜ=Dict()
 
                                 for iVar in eachindex(vars)
-                                    localmapηᶜ[vars[iVar]]=varM[iVar,linearμᶜ_plus_ηᶜ][]
+                                    localmapηᶜ[vars[iVar]]=varM[iVar,linearμᶜ_plus_ηᶜ_in_the_whole][]
                                 end
                                 
                                 for l in n .+ L_MINUS_N
@@ -718,7 +728,9 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
                                                     l_n_field = Tuple(l-n)[iCoord]
                                                     l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
                                                     # here I take only the middle_value
-                                                    kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+                                                    #kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+
+                                                    kernelProducts*=integralBsplineTaylorKernelsWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
                                                 end
                                                 
                                                 #nodeValue=Symbol(nodeValue)
@@ -728,7 +740,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
                                                 
                                                 substitutedValue = substitute(nodeValue, localmapηᶜ)
 
-                                                CoefU +=tmpCˡημᶜ[linearμᶜ_plus_ηᶜ,linearlᶜ]*tmpCˡημ[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
+                                                CoefU +=tmpCˡημᶜ[linearμᶜ_plus_ηᶜ,linearlᶜ]*tmpCˡημ[linearμ_plus_η,linearl]*kernelProducts*substitutedValue*U_HERE
                                             end
                                         end
                                     end
