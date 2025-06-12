@@ -192,7 +192,7 @@ function TaylorCoefInversion(coefInversionDict::Dict)
         CˡηGlobal[:,:,k]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,k)
     end 
 
-    return CˡηGlobal
+    return @strdict(CˡηGlobal)
 
 end
 
@@ -208,7 +208,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
             numerator = prod(distances .^orders)
             denominator=prod(factorial.(orders))
             tmpTaylorCoeffs = numerator/denominator
-            TaylorExpansionCoeffs[linearJ,linearI]=tmpTaylorCoeffs 
+            TaylorExpansionCoeffs[linearJ,i]=tmpTaylorCoeffs 
 
         end
     end
@@ -695,7 +695,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
         pointsIndices=availablePointsConfigurations[iConfigGeometry]
         middleLinearν=centrePointConfigurations[iConfigGeometry]
         #varM is given above for the max number of points used 
-        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline)
+        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofFields)
         AjiννᶜU=push!(AjiννᶜU,tmpAjiννᶜU)
         Ulocal=push!(Ulocal,tmpUlocal)
     end
@@ -721,7 +721,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
 end
 
 
-function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline)
+function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofFields)
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
@@ -729,8 +729,8 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
 
     coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
-    Cˡη, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
-   
+    output, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
+    Cˡη=output["CˡηGlobal"]
 
     #endregion
 
