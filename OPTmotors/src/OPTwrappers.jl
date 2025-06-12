@@ -12,12 +12,12 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     #operators=wload(datadir("semiSymbolics", savename(operatorConfigurations,"jld2")))
     
 
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, forceModels,maskedRegionForSourcesInSpace, iExperiment = concreteModelParameters
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, WorderBtime,WorderBspace,supplementaryOrder,pointsInSpace, pointsInTime, IneedExternalSources, modelName, models, modelPoints, forceModels,maskedRegionForSourcesInSpace, iExperiment = concreteModelParameters
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
     global ∂,∂²
     
     # here we construct semi symbolic operators (with numerical Δnum)
-    operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources iExperiment
+    operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace WorderBtime WorderBspace supplementaryOrder pointsInSpace pointsInTime IneedExternalSources iExperiment
     operators,_=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
 

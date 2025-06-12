@@ -12,7 +12,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
 
     @unpack maximumOrder, numberNodes = params
     @variables x Δx ξ
-    @variables extFns[numberNodes+1,maximumOrder+1] # piecewise external functions at nodes (the end point doubles)
+    @variables extFns[2,numberNodes,maximumOrder+1] # piecewise external functions at nodes (left/right)
 
     # maximum order of B-spline
     
@@ -154,9 +154,9 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                 for νSegment in nodeIndices
                     tmpνSegment = νSegment - νₗ + 1
                     
-                    integral_b[tmpν] -= (-1)^(i)*extFns[tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
+                    integral_b[tmpν] -= (-1)^(i)*extFns[1,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
     
-                    integral_b[tmpν] += (-1)^(i)*extFns[tmpνSegment+1,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                    integral_b[tmpν] += (-1)^(i)*extFns[2,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
                     
                 end
             end

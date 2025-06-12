@@ -37,6 +37,10 @@ numPointsX = collect(2:4)
 tmpOrderBtime=1
 tmpOrderBspace=1
 
+tmpWorderBtime=1
+tmpWorderBspace=1
+tmpSupplementaryOrder=2
+
 cases=[]
 
 # manufactured ExactSolutions 
@@ -90,6 +94,10 @@ for iPointsUsed in eachindex(numPointsX)
             pointsInSpace=numPointsX[iPointsUsed]
             pointsInTime=0
 
+            WorderBtime=tmpWorderBtime
+            WorderBspace=tmpWorderBspace
+            supplementaryOrder=tmpSupplementaryOrder
+
             modelName = name*string(Nx)
 
             modelPoints = (Nx)
@@ -98,7 +106,7 @@ for iPointsUsed in eachindex(numPointsX)
 
             forceModels =((1.0)) # if your model does not have anything special material parameters then it's how it's written
 
-            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace iExperiment
+            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace WorderBtime WorderBspace supplementaryOrder pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace iExperiment
 
 
             opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))

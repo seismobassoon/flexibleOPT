@@ -339,25 +339,34 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
         # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
 
-        Y_μᶜ=[:,μᶜ,1,WBsplineOrder]
-        Y_μ =[:,μ ,1,WBsplineOrder]
+        Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder]
+        Y_μ =b_deriv[:,μ ,1,WBsplineOrder]
         K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable/BigInt(factorial(l_n_variable))
         K_μ =(x-nodesSymbolic[μ])^l_n_field/BigInt(factorial(l_n_field))
 
-        
+
+        # the convoluted function of all above
+        F = Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ
+
+        # the target kernel integral
+
+        targetKernel = substitute(integral_b[ν],Dict(Δx=>Δ))
 
         dictionaryForSubstitute = Dict()
     
-    
-        for i in 1:1:maximumOrder-1
-            taylorNum *= N+i
-            dictionaryForSubstitute[gvec[i]]=x^(N+i)/taylorNum
-        
+        for i in 0:1:maximumOrder-1
+            F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
+            for iSegment in nodeIndices
+                dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute.(F[iSegment],Dict(x=>nodesSymbolic[tmpνSegment]))
+                dictionaryForSubstitute[extFns[2,iSegment,i+1]]=substitute.(F[iSegment],Dict(x=>nodesSymbolic[tmpνSegment+1]))
+            end
         end
 
+        kernelValue = substitute(targetKernel,dictionaryForSubstitute)
 
     end
 
+    return kernelValue
 
 end
 
@@ -453,9 +462,11 @@ end
 
 function OPTobj(operatorConfigurations::Dict)
     # this is just a wrapper for the OPTobj function below, for DrWatson package
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources, iExperiment= operatorConfigurations
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, WorderBtime,WorderBspace,supplementaryOrder,pointsInSpace, pointsInTime,IneedExternalSources, iExperiment= operatorConfigurations
+
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-  
+
+    TaylorOptions=(WorderBtime=WorderBtime,WorderBspace=WorderBspace,supplementaryOrder=supplementaryOrder)
     trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
     @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum,iExperiment=iExperiment)
     #AjiννᶜU=operatorData[1]
@@ -795,7 +806,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
                                                     # here I take only the middle_value
                                                     #kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
 
-                                                    kernelProducts*=integralBsplineTaylorKernelsWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiOrdersIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)[1]
+                                                    kernelProducts*=integralBsplineTaylorKernelsWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiOrdersIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
                                                 end
                                                 
                                                 #nodeValue=Symbol(nodeValue)
