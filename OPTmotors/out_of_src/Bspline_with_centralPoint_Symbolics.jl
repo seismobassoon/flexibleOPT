@@ -20,14 +20,14 @@ pointPerSegment = 20
 
 # the left and right indices
 νₗ = 0
-νᵣ = 4
+νᵣ = 3
 
 # δy for plotting, Δy for the real discretisation
 Δy = 1.0
 
 # maximum order of B-spline
 
-maximumOrder = 3 + 1
+maximumOrder = 2 + 1
 
 
 

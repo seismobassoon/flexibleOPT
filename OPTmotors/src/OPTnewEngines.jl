@@ -315,18 +315,24 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
     # however, the 'forgotten' μ (due to the whole) should be treated carefully 
     # (which I do not yet implemented here): I think Y_ignoredμ should be added to the Y_availableneighbouringμ
 
+    # or maybe the 'forgotten' μ is anyways not available (and thus very probably not continuous)
+    # so we just let this be forgotten 
+
+    kernelValue=0.0
    
 
     if BsplineOrder=== -1
         # this is for a delta function
         if l_n_variable === 0 && l_n_field === 0
-            middle_value=1
-            nearboundaries_values=ones(3)
+            kernelValue=1.0
         else
-            middle_value=0
-            nearboundaries_values=zeros(3)
+            kernelValue=0
         end
     else
+        maximumOrder = (BsplineOrder,WBsplineOrder)
+        
+        params=@strdict maximumOrder
+        output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
     end
 
 
