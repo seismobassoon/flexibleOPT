@@ -317,6 +317,17 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
 
    
 
+    if BsplineOrder=== -1
+        # this is for a delta function
+        if l_n_variable === 0 && l_n_field === 0
+            middle_value=1
+            nearboundaries_values=ones(3)
+        else
+            middle_value=0
+            nearboundaries_values=zeros(3)
+        end
+    else
+    end
 
 
 end
@@ -371,6 +382,8 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
         #extreme_value = (Δ^{l_n_variable+l_n_field+1})/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(l_n_variable)*factorial(l_n_field))
     end
     =#
+
+
     return middle_value,nearboundaries_values
 end
 
