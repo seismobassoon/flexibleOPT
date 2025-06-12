@@ -331,8 +331,23 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,Î
     else
         maximumOrder = (BsplineOrder,WBsplineOrder)
         
-        params=@strdict maximumOrder
+        params=@strdict maximumOrder numberNodes = L
+
         output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
+        nodeIndices,localB,integral_b,N,Î”x,gvec =output["BsplineIntegraters"]
+
+
+        dictionaryForSubstitute =Dict()
+    
+    
+    
+        for i in 1:1:maximumOrder
+            taylorNum *= N+i
+            dictionaryForSubstitute[gvec[i]]=x^(N+i)/taylorNum
+        
+        end
+
+
     end
 
 
