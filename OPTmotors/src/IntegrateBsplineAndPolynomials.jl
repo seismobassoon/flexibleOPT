@@ -12,8 +12,8 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
 
     @unpack maximumOrder, numberNodes = params
     @variables x Δx ξ
-    @variables extFns[2,numberNodes,maximumOrder+1] # piecewise external functions at nodes (left/right)
-
+   
+    extFns = Symbolics.variables(:extFns,1:2,1:numberNodes,1:maximumOrder+1)
     # maximum order of B-spline
     
     maximumOrder = maximumOrder + 1

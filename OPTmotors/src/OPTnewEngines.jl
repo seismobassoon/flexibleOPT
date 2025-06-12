@@ -329,8 +329,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
             kernelValue=0
         end
     else
-        maximumOrder = (BsplineOrder,WBsplineOrder)
-        
+        maximumOrder = maximum((BsplineOrder,WBsplineOrder))
         params=@strdict maximumOrder numberNodes = L
 
         output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
@@ -339,14 +338,14 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
         # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
 
-        Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder]
-        Y_μ =b_deriv[:,μ ,1,WBsplineOrder]
-        K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable/BigInt(factorial(l_n_variable))
-        K_μ =(x-nodesSymbolic[μ])^l_n_field/BigInt(factorial(l_n_field))
+        Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder+1]
+        Y_μ =b_deriv[:,μ ,1,WBsplineOrder+1]
+        K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable
+        K_μ =(x-nodesSymbolic[μ])^l_n_field
 
 
         # the convoluted function of all above
-        F = Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ
+        F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
 
         # the target kernel integral
 
@@ -357,12 +356,12 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         for i in 0:1:maximumOrder-1
             F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
             for iSegment in nodeIndices
-                dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute.(F[iSegment],Dict(x=>nodesSymbolic[tmpνSegment]))
-                dictionaryForSubstitute[extFns[2,iSegment,i+1]]=substitute.(F[iSegment],Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
+                dictionaryForSubstitute[extFns[2,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment+1]))
             end
         end
 
-        kernelValue = substitute(targetKernel,dictionaryForSubstitute)
+        kernelValue = substitute(targetKernel,dictionaryForSubstitute)  /BigInt(factorial(l_n_field))/BigInt(factorial(l_n_variable))
 
     end
 
@@ -395,7 +394,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 
     elseif BsplineOrder >= 0
         maximumOrder = BsplineOrder
-        params=@strdict maximumOrder
+        params=@strdict maximumOrder numberNodes=L
         output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
         numberNodes,integral_b_polys,N,Δx=output["BsplineIntegraters"]
         #fns=eval.(build_function.(integral_b_polys,N,Δx))
@@ -695,7 +694,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
         pointsIndices=availablePointsConfigurations[iConfigGeometry]
         middleLinearν=centrePointConfigurations[iConfigGeometry]
         #varM is given above for the max number of points used 
-        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofFields)
+        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
         AjiννᶜU=push!(AjiννᶜU,tmpAjiννᶜU)
         Ulocal=push!(Ulocal,tmpUlocal)
     end
@@ -707,10 +706,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
 
     #region outputs
     
-    utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
+    utilities=(middlepoint=middleν,middlepointLinear=centrePointConfigurations[1],localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal[1])
     if testOnlyCentre
-        smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
-        smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
+        #smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
+        #smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
+        smallAjiννᶜU = AjiννᶜU[1]
         return smallAjiννᶜU,utilities
     else
         return AjiννᶜU,utilities
@@ -721,7 +721,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
 end
 
 
-function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofFields)
+function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
@@ -797,7 +797,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
                                     if l ∈ L_MINUS_N
                                         linearl = LinearIndices(multiOrdersIndices)[l]
                                         for lᶜ in nᶜ.+ L_MINUS_N
-                                            if l ∈ L_MINUS_N
+                                            if lᶜ ∈ L_MINUS_N
                                                 linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
                                                 kernelProducts = 1
                                                 for iCoord in eachindex(coordinates)
@@ -806,7 +806,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
                                                     # here I take only the middle_value
                                                     #kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
 
-                                                    kernelProducts*=integralBsplineTaylorKernelsWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiOrdersIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
+                                                    kernelProducts*=integralBsplineTaylorKernels1DWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiOrdersIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
                                                 end
                                                 
                                                 #nodeValue=Symbol(nodeValue)
