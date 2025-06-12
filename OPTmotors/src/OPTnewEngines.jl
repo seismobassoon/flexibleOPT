@@ -304,6 +304,24 @@ function illposedTaylorCoefficientsInversionSingleCentre(numberOfLs,numberOfEtas
     return Cˡηlocal
 end
 
+function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
+    # this computes the analytical value of the 1D integral between B-spline fns and weighted Taylor kernels
+    # \int dx Bspline Y_μᶜ Y_μ  K_{lᶜ-nᶜ}(y-y_μᶜ) K_{l-n}(y-y_μ)
+
+    # unlike the previous integralBsplineTaylorKernels1D, it computes for a specific ν
+    # Cˡη;μ are computed for a specific geometry, so even though the boundary condition reduce
+    # the number of available points, each Taylor expansion for K_{l-n}(y-y_μ) should be Okubo
+    
+    # however, the 'forgotten' μ (due to the whole) should be treated carefully 
+    # (which I do not yet implemented here): I think Y_ignoredμ should be added to the Y_availableneighbouringμ
+
+   
+
+
+
+end
+
+
 
 function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 
