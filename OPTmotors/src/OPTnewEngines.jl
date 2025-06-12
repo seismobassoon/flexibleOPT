@@ -413,7 +413,7 @@ function OPTobj(operatorConfigurations::Dict)
     return @strdict(operators)
 end
 
-function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing,iExperiment =nothing)
+function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderBtime=1,WorderBspace=1,supplementaryOrder=2), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing,iExperiment =nothing)
 
     #region General introduction, some cautions
 
@@ -472,6 +472,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
 
     @unpack orderBtime, orderBspace, pointsInSpace, pointsInTime = trialFunctionsCharacteristics
+    @unpack WorderBtime, WorderBspace,supplementaryOrder = TaylorOptions
 
     NtypeofExpr=length(exprs)   # number of governing equations
     NtypeofMaterialVariables=length(vars) # number of material coefficients
@@ -528,12 +529,16 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     # the orders of B-spline functions, depending on fields 
 
     orderBspline=zeros(Int,Ndimension)
+    WorderBspline=zeros(Int,Ndimension)
 
     if timeMarching
         orderBspline[Ndimension]=orderBtime*fieldDependency[Ndimension]
         orderBspline[1:Ndimension-1]=orderBspace*fieldDependency[1:Ndimension-1]
+        WorderBspline[Ndimension]=WorderBtime*fieldDependency[Ndimension]
+        WorderBspline[1:Ndimension-1]=WorderBspace*fieldDependency[1:Ndimension-1]
     else
         orderBspline[1:Ndimension]=orderBspace*fieldDependency[1:Ndimension]
+        WorderBspline[1:Ndimension]=WorderBspace*fieldDependency[1:Ndimension]
     end
     
     # the maximum number of points used in the vicinity of the node, which is independent of the order of B-spline functions (see our paper)
@@ -544,9 +549,9 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     
     # numbers of points to evaluate the integral for the governing equation filtered by the test functions
     
-    # orderU is the maximal orders for the fields that we will use for OPT coefficients' exploration
-    orderU = (orderExpressions.-1).+2 .+1 
-    # we restore this orderU since we need to control this (we set this to the twice the size of the number of used points)
+    # orderU is the maximum orders for the fields that we will use for OPT coefficients' exploration
+    @show orderU = (orderExpressions .-1) .+ (supplementaryOrder .*fieldDependency).+1 
+    # we restore this orderU since we need to control this 
 
     #endregion
 
@@ -619,7 +624,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
         pointsIndices=availablePointsConfigurations[iConfigGeometry]
         middleLinearν=centrePointConfigurations[iConfigGeometry]
         #varM is given above for the max number of points used 
-        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα)
+        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline)
         AjiννᶜU=push!(AjiννᶜU,tmpAjiννᶜU)
         Ulocal=push!(Ulocal,tmpUlocal)
     end
@@ -645,7 +650,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 end
 
 
-function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα)
+function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline)
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
