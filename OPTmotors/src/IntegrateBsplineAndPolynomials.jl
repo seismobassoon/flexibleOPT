@@ -161,11 +161,11 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                     
                     diff = Δx * (tmpνSegment - tmpν)
                     tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] -= (-1)^(i+1)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
+                    integral_b[tmpν] -= (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
     
                     diff = Δx * (tmpνSegment - tmpν+1)
                     tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] += (-1)^(i+1)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]*Δx))
+                    integral_b[tmpν] += (-1)^(i)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]*Δx))
                     
                 end
             end
@@ -180,6 +180,12 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     # for special g(x) = C ξ^N 
     @variables C N
     
+    
+
+
+
+
+
     
     dictionaryForSubstitute =Dict()
     
@@ -230,7 +236,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     integral_b_polys=mySimplify.(integral_b_polys)
     BsplineIntegraters=(numberNodes=numberNodes,integral_b_polys=integral_b_polys,N=N,Δx =Δx)
     return @strdict(BsplineIntegraters)
-    
+
 end
     
 
