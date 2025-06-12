@@ -735,7 +735,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
                                                     # here I take only the middle_value
                                                     #kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
 
-                                                    kernelProducts*=integralBsplineTaylorKernelsWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+                                                    kernelProducts*=integralBsplineTaylorKernelsWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiOrdersIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)[1]
                                                 end
                                                 
                                                 #nodeValue=Symbol(nodeValue)
