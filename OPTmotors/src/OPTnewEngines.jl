@@ -333,7 +333,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,Î
         params=@strdict maximumOrder numberNodes = L
 
         #output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
-
+        @show params
         output=myProduceOrLoad(BsplineTimesPolynomialsIntegrated,params,"BsplineInt","Bspline")
 
         nodeIndices,nodesSymbolic,b_deriv,integral_b,Î”x,extFns,x =output["BsplineIntegraters"]
