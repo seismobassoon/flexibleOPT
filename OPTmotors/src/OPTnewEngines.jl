@@ -344,6 +344,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         F=zeros(Num,L)
 
         if WBsplineOrder === -1
+            @show nodesSymbolic[ν],ν
             @show K_μᶜ=(x-nodesSymbolic[ν])^l_n_variable
             @show K_μ =(x-nodesSymbolic[ν])^l_n_field
             F[:] .= K_μᶜ*K_μ
@@ -381,7 +382,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         @show a
     end
 
-
+    oops()
    
     return kernelValue
     
