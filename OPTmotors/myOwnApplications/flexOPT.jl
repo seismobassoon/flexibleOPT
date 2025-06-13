@@ -133,7 +133,9 @@ concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspa
 
 #region OPT symbolic derivation of objective functions to be minimised, first semi-symbolically then numerically
 
-opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+#opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+
+opt = myProduceOrLoad(makeCompleteCostFunctions,concreteModelParameters,"numOperators","quasiNum")
 
 #endregion
 

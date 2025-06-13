@@ -332,7 +332,10 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         maximumOrder = maximum((BsplineOrder,WBsplineOrder))
         params=@strdict maximumOrder numberNodes = L
 
-        output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
+        #output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
+
+        output=myProduceOrLoad(BsplineTimesPolynomialsIntegrated,params,"BsplineInt","Bspline")
+
         nodeIndices,nodesSymbolic,b_deriv,integral_b,Δx,extFns,x =output["BsplineIntegraters"]
 
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
@@ -741,10 +744,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
     coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
 
-    hash_id = hash_parameters(coefInversionDict)
-    coefInversionDict[:hash_id] = hash_id
-
-    output, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
+    output=myProduceOrLoad(TaylorCoefInversion,coefInversionDict,"taylorCoefInv")
     Cˡη=output["CˡηGlobal"]
 
     #endregion

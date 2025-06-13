@@ -18,7 +18,9 @@ function makeCompleteCostFunctions(concreteModelParameters::Dict)
     
     # here we construct semi symbolic operators (with numerical Δnum)
     operatorConfigurations = @strdict famousEquationType Δnum orderBtime orderBspace WorderBtime WorderBspace supplementaryOrder pointsInSpace pointsInTime IneedExternalSources iExperiment
-    operators,_=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
+
+    operators = myProduceOrLoad(OPTobj,operatorConfigurations,"semiSymbolics")
+    #operators,_=produce_or_load(OPTobj, operatorConfigurations, datadir("semiSymbolics"))
 
 
     # constructing numerical operator (with still symbolic expression for time coordinates)
@@ -50,7 +52,8 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,forceMode
 
     lhsConfigurations = @strdict semiSymbolicOpt=AjiννᶜU coordinates modelName models fields vars famousEquationType modelPoints utilities maskedRegion=maskedRegionForFieldInSpace NpointsUsed
 
-    numOperators,file = @produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(lhsConfigurations));filename = config -> savename(lhsConfigurations; ignores=["vars", "fields"]))
+    #numOperators,file = @produce_or_load(constructingNumericalDiscretisedEquations,lhsConfigurations,datadir("numOperators",savename(lhsConfigurations));filename = config -> savename(lhsConfigurations; ignores=["vars", "fields"]))
+    numOperators = myProduceOrLoad(constructingNumericalDiscretisedEquations,lhsConfigurations,"numOperators","lhs")
 
 
     # left-hand side, which is far more recyclable than r.h.s.
@@ -68,6 +71,8 @@ function quasiNumericalOperatorConstruction(operators,modelName,models,forceMode
     if IneedExternalSources 
         rhsConfigurations = @strdict semiSymbolicOpt=Γg coordinates modelName models=forceModels fields=extfields vars=extvars famousEquationType modelPoints utilities=utilitiesForce maskedRegion=maskedRegionForSourcesInSpace NpointsUsed
         numOperators,file=produce_or_load(constructingNumericalDiscretisedEquations,rhsConfigurations,datadir("numOperators",savename(rhsConfigurations));filename = config -> savename("source",rhsConfigurations; ignores=["vars", "fields"]))
+
+        numOperators = myProduceOrLoad(constructingNumericalDiscretisedEquations,rhsConfigurations,"numOperators","rhs")
        
         costfunctionsRHS,fieldRHS,champsLimité=numOperators["numOperators"]
 
