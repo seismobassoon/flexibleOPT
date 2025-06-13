@@ -344,9 +344,9 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         F=zeros(Num,L)
 
         if WBsplineOrder === -1
-            K_μᶜ=(x-nodesSymbolic[ν])^l_n_variable
-            K_μ =(x-nodesSymbolic[ν])^l_n_field
-            F[ν] = K_μᶜ*K_μ
+            @show K_μᶜ=(x-nodesSymbolic[ν])^l_n_variable
+            @show K_μ =(x-nodesSymbolic[ν])^l_n_field
+            F[:] .= K_μᶜ*K_μ
         else
             Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder+1]
             Y_μ =b_deriv[:,μ ,1,WBsplineOrder+1]
@@ -364,7 +364,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         dictionaryForSubstitute = Dict()
     
         for i in 0:1:BsplineOrder
-            F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
+            @show F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
             for iSegment in nodeIndices
                 dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
                 dictionaryForSubstitute[extFns[2,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment+1]))
@@ -374,11 +374,15 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         
         kernelValue = substitute(targetKernel,dictionaryForSubstitute)  /BigInt(factorial(l_n_field))/BigInt(factorial(l_n_variable))
         
-        kernelValue = substitute(kernelValue,Dict(Δx=>Δ))
+        @show kernelValue = substitute(kernelValue,Dict(Δx=>Δ))
     
 
+        a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+        @show a
     end
 
+
+    oops()
     return kernelValue
     
 end
@@ -634,7 +638,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
     # numbers of points to evaluate the integral for the governing equation filtered by the test functions
     
     # orderU is the maximum orders for the fields that we will use for OPT coefficients' exploration
-    @show orderU = (orderExpressions .-1) .+ (supplementaryOrder .*fieldDependency).+1 
+    orderU = (orderExpressions .-1) .+ (supplementaryOrder .*fieldDependency).+1 
     # we restore this orderU since we need to control this 
 
     #endregion

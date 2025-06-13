@@ -122,8 +122,8 @@ for iPointsUsed in eachindex(numPointsX)
 
             fig =Figure()
             ax=Axis(fig[1,1]; title="Comparison for h=$Δx, model=$(cases[iCase].name), points=1+$pointsInSpace")
-            lines!(ax,X,analyticalData,color=:blue,label="analytical")
-            scatter!(ax,X,syntheticData,color=:red,marker=:circle,label="synthetic")        
+            lines!(ax,X,analyticalData,color=:blue)
+            scatter!(ax,X,syntheticData,color=:red,marker=:circle)        
             axislegend(ax)
             display(fig)
             
