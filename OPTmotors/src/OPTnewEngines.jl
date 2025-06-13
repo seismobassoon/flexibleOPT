@@ -485,14 +485,14 @@ function OPTobj(operatorConfigurations::Dict)
 
     TaylorOptions=(WorderBtime=WorderBtime,WorderBspace=WorderBspace,supplementaryOrder=supplementaryOrder)
     trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
-    @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum,iExperiment=iExperiment)
+    @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,TaylorOptions=TaylorOptions,Δnum = Δnum,iExperiment=iExperiment)
     #AjiννᶜU=operatorData[1]
     #utilities=operatorData[2]   
 
     operatorForceData=nothing
     # if you do not want to apply external forces, it is possible to skip below
     if IneedExternalSources 
-        @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum,iExperiment=iExperiment)  
+        @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,TaylorOptions=TaylorOptions,Δnum = Δnum,iExperiment=iExperiment)  
         #@show Γg = operatorForceData[1]
         #utilitiesForce = operatorForceData[2]
     end
