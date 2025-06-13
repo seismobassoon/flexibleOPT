@@ -19,10 +19,11 @@ function myProduceOrLoad(functionName,paramDict,directoryName::String,prefixName
     # this is myFunction strategy for DrWatson
 
     hash_id = hash_parameters(paramDict)
-    paramDict["hash_id"] = hash_id
+    
 
     newDict = Dict{String,Any}(paramDict)
-
+    newDict["hash_id"] = hash_id
+    
     output, _ = produce_or_load(functionName,newDict,datadir(directoryName);filename = config -> savename(prefixName,newDict))
     
     return output
