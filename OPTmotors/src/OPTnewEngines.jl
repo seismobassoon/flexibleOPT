@@ -338,15 +338,22 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
         # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
 
-        Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder+1]
-        Y_μ =b_deriv[:,μ ,1,WBsplineOrder+1]
-        K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable
-        K_μ =(x-nodesSymbolic[μ])^l_n_field
+        F=zeros(Num,L)
 
+        if WBsplineOrder === -1
+            K_μᶜ=(x-nodesSymbolic[ν])^l_n_variable
+            K_μ =(x-nodesSymbolic[ν])^l_n_field
+            F[ν] = K_μᶜ*K_μ
+        else
+            Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder+1]
+            Y_μ =b_deriv[:,μ ,1,WBsplineOrder+1]
+            K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable
+            K_μ =(x-nodesSymbolic[μ])^l_n_field
 
-        # the convoluted function of all above
-        F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
+            # the convoluted function of all above
+            F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
 
+        end
         # the target kernel integral
 
         targetKernel = integral_b[ν]
@@ -365,6 +372,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         kernelValue = substitute(targetKernel,dictionaryForSubstitute)  /BigInt(factorial(l_n_field))/BigInt(factorial(l_n_variable))
         
         kernelValue = substitute(kernelValue,Dict(Δx=>Δ))
+    
 
     end
 
