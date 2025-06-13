@@ -349,24 +349,27 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
 
         # the target kernel integral
 
-        targetKernel = substitute(integral_b[ν],Dict(Δx=>Δ))
+        targetKernel = integral_b[ν]
 
         dictionaryForSubstitute = Dict()
     
-        for i in 0:1:maximumOrder-1
+        for i in 0:1:BsplineOrder
             F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
             for iSegment in nodeIndices
                 dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
                 dictionaryForSubstitute[extFns[2,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment+1]))
             end
         end
-
+        #@show dictionaryForSubstitute,targetKernel
+        
         kernelValue = substitute(targetKernel,dictionaryForSubstitute)  /BigInt(factorial(l_n_field))/BigInt(factorial(l_n_variable))
+        
+        kernelValue = substitute(kernelValue,Dict(Δx=>Δ))
 
     end
 
     return kernelValue
-
+    
 end
 
 
@@ -806,7 +809,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
                                                     # here I take only the middle_value
                                                     #kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
 
-                                                    kernelProducts*=integralBsplineTaylorKernels1DWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiOrdersIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
+                                                    kernelProducts*=integralBsplineTaylorKernels1DWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiPointsIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
                                                 end
                                                 
                                                 #nodeValue=Symbol(nodeValue)
