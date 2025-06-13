@@ -23,8 +23,8 @@ function myProduceOrLoad(functionName,paramDict,directoryName::String,prefixName
 
     newDict = Dict{String,Any}(paramDict)
     newDict["hash_id"] = hash_id
-    
-    output, _ = produce_or_load(functionName,newDict,datadir(directoryName);filename = config -> savename(prefixName,newDict))
+
+    output, _ = produce_or_load(functionName,newDict,datadir(directoryName);filename = config -> savename(prefixName,newDict["hash_id"]))
     
     return output
 
