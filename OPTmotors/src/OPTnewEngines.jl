@@ -740,7 +740,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
 
     coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
-    output, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
+    output, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict;allowedtypes = [Array, Tuple]))
     Cˡη=output["CˡηGlobal"]
 
     #endregion
