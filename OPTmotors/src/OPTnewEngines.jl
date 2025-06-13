@@ -382,7 +382,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,Î
     end
 
 
-    oops()
+   
     return kernelValue
     
 end
@@ -854,7 +854,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
             
         end
     end
-
+     oops()
 
 
     #endregion
