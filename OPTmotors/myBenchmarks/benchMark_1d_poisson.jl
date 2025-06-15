@@ -37,8 +37,8 @@ numPointsX = collect(2:3)
 tmpOrderBtime=1
 tmpOrderBspace=1
 
-tmpWorderBtime=-1
-tmpWorderBspace=-1
+tmpWorderBtime=1
+tmpWorderBspace=1
 tmpSupplementaryOrder=2
 
 cases=[]
