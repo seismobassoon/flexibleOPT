@@ -38,7 +38,7 @@ tmpOrderBtime=1
 tmpOrderBspace=1
 
 tmpWorderBtime=1
-tmpWorderBspace=2
+tmpWorderBspace=1
 tmpSupplementaryOrder=2
 
 cases=[]
