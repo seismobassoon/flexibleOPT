@@ -44,7 +44,7 @@ tmpSupplementaryOrder=2
 cases=[]
 
 # manufactured ExactSolutions 
-prefix="B"*string(tmpOrderBspace)*"_"*"w"*strig(tmpWorderBspace)*"_"
+prefix="B"*string(tmpOrderBspace)*"_"*"w"*string(tmpWorderBspace)*"_"
 #cases = push!(cases,(name=prefix*"sameλ",u=cos(x),β=sin(x)+2))
 #cases = push!(cases,(name=prefix*"twiceλ",u=cos(x),β=sin(x/2) + 2))
 #cases = push!(cases,(name=prefix*"sameλ_shifted_π_3",u=cos(x),β=sin(x+π/3) + 2))

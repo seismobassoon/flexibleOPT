@@ -788,7 +788,9 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
 
     output=myProduceOrLoad(TaylorCoefInversion,coefInversionDict,"taylorCoefInv")
-    Cˡη=output["CˡηGlobal"]
+    @show Cˡη=output["CˡηGlobal"]
+
+    oops()
 
     #endregion
 
