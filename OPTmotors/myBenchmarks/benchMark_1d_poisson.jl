@@ -33,7 +33,7 @@ end
 
 logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(3:3)
+numPointsX = collect(2:2)
 tmpOrderBtime=1
 tmpOrderBspace=1
 
@@ -57,7 +57,7 @@ L = 10.0*π # the length of the segment
 
 misfit = Array{Float64,3}(undef,length(logsOfHinverse),length(cases),length(numPointsX))
 
-fileMisfit="misfit_B"*string(tmpOrderBspace)*"Y_"*string(tmpWorderBspace)*string(numPointsX[end])*".jld2"
+fileMisfit="misfit_B"*string(tmpOrderBspace)*"_Y_"*string(tmpWorderBspace)*"_max_"*string(numPointsX[end])*".jld2"
 
 if !isfile(fileMisfit)
 for iPointsUsed in eachindex(numPointsX)
