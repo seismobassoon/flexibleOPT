@@ -400,7 +400,18 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
             # that are arbitrarily put during the integral
             
             #F .-= substitute(F[ν],Dict(x=>nodesSymbolic[ν]))
-            
+
+            # F should be continuous
+
+            for iSegment in 2:1:L # this should be sequential
+                lastValue = substitute(F[iSegment-1],Dict(x=>nodesSymbolic[iSegment]))
+                startValue = substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
+                shiftValue = lastValue - startValue
+                F[iSegment]=F[iSegment]+shiftValue
+            end
+
+
+
             F .= mySimplify(F)
 
             #@show F
@@ -788,7 +799,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
 
     output=myProduceOrLoad(TaylorCoefInversion,coefInversionDict,"taylorCoefInv")
-    @show Cˡη=output["CˡηGlobal"]
+    Cˡη=output["CˡηGlobal"]
 
 
     #endregion
