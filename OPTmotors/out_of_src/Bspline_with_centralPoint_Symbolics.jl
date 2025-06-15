@@ -19,7 +19,7 @@ pointPerSegment = 20
 # input parameters
 
 # the left and right indices
-νₗ = 0
+νₗ = 1
 νᵣ = 3
 
 # δy for plotting, Δy for the real discretisation

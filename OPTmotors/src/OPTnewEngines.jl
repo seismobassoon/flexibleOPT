@@ -304,6 +304,23 @@ function illposedTaylorCoefficientsInversionSingleCentre(numberOfLs,numberOfEtas
     return Cˡηlocal
 end
 
+function getIngegralWYYKKK(params::Dict)
+    @unpack oB, oWB, νCoord, LCoord, ΔCoord, l_n_max = params
+    kernels = Array{Any,4}(undef,LCoord,LCoord,l_n_max+1,l_n_max+1)
+    for l_n_field in 0:1:l_n_max
+        for l_n_variable in 0:1:l_n_max
+            for μ in 1:1:LCoord
+                for μᶜ in 1:1:LCoord
+                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1]=integralBsplineTaylorKernels1DWithWindow1D(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field)
+                end
+            end
+        end
+    end
+    return @strdict(intKernelforνLΔ=kernels)
+    # the target
+    #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
+end
+
 function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
     # this computes the analytical value of the 1D integral between B-spline fns and weighted Taylor kernels
     # \int dx Bspline Y_μᶜ Y_μ  K_{lᶜ-nᶜ}(y-y_μᶜ) K_{l-n}(y-y_μ)
@@ -317,6 +334,16 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
 
     # or maybe the 'forgotten' μ is anyways not available (and thus very probably not continuous)
     # so we just let this be forgotten 
+
+    if μᶜ !== ν
+        return 0
+    end
+    if μ !== ν
+        return 0
+    end
+        
+
+    @show μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field
 
     kernelValue=0.0
    
@@ -341,48 +368,68 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
         # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
 
-        F=zeros(Num,L)
+        Y_μᶜ = zeros(Num,L)
+        Y_μ = zeros(Num,L)
 
         if WBsplineOrder === -1
-            @show nodesSymbolic[ν],ν
-            @show K_μᶜ=(x-nodesSymbolic[ν])^l_n_variable
-            @show K_μ =(x-nodesSymbolic[ν])^l_n_field
-            F[:] .= K_μᶜ*K_μ
+
+            if μᶜ === ν
+                Y_μᶜ = ones(Num,L) 
+            end
+
+            if μ === ν
+                Y_μ = ones(Num,L)
+            end
+
         else
             Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder+1]
             Y_μ =b_deriv[:,μ ,1,WBsplineOrder+1]
-            K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable
-            K_μ =(x-nodesSymbolic[μ])^l_n_field
-
-            # the convoluted function of all above
-            F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
-
         end
+
+        K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable
+        K_μ =(x-nodesSymbolic[μ])^l_n_field
+
+        # the convoluted function of all above
+        F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
+
+
         # the target kernel integral
 
-        targetKernel = integral_b[ν]
+        targetKernel = integral_b[ν,BsplineOrder+1]
 
         dictionaryForSubstitute = Dict()
     
         for i in 0:1:BsplineOrder
-            @show F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
+            F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
+            
+            # mathematically I need to understand why but F cannot be disturbed by supplementary complexities due to constants 
+            # that are arbitrarily put during the integral
+            
+            F .-= substitute(F[ν],Dict(x=>nodesSymbolic[ν]))
+            
+            F .= mySimplify(F)
+
+            @show F
+
             for iSegment in nodeIndices
                 dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
                 dictionaryForSubstitute[extFns[2,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment+1]))
             end
         end
-        #@show dictionaryForSubstitute,targetKernel
+
+        @show dictionaryForSubstitute,targetKernel
         
-        kernelValue = substitute(targetKernel,dictionaryForSubstitute)  /BigInt(factorial(l_n_field))/BigInt(factorial(l_n_variable))
+
+        @show kernelValue = substitute(targetKernel,dictionaryForSubstitute)  
         
-        @show kernelValue = substitute(kernelValue,Dict(Δx=>Δ))
+        @show kernelValue = substitute(kernelValue,Dict(Δx=>Δ))/(BigInt(factorial(l_n_field))*BigInt(factorial(l_n_variable)))
     
 
         a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         @show a
     end
 
-    oops()
+
    
     return kernelValue
     
@@ -775,13 +822,20 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
     AjiννᶜU .= 0
 
+    integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
+    for iCoord in eachindex(coordinates)
+        integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
+        output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
+        integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
+    end
+
     for iExpr in eachindex(exprs) # j in eq. 52
         for iField in eachindex(fields) # i in eq. 52
             α = bigα[iExpr,iField]
 
             # this is the ν point in the relative space-time domain
 
-            linearν = middleLinearν  
+            #linearν = middleLinearν  
 
             CoefU = 0
 
@@ -792,6 +846,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
                 for linearμ in eachindex(pointsIndices)
 
                     tmpCˡημ=Cˡη[:,:,linearμ] # C^{(l)}_{μ+η;μ,ν}
+
 
                     for linearμ_plus_η in eachindex(pointsIndices) # relative position νᶜ-ν
 
@@ -825,8 +880,8 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
                                                     l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
                                                     # here I take only the middle_value
                                                     #kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
-
-                                                    kernelProducts*=integralBsplineTaylorKernels1DWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiPointsIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
+                                                    kernelProducts*=integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable+1,l_n_field+1]
+                                                    #kernelProducts*=integralBsplineTaylorKernels1DWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiPointsIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
                                                 end
                                                 
                                                 #nodeValue=Symbol(nodeValue)

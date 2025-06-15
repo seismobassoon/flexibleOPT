@@ -141,7 +141,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
         
     
     
-    integral_b= zeros(Num,numberNodes)
+    integral_b= zeros(Num,numberNodes,maximumOrder)
 
     #gvec = (@variables (g(x))[1:maximumOrder])[1]
     
@@ -154,9 +154,9 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                 for νSegment in nodeIndices
                     tmpνSegment = νSegment - νₗ + 1
                     
-                    integral_b[tmpν] -= (-1)^(i)*extFns[1,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
+                    integral_b[tmpν,ι+1] -= (-1)^(i)*extFns[1,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
     
-                    integral_b[tmpν] += (-1)^(i)*extFns[2,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
+                    integral_b[tmpν,ι+1] += (-1)^(i)*extFns[2,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
                     
                 end
             end
