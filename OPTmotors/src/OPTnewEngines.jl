@@ -343,7 +343,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,Î
    
 
     if BsplineOrder=== -1
-        # this is for a delta function
+        # this is for an indicator function
         if l_n_variable === 0 && l_n_field === 0
             kernelValue=1.0
         else
@@ -401,20 +401,18 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,Î
             
             #F .-= substitute(F[Î½],Dict(x=>nodesSymbolic[Î½]))
 
-            # F should be continuous
-
+            # F should be continuous, in general but since all the integral by parts
+            # is done piecewisely we might not need this
+            #=
             for iSegment in 2:1:L # this should be sequential
                 lastValue = substitute(F[iSegment-1],Dict(x=>nodesSymbolic[iSegment]))
                 startValue = substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
                 shiftValue = lastValue - startValue
                 F[iSegment]=F[iSegment]+shiftValue
             end
-
-
+            =#
 
             F .= mySimplify(F)
-
-            #@show F
 
             for iSegment in nodeIndices
                 dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
