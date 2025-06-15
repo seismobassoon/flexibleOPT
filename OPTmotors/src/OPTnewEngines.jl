@@ -337,7 +337,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
 
         
 
-    #@show μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field
+    @show μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field
 
     kernelValue=0.0
    
@@ -416,11 +416,11 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
 
         kernelValue = substitute(targetKernel,dictionaryForSubstitute)  
         
-        kernelValue = substitute(kernelValue,Dict(Δx=>Δ))/(BigInt(factorial(l_n_field))*BigInt(factorial(l_n_variable)))
+        @show kernelValue = substitute(kernelValue,Dict(Δx=>Δ))/(BigInt(factorial(l_n_field))*BigInt(factorial(l_n_variable)))
     
 
-        #a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
-        #@show a
+        a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+        @show a
     end
     return kernelValue
     
@@ -790,7 +790,6 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     output=myProduceOrLoad(TaylorCoefInversion,coefInversionDict,"taylorCoefInv")
     @show Cˡη=output["CˡηGlobal"]
 
-    oops()
 
     #endregion
 
@@ -821,6 +820,8 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
         output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
         integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
     end
+
+    oops()
 
     for iExpr in eachindex(exprs) # j in eq. 52
         for iField in eachindex(fields) # i in eq. 52
