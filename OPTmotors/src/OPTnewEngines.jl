@@ -399,7 +399,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
             # mathematically I need to understand why but F cannot be disturbed by supplementary complexities due to constants 
             # that are arbitrarily put during the integral
             
-            F .-= substitute(F[ν],Dict(x=>nodesSymbolic[ν]))
+            #F .-= substitute(F[ν],Dict(x=>nodesSymbolic[ν]))
             
             F .= mySimplify(F)
 

@@ -124,7 +124,7 @@ for iPointsUsed in eachindex(numPointsX)
             ax=Axis(fig[1,1]; title="Comparison for h=$Δx, model=$(cases[iCase].name), points=1+$pointsInSpace")
             lines!(ax,X,analyticalData,color=:blue)
             scatter!(ax,X,syntheticData,color=:red,marker=:circle)        
-            axislegend(ax)
+            #axislegend(ax)
             display(fig)
             
             #save("plot_$iH_$iCase_$iPointsUsed.png",fig)
