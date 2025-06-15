@@ -335,15 +335,9 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
     # or maybe the 'forgotten' μ is anyways not available (and thus very probably not continuous)
     # so we just let this be forgotten 
 
-    if μᶜ !== ν
-        return 0
-    end
-    if μ !== ν
-        return 0
-    end
         
 
-    @show μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field
+    #@show μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field
 
     kernelValue=0.0
    
@@ -409,7 +403,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
             
             F .= mySimplify(F)
 
-            @show F
+            #@show F
 
             for iSegment in nodeIndices
                 dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
@@ -417,20 +411,17 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
             end
         end
 
-        @show dictionaryForSubstitute,targetKernel
+        #@show dictionaryForSubstitute,targetKernel
         
 
-        @show kernelValue = substitute(targetKernel,dictionaryForSubstitute)  
+        kernelValue = substitute(targetKernel,dictionaryForSubstitute)  
         
-        @show kernelValue = substitute(kernelValue,Dict(Δx=>Δ))/(BigInt(factorial(l_n_field))*BigInt(factorial(l_n_variable)))
+        kernelValue = substitute(kernelValue,Dict(Δx=>Δ))/(BigInt(factorial(l_n_field))*BigInt(factorial(l_n_variable)))
     
 
-        a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
-        @show a
+        #a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+        #@show a
     end
-
-
-   
     return kernelValue
     
 end
@@ -910,7 +901,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
             
         end
     end
-     oops()
+
 
 
     #endregion
