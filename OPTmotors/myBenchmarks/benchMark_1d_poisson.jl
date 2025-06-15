@@ -37,14 +37,14 @@ numPointsX = collect(2:3)
 tmpOrderBtime=1
 tmpOrderBspace=1
 
-tmpWorderBtime=1
-tmpWorderBspace=1
+tmpWorderBtime=-1
+tmpWorderBspace=-1
 tmpSupplementaryOrder=2
 
 cases=[]
 
 # manufactured ExactSolutions 
-prefix="B"*string(tmpOrderBspace)*"_"
+prefix="B"*string(tmpOrderBspace)*"_"*"w"*strig(tmpWorderBspace)*"_"
 #cases = push!(cases,(name=prefix*"sameλ",u=cos(x),β=sin(x)+2))
 #cases = push!(cases,(name=prefix*"twiceλ",u=cos(x),β=sin(x/2) + 2))
 #cases = push!(cases,(name=prefix*"sameλ_shifted_π_3",u=cos(x),β=sin(x+π/3) + 2))
@@ -57,7 +57,7 @@ L = 10.0*π # the length of the segment
 
 misfit = Array{Float64,3}(undef,length(logsOfHinverse),length(cases),length(numPointsX))
 
-fileMisfit="misfit_B"*string(tmpOrderBspace)*string(numPointsX[end])*".jld2"
+fileMisfit="misfit_B"*string(tmpOrderBspace)*"Y_"*string(tmpWorderBspace)*string(numPointsX[end])*".jld2"
 
 if !isfile(fileMisfit)
 for iPointsUsed in eachindex(numPointsX)
