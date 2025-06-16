@@ -172,7 +172,7 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
     # be careful that pointsIndices is now a 1D array of integer vectors!!
 
-    @unpack coordinates,multiOrdersIndices,pointsIndices, Δ = coefInversionDict
+    @unpack coordinates,multiOrdersIndices,pointsIndices, Δ, WorderBspline= coefInversionDict
 
     Ndimension=length(coordinates)
 
@@ -186,21 +186,64 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
     CˡηGlobal = Array{Any,3}(undef,numberOfEtas,numberOfLs,numberOfEtas)
 
-    # this is the C^{(l)}_{\mu+\eta; \mu, \nu}
-   
-    for k in eachindex(pointsIndices)
-        CˡηGlobal[:,:,k]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,k)
+    # this is the C^{(l)}_{\mu+\eta; μ, \nu}
+
+    for μ in eachindex(pointsIndices)
+        CˡηGlobal[:,:,μ]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline)
     end 
+
+
+
 
     return @strdict(CˡηGlobal)
 
 end
 
-function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,k)
+function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline)
     # the old version is : illposedTaylorCoefficientsInversionSingleCentre
-    TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
+
+    # in fact, available points depend on the position of μ (=k here), we need to 'mute' some points
+    # with Y_μ
+
+
+    # for this pointsIndices are filtered for every μ
+    
+    Ndimension = length(WorderBspline)
+
+    tmpPointsIndices = []
+    linearIndicesUsed = []
+
+    limitsPoints = Array{Int,2}(undef,2,Ndimension)
+    for iCoord in eachindex(WorderBspline)
+        numberPoints = WorderBspline[iCoord]+2
+        #right side        
+        limitsPoints[2,iCoord]=floor(Int,numberPoints/2)
+        #left side
+        limitsPoints[1,iCoord]=numberPoints - 1 - limitsPoints
+
+    end
+
     for i in eachindex(pointsIndices)
-        η = pointsIndices[i]-pointsIndices[k]
+        η = pointsIndices[i]-pointsIndices[μ]
+        iSayWeSayGo = false
+        for iCoord in eachindex(WorderBspline) # Ndimension
+            if WorderBspace[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
+                iSayWeSayGo = true
+            elseif  limitsPoints[1,iCoord] <=η[iCoord] <= limitsPoints[2,iCoord]
+                iSayWeSayGo = true
+            end
+        end
+        if iSayWeSayGo === true
+            tmpPointsIndices=push!(tmpPointsIndices,pointsIndices[i])
+            linearIndicesUsed=push!(linearIndicesUsed,i)
+        end
+    end
+
+    tmpNumberOfEtas = length(tmpPointsIndices)
+    tmpTaylorExpansionCoeffs = Array{Any,2}(undef,numberOfLs,tmpNumberOfEtas)
+
+    for i in eachindex(tmpPointsIndices)
+        η = tmpPointsIndices[i]-pointsIndices[μ]
         distances= η .* Δ
         for j in multiOrdersIndices
             linearJ = LinearIndices(multiOrdersIndices)[j]
@@ -208,16 +251,26 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
             numerator = prod(distances .^orders)
             denominator=prod(factorial.(orders))
             tmpTaylorCoeffs = numerator/denominator
-            TaylorExpansionCoeffs[linearJ,i]=tmpTaylorCoeffs 
+            tmpTaylorExpansionCoeffs[linearJ,i]=tmpTaylorCoeffs 
 
         end
     end
 
     # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
     
-    aa=transpose(TaylorExpansionCoeffs)*TaylorExpansionCoeffs
+    aa=transpose(tmpTaylorExpansionCoeffs)*tmpTaylorExpansionCoeffs
     invaa= myInv(aa)
-    Cˡηlocal=invaa*transpose(TaylorExpansionCoeffs)
+    tmpCˡηlocal=invaa*transpose(tmpTaylorExpansionCoeffs)
+
+
+    Cˡηlocal = Array{Any,2}(undef,numberOfEtas,numberOfLs)
+
+    Cˡηlocal .= 0
+
+    for j in eachindex(tmpPointsIndices)
+        Cˡηlocal[linearIndicesUsed[j],:] = tmpCˡηlocal[j,:]
+    end
+    
     return Cˡηlocal
 end
 
@@ -794,7 +847,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
 
 
-    coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
+    coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ WorderBspline
 
     output=myProduceOrLoad(TaylorCoefInversion,coefInversionDict,"taylorCoefInv")
     Cˡη=output["CˡηGlobal"]
