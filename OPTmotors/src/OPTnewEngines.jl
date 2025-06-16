@@ -219,21 +219,23 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
         #right side        
         limitsPoints[2,iCoord]=floor(Int,numberPoints/2)
         #left side
-        limitsPoints[1,iCoord]=numberPoints - 1 - limitsPoints
+        limitsPoints[1,iCoord]=numberPoints - 1 - limitsPoints[2,iCoord]
 
     end
 
     for i in eachindex(pointsIndices)
         η = pointsIndices[i]-pointsIndices[μ]
-        iSayWeSayGo = false
+        iSayWeSayGo = 1
         for iCoord in eachindex(WorderBspline) # Ndimension
-            if WorderBspace[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
-                iSayWeSayGo = true
+            if WorderBspline[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
+                iSayWeSayGo *= 1
             elseif  limitsPoints[1,iCoord] <=η[iCoord] <= limitsPoints[2,iCoord]
-                iSayWeSayGo = true
+                iSayWeSayGo *= 1
+            else
+                iSayWeSayGo *= 0
             end
         end
-        if iSayWeSayGo === true
+        if iSayWeSayGo === 1
             tmpPointsIndices=push!(tmpPointsIndices,pointsIndices[i])
             linearIndicesUsed=push!(linearIndicesUsed,i)
         end
@@ -270,7 +272,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     for j in eachindex(tmpPointsIndices)
         Cˡηlocal[linearIndicesUsed[j],:] = tmpCˡηlocal[j,:]
     end
-    
+
     return Cˡηlocal
 end
 
