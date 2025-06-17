@@ -396,7 +396,8 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,Î
 
     kernelValue=0.0
    
-
+    modÎ¼ = nothing
+    
     if BsplineOrder=== -1
         # this is for an indicator function
         if l_n_variable === 0 && l_n_field === 0
