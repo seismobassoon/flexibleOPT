@@ -362,21 +362,28 @@ end
 function getIngegralWYYKKK(params::Dict)
     @unpack oB, oWB, νCoord, LCoord, ΔCoord, l_n_max = params
     kernels = Array{Any,4}(undef,LCoord,LCoord,l_n_max+1,l_n_max+1)
+    modμ = nothing
     for l_n_field in 0:1:l_n_max
         for l_n_variable in 0:1:l_n_max
             for μ in 1:1:LCoord
                 for μᶜ in 1:1:LCoord
-                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1]=integralBsplineTaylorKernels1DWithWindow1D(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field)
+                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1]=integralBsplineTaylorKernels1DWithWindow1D!(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field,modμ)
                 end
             end
         end
     end
-    return @strdict(intKernelforνLΔ=kernels)
+    # it happens that modμ is still nothing
+
+    
+    return @strdict(intKernelforνLΔ=kernels,modμ=modμ)
     # the target
     #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
 end
 
-function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
+function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field,modμForCinversion)
+
+    # Don't worry the modμForCinversion is the only one to be replaced
+
     # this computes the analytical value of the 1D integral between B-spline fns and weighted Taylor kernels
     # \int dx Bspline Y_μᶜ Y_μ  K_{lᶜ-nᶜ}(y-y_μᶜ) K_{l-n}(y-y_μ)
 
@@ -396,8 +403,8 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
 
     kernelValue=0.0
    
-    modμ = nothing
     
+
     if BsplineOrder=== -1
         # this is for an indicator function
         if l_n_variable === 0 && l_n_field === 0
@@ -414,7 +421,9 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         output=myProduceOrLoad(BsplineTimesPolynomialsIntegrated,params,"BsplineInt","Bspline")
 
         nodeIndices,nodesSymbolic,b_deriv,integral_b,Δx,extFns,x,modμ =output["BsplineIntegraters"]
-
+        if modμForCinversion === nothing
+            modμForCinversion = modμ
+        end
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
         # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
 
