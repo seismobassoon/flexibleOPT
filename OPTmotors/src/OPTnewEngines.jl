@@ -846,6 +846,19 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
+
+    #region we compute the integral for 1D domain(s)
+
+    integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
+    for iCoord in eachindex(coordinates)
+        integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
+        output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
+        integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
+    end
+
+    #endregion
+
+
     #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
 
 
@@ -878,12 +891,6 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
     AjiννᶜU .= 0
 
-    integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
-    for iCoord in eachindex(coordinates)
-        integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
-        output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
-        integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
-    end
 
     for iExpr in eachindex(exprs) # j in eq. 52
         for iField in eachindex(fields) # i in eq. 52
