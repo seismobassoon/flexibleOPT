@@ -27,7 +27,8 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
   
     
     # the left and right indices
-    νₗ = 1
+    
+    νₗ = 1 # we cannot touch this anymore
     νᵣ = numberNodes # like in the middle we know that the expression is ok 
 
     
@@ -37,7 +38,10 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     nodeIndices = collect(νₗ:1:νᵣ)
     
     nodesSymbolic = Δx .* nodeIndices
+
     append!(nodesSymbolic,nodesSymbolic[end])
+
+
     
     # b-splines
     
@@ -121,9 +125,11 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     
         end
     
+
         b[:,1,ι+1]=bX[:,1,ι+1]
         b[:,end,ι+1]=bX[:,end,ι+1]
-    
+        
+          
         
         # computing the derivatives 
     
@@ -140,7 +146,22 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     end
         
     
+    # re-calculated centre
     
+    modμ=zeros(Num,3,numberNodes,maximumOrder) # min, max, mid for each b-splines this can be a multiple of Δx / 2 
+
+    for ι in 0:1:maximumOrder-1
+        for μ in nodeIndices
+            leftLimit = nodeIndices(minimum(findall(x->x!==0,b[:,μ,ι+1]))) /Δx
+            rightLimit = nodeIndices(maximum(findall(x->x!==0,b[:,μ,ι+1]))+1) /Δx
+            midNode = mySimplify((leftLimit+rightLimit)/2)
+            modμ[1,μ,ι+1]=leftLimit 
+            modμ[2,μ,ι+1]=rightLimit
+            modμ[3,μ,ι+1]=midNode
+        end
+    end
+    
+
     integral_b= zeros(Num,numberNodes,maximumOrder)
 
     #gvec = (@variables (g(x))[1:maximumOrder])[1]
@@ -166,7 +187,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     
     integral_b=mySimplify.(integral_b)
     
-    BsplineIntegraters=(nodeIndices=nodeIndices,nodesSymbolic=nodesSymbolic,b_deriv=b_deriv,integral_b=integral_b,Δx=Δx,extFns=extFns,x=x)
+    BsplineIntegraters=(nodeIndices=nodeIndices,nodesSymbolic=nodesSymbolic,b_deriv=b_deriv,integral_b=integral_b,Δx=Δx,extFns=extFns,x=x,modμ=modμ)
     return @strdict(BsplineIntegraters)
 
 end

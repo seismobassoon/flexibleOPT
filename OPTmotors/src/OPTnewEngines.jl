@@ -412,7 +412,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         
         output=myProduceOrLoad(BsplineTimesPolynomialsIntegrated,params,"BsplineInt","Bspline")
 
-        nodeIndices,nodesSymbolic,b_deriv,integral_b,Δx,extFns,x =output["BsplineIntegraters"]
+        nodeIndices,nodesSymbolic,b_deriv,integral_b,Δx,extFns,x,modμ =output["BsplineIntegraters"]
 
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
         # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
@@ -435,8 +435,10 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
             Y_μ =b_deriv[:,μ ,1,WBsplineOrder+1]
         end
 
-        K_μᶜ=(x-nodesSymbolic[μᶜ])^l_n_variable
-        K_μ =(x-nodesSymbolic[μ])^l_n_field
+        # modμ[3,:,ι+1] is the symbolic expression of the centre to compute Taylor kernels, which can be staggered!!!
+
+        K_μᶜ=(x-Δx*modμ[3,μᶜ,WBsplineOrder+1])^l_n_variable
+        K_μ =(x-Δx*modμ[3,μ,WBsplineOrder+1])^l_n_field
 
         # the convoluted function of all above
         F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
