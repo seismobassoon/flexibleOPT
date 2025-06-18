@@ -152,8 +152,8 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
 
     for ι in 0:1:maximumOrder-1
         for μ in nodeIndices
-            leftLimit = nodeIndices(minimum(findall(x->x!==0,b[:,μ,ι+1]))) /Δx
-            rightLimit = nodeIndices(maximum(findall(x->x!==0,b[:,μ,ι+1]))+1) /Δx
+            leftLimit = nodesSymbolic[findfirst(x->x!==0,b[:,μ,ι+1])] /Δx
+            rightLimit = nodesSymbolic[findlast(x->x!==0,b[:,μ,ι+1])+1] /Δx
             midNode = mySimplify((leftLimit+rightLimit)/2)
             modμ[1,μ,ι+1]=leftLimit 
             modμ[2,μ,ι+1]=rightLimit
