@@ -786,13 +786,14 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
     # this is the whole local Cartesian grids (without any lacking points)
 
-    tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    @show tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
     midTimeCoord = nothing
     if timeMarching
         midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
         tmpVecForMiddlePoint[end]=midTimeCoord
         #AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices)÷(midTimeCoord+1),NtypeofExpr)
     end
+    @show tmpVecForMiddlePoint 
     middleν=vec2car(tmpVecForMiddlePoint)
 
 
