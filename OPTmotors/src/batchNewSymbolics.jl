@@ -65,7 +65,6 @@ function mySimplify(eq)
     return neweq 
 end
 
-
 function integrateTaylorPolynomials(eq, x)
     # this function works only for (positive) polynomials 
     #

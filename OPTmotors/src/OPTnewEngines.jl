@@ -172,7 +172,7 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
     # be careful that pointsIndices is now a 1D array of integer vectors!!
 
-    @unpack coordinates,multiOrdersIndices,pointsIndices, Δ, WorderBspline= coefInversionDict
+    @unpack coordinates,multiOrdersIndices,pointsIndices, Δ, WorderBspline, modifiedμ = coefInversionDict
 
     Ndimension=length(coordinates)
 
@@ -189,7 +189,7 @@ function TaylorCoefInversion(coefInversionDict::Dict)
     # this is the C^{(l)}_{\mu+\eta; μ, \nu}
 
     for μ in eachindex(pointsIndices)
-        CˡηGlobal[:,:,μ]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline)
+        CˡηGlobal[:,:,μ]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline,modifiedμ)
     end 
 
 
@@ -199,7 +199,7 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
 end
 
-function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline)
+function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline,modifiedμ)
     # the old version is : illposedTaylorCoefficientsInversionSingleCentre
 
     # in fact, available points depend on the position of μ (=k here), we need to 'mute' some points
@@ -213,23 +213,16 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     tmpPointsIndices = []
     linearIndicesUsed = []
 
-    limitsPoints = Array{Int,2}(undef,2,Ndimension)
-    for iCoord in eachindex(WorderBspline)
-        numberPoints = WorderBspline[iCoord]+2
-        #right side        
-        limitsPoints[2,iCoord]=floor(Int,numberPoints/2)
-        #left side
-        limitsPoints[1,iCoord]=numberPoints - 1 - limitsPoints[2,iCoord]
-
-    end
+    modifiedμ_vector = Array{Float64,1}(undef,Ndimension)
 
     for i in eachindex(pointsIndices)
-        η = pointsIndices[i]-pointsIndices[μ]
+        η_μ = pointsIndices[i]
         iSayWeSayGo = 1
-        for iCoord in eachindex(WorderBspline) # Ndimension
+        for iCoord in eachindex(modifiedμ) # Ndimension
+            modifiedμ_vector[iCoord]= modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1]
             if WorderBspline[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
                 iSayWeSayGo *= 1
-            elseif  limitsPoints[1,iCoord] <=η[iCoord] <= limitsPoints[2,iCoord]
+            elseif  modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1] <=η_μ[iCoord] <= modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1]
                 iSayWeSayGo *= 1
             else
                 iSayWeSayGo *= 0
@@ -245,7 +238,8 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     tmpTaylorExpansionCoeffs = Array{Any,2}(undef,numberOfLs,tmpNumberOfEtas)
 
     for i in eachindex(tmpPointsIndices)
-        η = tmpPointsIndices[i]-pointsIndices[μ]
+        #η = tmpPointsIndices[i]-pointsIndices[μ]
+        η = tmpPointsIndices[i] - modifiedμ_vector
         distances= η .* Δ
         for j in multiOrdersIndices
             linearJ = LinearIndices(multiOrdersIndices)[j]
@@ -374,7 +368,7 @@ function getIngegralWYYKKK(params::Dict)
     end
     # it happens that modμ is still nothing
 
-    
+
     return @strdict(intKernelforνLΔ=kernels,modμ=modμ)
     # the target
     #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
@@ -862,10 +856,12 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     #region we compute the integral for 1D domain(s)
 
     integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
+    modifiedμ=Array{Any,1}(undef,length(coordinates))
     for iCoord in eachindex(coordinates)
         integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
         output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
         integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
+        modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
 
     #endregion
@@ -874,7 +870,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
 
 
-    coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ WorderBspline
+    coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ WorderBspline modifiedμ
 
     output=myProduceOrLoad(TaylorCoefInversion,coefInversionDict,"taylorCoefInv")
     Cˡη=output["CˡηGlobal"]

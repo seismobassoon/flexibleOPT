@@ -88,7 +88,7 @@ rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 
 
 
-
+#@show length(rhoFiles)
 
 # iTime definition
 
@@ -111,10 +111,17 @@ field2, Xnode, Ynode, rcmb = readStagYYFiles(file2)
 fi2,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field2,correlationLength,epsilon2);
 wtrField = quarterDiskExtrapolation(fi2,nX,nY);
 
+
+# this is NOT a good equation to estimate electron density!!
+
 fₚ = 0.5 .- 0.25 .* wtrField + 0.5 .* wtrField # Z/A
+
+
+
 nₑField=rhoField .* fₚ / (massProton) 
 nₑ0Field=rhoField  .* (0.5/massProton)
 dnₑField = (nₑField - nₑ0Field)   ./nₑ0Field
+
 #fig = heatmap(wtrField)
 #display(fig)
 fig = Figure()
@@ -123,6 +130,7 @@ ax = Axis(fig[1,1])#
 hm=heatmap!(ax,dnₑField,colormap=cgrad(:viridis))
 Colorbar(fig[:, 2], hm)
 display(fig)
+@show length(wtrFiles)
 
 # below is for making a video
 
