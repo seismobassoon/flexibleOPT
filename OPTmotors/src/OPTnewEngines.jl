@@ -205,7 +205,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     # in fact, available points depend on the position of μ (=k here), we need to 'mute' some points
     # with Y_μ
 
-
+    
     # for this pointsIndices are filtered for every μ
     
     Ndimension = length(WorderBspline)
@@ -445,7 +445,7 @@ function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,
         K_μ =(x-Δx*modμ[3,μ,WBsplineOrder+1])^l_n_field
 
         # the convoluted function of all above
-        @show F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
+        F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
 
 
         # the target kernel integral
@@ -793,7 +793,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
         tmpVecForMiddlePoint[end]=midTimeCoord
         #AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices)÷(midTimeCoord+1),NtypeofExpr)
     end
-    @show tmpVecForMiddlePoint 
+    #@show tmpVecForMiddlePoint 
     middleν=vec2car(tmpVecForMiddlePoint)
 
 
