@@ -445,7 +445,7 @@ function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,
         K_μ =(x-Δx*modμ[3,μ,WBsplineOrder+1])^l_n_field
 
         # the convoluted function of all above
-        F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
+        @show F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
 
 
         # the target kernel integral
