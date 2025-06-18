@@ -785,8 +785,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
 
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
     # this is the whole local Cartesian grids (without any lacking points)
-
-    @show tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    
+    tmpVecForMiddlePoint = ((car2vec(multiPointsIndices[end]).-1 ).÷2 ).+1 # only valid for testOnlyCentre
     midTimeCoord = nothing
     if timeMarching
         midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
@@ -854,6 +854,13 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
 
 
+    #region preparation 
+
+    L_MINUS_N = multiOrdersIndices
+    L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
+
+    #endregion
+
     #region we compute the integral for 1D domain(s)
 
     integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
@@ -881,8 +888,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
     #region making the (symbolic-numerical-hybrid) operator calling the factorial kernels and test functions
 
-    L_MINUS_N = multiOrdersIndices
-    L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
+
 
     
     # the order is: (νᶜ,) ν, i, j  here
