@@ -1,6 +1,7 @@
 using  Pkg
-cd(Base.source_dir())       
-Pkg.activate("../")                  # active the project, with a  static environment
+#cd(Base.source_dir())       
+cd(@__DIR__)
+Pkg.activate("../..")           # active the project, with a  static environment
 # Pkg.activate(; temp=true)    #  activate the project with a temporary environment
 Pkg.update()      
 
