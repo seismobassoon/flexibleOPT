@@ -8,12 +8,12 @@ Pkg.update()
 include("../src/imageReader.jl")
 
 #imagefile="DSM1D/data/model/artemis/IMG_6098.jpeg"
-#imagefile="DSM1D/data/model/random/tmp.png"
+#imagefile="../data/model/random/tmp.png"
 imagefile = "../data/model/moi/ground_canyon.png"
 colormap = "hot" #colormap can be RGB vector or predefined colormap
 
 floatMatrix=read2DimageModel(imagefile,colormap;min=1.0,max=3.3, showRecoveredImage=true) 
-
+@show size(floatMatrix)
 
 # Brocher (2005)
 function vp_from_rho(rho::Float64)
