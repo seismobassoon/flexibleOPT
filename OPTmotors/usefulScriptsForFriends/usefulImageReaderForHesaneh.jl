@@ -7,26 +7,27 @@ Pkg.update()
 
 include("../src/imageReader.jl")
 
-#imagefile="DSM1D/data/model/artemis/IMG_6098.jpeg"
+#imagefile="../data/model/artemis/IMG_6098.jpeg"
 #imagefile="../data/model/random/tmp.png"
 imagefile = "../data/model/moi/ground_canyon.png"
 colormap = "hot" #colormap can be RGB vector or predefined colormap
 
-floatMatrix=read2DimageModel(imagefile,colormap;min=1.0,max=3.3, showRecoveredImage=true) 
+floatMatrix=read2DimageModel(imagefile,colormap;min=1000,max=3300, showRecoveredImage=true) 
 @show size(floatMatrix)
 
 # Brocher (2005)
 function vp_from_rho(rho::Float64)
-    return -24.629 + 116.00*rho - 182.34*rho^2 + 121.90*rho^3 - 25.478*rho^4
+    return rho*1.5
 end
 
 function vs_from_vp(vp::Float64)
-    return -1.361 + 1.483*vp - 0.822*vp^2 + 0.260*vp^3 - 0.032*vp^4
+    return vp/1.7
 end
 
 # this is only for Lyon concours use!
 
 data=floatMatrix
+@show maximum(data),minimum(data)
   # Convert to Float32 (single precision)
 data_single = Float32.(data)
 
@@ -41,7 +42,7 @@ end
 
 
 data=vp_from_rho.(data)
-
+@show maximum(data),minimum(data)
 # Convert to Float32 (single precision)
 data_single = Float32.(data)
 
@@ -55,6 +56,7 @@ end
 
 
 data=vs_from_vp.(data)
+@show maximum(data),minimum(data)
 # Convert to Float32 (single precision)
 data_single = Float32.(data)
 

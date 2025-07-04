@@ -96,8 +96,14 @@ iTime = 100
 
 rhoField=nothing
 wtrField=nothing
+
+
+
 file1=rhoFiles[iTime]
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
+
+
+
 
 #field1, Xnode, Ynode, rcmb = extendToCoreWithρ(field1, Xnode, Ynode, rcmb, dR)
 
@@ -134,10 +140,10 @@ display(fig)
 
 # below is for making a video
 
-for file in wtrFiles[100:100]
+for file in compositionFiles[100:100]
     local field, Xnode, Ynode= readStagYYFiles(file)
     local fi,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
-    #local fi = quarterDiskExtrapolation(fi,nX,nY);
+    local fi = quarterDiskExtrapolation(fi,nX,nY);
     local fig = Figure()
     local ax = Axis(fig[1,1],aspect = 1)
    
