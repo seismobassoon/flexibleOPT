@@ -29,14 +29,18 @@ function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
         arrayRadius = push!(arrayRadius,rcmb)
     end
 
-    @show arrayRadius, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius, "above")
+    @show arrayRadius, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
 
     f=Figure()
     #lines(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ, markersize=1,color=:red)
     lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
     scatter!(f[1,1],arrayRadius, arrayParams.ρ, markersize=3,color=:blue)
     display(f)
-end
+
+
+    return field1, Xnode, Ynode, rcmb
+
+end 
 
 #dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025"
 dir="/Users/nobuaki/Documents/MantleConvectionTakashi/op_first_run"
@@ -104,8 +108,7 @@ field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
 
 
 
-
-#field1, Xnode, Ynode, rcmb = extendToCoreWithρ(field1, Xnode, Ynode, rcmb, dR)
+field1, Xnode, Ynode, rcmb = extendToCoreWithρ(field1, Xnode, Ynode, rcmb, dR)
 
 fi1,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field1,correlationLength,epsilon2);
 rhoField = quarterDiskExtrapolation(fi1,nX,nY);

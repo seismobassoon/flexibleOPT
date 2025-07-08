@@ -582,7 +582,7 @@ function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(
         if 深さインデックス < N深さインデックス
             if tmpNormalisedRadii[深さインデックス] == tmpNormalisedRadii[深さインデックス+1]
                 twoPointsAtTheSameRadius = true
-                @show tmpRadiiInKilometer[深さインデックス]
+                #@show tmpRadiiInKilometer[深さインデックス]
             else
                 twoPointsAtTheSameRadius = false
             end
