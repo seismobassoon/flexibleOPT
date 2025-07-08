@@ -287,7 +287,7 @@ function quarterDiskExtrapolation(fi,nX,nY)
 
     fi[1:halfnX+1,halfnY+1:nY]=transpose(fi[halfnX+1:nX,1:halfnY+1])
     fi[halfnX+1:nX,halfnY+1:nY]= fi[halfnX+1:nX,halfnY+1:-1:1]
-    fi[1:halfnX+1,1:halfnY+1]=fi[nX:-1:halfnX+1,1:halfnY+1]
+    fi[1:halfnX+1,1:halfnY+1]=transpose(fi[nX:-1:halfnX+1,1:halfnY+1])
     return fi
 end
 
