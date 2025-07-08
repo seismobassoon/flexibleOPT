@@ -297,6 +297,7 @@ mutable struct VerticalGridStructure
             kₓ=(locallCritical+5.e-1)/rmax
             Δz = sqrt(abs(relativeError/3.3e0*4.e0*π^2/(localωMax^2/vmin^2-kₓ^2)))
             zWidth=Coefs.topRadius[i]-Coefs.bottomRadius[i]
+ 
             localNumberOfGrids=max(trunc(Int64,zWidth/Δz)+1,5)
             numberOfGrids+=localNumberOfGrids
             Δz= (Coefs.topRadius[i]-Coefs.bottomRadius[i])/convert(Float64,localNumberOfGrids-1)
