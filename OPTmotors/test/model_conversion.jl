@@ -11,12 +11,18 @@ include("../src/DSM1D.jl")
 using .DSM1D
 
 
+
+writeClassicDSM1DPSVmodel(DSM1D.my1DDSMmodel,"moon.inf")
+
 arrayRadius, arrayParams=DSM1D.compute1DseismicParamtersFromPolynomialCoefficients(DSM1D.my1DDSMmodel,10)
 f=Figure()
 #lines(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ, markersize=1,color=:red)
 lines(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ,color=:red)
 scatter!(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ, markersize=3,color=:blue)
 display(f)
+
+
+
 
 display(DSM1D.input.ωᵣ)
 @testset "First series of tests" verbose=true begin

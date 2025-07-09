@@ -1,3 +1,6 @@
+using Printf
+
+
 mutable struct Input
     modelFile::String
     averagedPlanetRadius::Float64
@@ -27,7 +30,6 @@ mutable struct DSM1Dconfig
     eps::Float64 # tolerance for the error in interpolation
     DSM1Dconfig() = new()
 end
-
 
 
 mutable struct DSM1DPSVmodel 
@@ -70,6 +72,8 @@ mutable struct DSM1DPSVmodel
     end
 
 
+    
+
     function DSM1DPSVmodel(modelType::String,rawArray::Array{Float64,1},傾き許容度::Float64,eps::Float64)
         # This subroutine constructs a DSM1D model from a MINEOS model
 
@@ -107,7 +111,7 @@ mutable struct DSM1DPSVmodel
                     tmpaveragedPlanetRadius=tmpRadius[i]
                 end
             end
-            normalisedRadius = tmpRadius/tmpaveragedPlanetRadius
+            normalisedRadius = tmpRadius./tmpaveragedPlanetRadius
             # we don't change the number of layers for each parameter, we will fusion at the end
             nLayers=0
             normalisedtmpBottomRadius=Float64[]
@@ -172,6 +176,8 @@ mutable struct DSM1DPSVmodel
             Coefs.C_QμPower=zeros(nLayers,4)
             Coefs.topRadius=tmpTopRadius
             Coefs.bottomRadius=tmpBottomRadius
+            Coefs.normalisedTopRadius=normalisedtmpTopRadius
+            Coefs.normalisedBottomRadius=normalisedtmpBottomRadius
 
             # We then find out the doublons
 
@@ -187,6 +193,7 @@ mutable struct DSM1DPSVmodel
         else 
             @error "modelType $modelType is not proper to use this MINEOS-DSM constructor"
         end
+
         return Coefs
     end
 
@@ -286,12 +293,19 @@ mutable struct VerticalGridStructure
         tmpSolidNormalisedRadius=Float64[]
         tmpSolid_or_fluid=String[]
         numberOfGrids=0
+
+
+        #@show Coefs.normalisedTopRadius
         for i in 1:Coefs.nzone
+
+            @show Coefs.normalisedBottomRadius[i], Coefs.normalisedTopRadius[i],Coefs.C_Vpv[i,:]
             if Coefs.solid_or_fluid[i] == "S"
                 vmin=min(getParameterForOnePoint(Coefs.C_Vsv[i,:],Coefs.normalisedBottomRadius[i]),getParameterForOnePoint(Coefs.C_Vsv[i,:],Coefs.normalisedTopRadius[i])) 
             else
                 vmin=min(getParameterForOnePoint(Coefs.C_Vpv[i,:],Coefs.normalisedBottomRadius[i]),getParameterForOnePoint(Coefs.C_Vpv[i,:],Coefs.normalisedTopRadius[i]))
             end
+
+            @show vmin
 
             rmax=Coefs.topRadius[i]
             kₓ=(locallCritical+5.e-1)/rmax
@@ -643,3 +657,27 @@ function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(
     return tmpRadiiInKilometer, parameter
 end
 
+
+
+
+function writeClassicDSM1DPSVmodel(Coefs::DSM1DPSVmodel,filename::String)
+    # this needs 'using Printf'
+    fmtDepth(x) = @sprintf("%.2f",x)
+    fmtCoefs(x) = @sprintf("%.5f",x)
+    io = open(filename,"w")
+    write(io,Coefs.nzone*'\n')
+    for i in 1:Coefs.nzone
+        write(io,fmtDepth(Coefs.bottomRadius[i])*' '*fmtDepth(Coefs.topRadius[i])*'\n')
+        write(io,fmtCoefs(Coefs.C_ρ[1,i])*' '*fmtCoefs(Coefs.C_ρ[2,i])*' '*fmtCoefs(Coefs.C_ρ[3,i])*' '*fmtCoefs(Coefs.C_ρ[4,i])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vpv[1,i])*' '*fmtCoefs(Coefs.C_Vpv[2,i])*' '*fmtCoefs(Coefs.C_Vpv[3,i])*' '*fmtCoefs(Coefs.C_Vpv[4,i])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vph[1,i])*' '*fmtCoefs(Coefs.C_Vph[2,i])*' '*fmtCoefs(Coefs.C_Vph[3,i])*' '*fmtCoefs(Coefs.C_Vph[4,i])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vsv[1,i])*' '*fmtCoefs(Coefs.C_Vsv[2,i])*' '*fmtCoefs(Coefs.C_Vsv[3,i])*' '*fmtCoefs(Coefs.C_Vsv[4,i])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vsh[1,i])*' '*fmtCoefs(Coefs.C_Vsh[2,i])*' '*fmtCoefs(Coefs.C_Vsh[3,i])*' '*fmtCoefs(Coefs.C_Vsh[4,i])*'\n')
+        write(io,fmtCoefs(Coefs.C_η[1,i])*' '*fmtCoefs(Coefs.C_η[2,i])*' '*fmtCoefs(Coefs.C_η[3,i])*' '*fmtCoefs(Coefs.C_η[4,i])*'\n')
+        write(io,fmtCoefs(Coefs.C_Qμ[1,i])*' 'fmtCoefs(Coefs.C_Qκ[1,i])*'\n')
+    end
+    close(io)
+end
+
+
+export writeClassicDSM1DPSVmodel

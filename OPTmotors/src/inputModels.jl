@@ -59,7 +59,7 @@ function test1DModelType(array::Vector{Any})
 end
 
 function read1DModel(modelFile::String)
-    @show a=readlines(modelFile)
+
     # this function will read the model and grid it
     try        
         # honestly the dinosaur way to read a file but it works
