@@ -17,6 +17,12 @@ function myDensityFrom1DModel(arrayRadius)
     return density
 end
 
+function myPlot2DConvectionModel(field,fieldname)
+    if fieldname==="temperature"
+        colorbar="seismic"
+    end
+end
+
 function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
     # local function here: this requires DSM1D.jl, testparam.csv
     #
