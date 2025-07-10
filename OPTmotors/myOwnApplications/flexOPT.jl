@@ -85,6 +85,9 @@ orderBspace=1
 pointsInSpace=2
 pointsInTime=2
 
+WorderBspace=1
+WorderBtime=1
+supplementaryOrder=2
 
 #endregion
 
@@ -120,7 +123,7 @@ maskedRegionForSourcesInSpace = push!(maskedRegionForSourcesInSpace, CartesianIn
 
 forceModels =((1.0)) # if your model does not have anything special material parameters then it's how it's written
 
-concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace
+concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace WorderBtime WorderBspace supplementaryOrder pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace
 
 #endregion
 
@@ -130,7 +133,9 @@ concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspa
 
 #region OPT symbolic derivation of objective functions to be minimised, first semi-symbolically then numerically
 
-opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+#opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+
+opt = myProduceOrLoad(makeCompleteCostFunctions,concreteModelParameters,"numOperators","quasiNum")
 
 #endregion
 

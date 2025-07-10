@@ -53,22 +53,11 @@ function makeMixPartials(orders,coordinates;field=identity)
     return ∇
 end
 
-function PDECoefFinder(orders,coordinates,expr,field,vars)
-    # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
-    # I know how to do it, but eq. 40 should be then more generalised (kind of the product of partials of different materials)
-
-    # maxPolynomialOrderMaterial is also a chelou thing, that I need to work on more systematically
-    # like the powers of partials should also be included but here search for Rm[1], yeah, that's what I am doing
-
-
-
+function varMmaker(maxPointsUsed,coordinates,vars) 
+    # this will make an array of material coeffs for with a local Cartesian grid (max points used for a node)
     Ndimension = length(coordinates)
-    alpha=[]
-    
-    maxPolynomialOrderMaterial = 2*(maximum(orders)-1)
-    ∇=makeMixPartials(orders,coordinates;field=field)
-    R=CartesianIndices(∇)
-    expr=mySimplify(expr)
+
+    R = CartesianIndices(Tuple(maxPointsUsed))
 
     varM=Array{Any,2}(undef,length(vars),length(R))
    
@@ -90,6 +79,24 @@ function PDECoefFinder(orders,coordinates,expr,field,vars)
         varM[iVar,:]=smallVarM
     end
     
+    return varM
+end
+
+function PDECoefFinder(orders,coordinates,expr,field,vars)
+    # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
+    # I know how to do it, but eq. 40 should be then more generalised (kind of the product of partials of different materials)
+
+    # maxPolynomialOrderMaterial is also a chelou thing, that I need to work on more systematically
+    # like the powers of partials should also be included but here search for Rm[1], yeah, that's what I am doing
+
+
+    Ndimension = length(coordinates)
+    alpha=[]
+    
+    maxPolynomialOrderMaterial = 2*(maximum(orders)-1)
+    ∇=makeMixPartials(orders,coordinates;field=field)
+    R=CartesianIndices(∇)
+    expr=mySimplify(expr)
 
 
     for i in R
@@ -152,7 +159,7 @@ function PDECoefFinder(orders,coordinates,expr,field,vars)
     alpha=unique(alpha)
 
 
-    return alpha, varM # varM: iVar and linearised cartesian indices
+    return alpha # varM: iVar and linearised cartesian indices
 end 
 
 function TaylorCoefInversion(coefInversionDict::Dict)
@@ -165,7 +172,7 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
     # be careful that pointsIndices is now a 1D array of integer vectors!!
 
-    @unpack coordinates,multiOrdersIndices,pointsIndices, Δ = coefInversionDict
+    @unpack coordinates,multiOrdersIndices,pointsIndices, Δ, WorderBspline, modifiedμ = coefInversionDict
 
     Ndimension=length(coordinates)
 
@@ -179,21 +186,60 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
     CˡηGlobal = Array{Any,3}(undef,numberOfEtas,numberOfLs,numberOfEtas)
 
-    # this is the C^{(l)}_{\mu+\eta; \mu, \nu}
-   
-    for k in eachindex(pointsIndices)
-        CˡηGlobal[:,:,k]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,k)
+    # this is the C^{(l)}_{\mu+\eta; μ, \nu}
+
+    for μ in eachindex(pointsIndices)
+        CˡηGlobal[:,:,μ]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline,modifiedμ)
     end 
 
-    return CˡηGlobal
+
+
+
+    return @strdict(CˡηGlobal)
 
 end
 
-function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,k)
+function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline,modifiedμ)
     # the old version is : illposedTaylorCoefficientsInversionSingleCentre
-    TaylorExpansionCoeffs = Array{Num,2}(undef,numberOfLs,numberOfEtas)
+
+    # in fact, available points depend on the position of μ (=k here), we need to 'mute' some points
+    # with Y_μ
+
+    
+    # for this pointsIndices are filtered for every μ
+    
+    Ndimension = length(WorderBspline)
+
+    tmpPointsIndices = []
+    linearIndicesUsed = []
+
+    modifiedμ_vector = Array{Float64,1}(undef,Ndimension)
+
     for i in eachindex(pointsIndices)
-        η = pointsIndices[i]-pointsIndices[k]
+        η_μ = pointsIndices[i]
+        iSayWeSayGo = 1
+        for iCoord in eachindex(modifiedμ) # Ndimension
+            modifiedμ_vector[iCoord]= modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1]
+            if WorderBspline[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
+                iSayWeSayGo *= 1
+            elseif  modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1] <=η_μ[iCoord] <= modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1]
+                iSayWeSayGo *= 1
+            else
+                iSayWeSayGo *= 0
+            end
+        end
+        if iSayWeSayGo === 1
+            tmpPointsIndices=push!(tmpPointsIndices,pointsIndices[i])
+            linearIndicesUsed=push!(linearIndicesUsed,i)
+        end
+    end
+
+    tmpNumberOfEtas = length(tmpPointsIndices)
+    tmpTaylorExpansionCoeffs = Array{Any,2}(undef,numberOfLs,tmpNumberOfEtas)
+
+    for i in eachindex(tmpPointsIndices)
+        #η = tmpPointsIndices[i]-pointsIndices[μ]
+        η = tmpPointsIndices[i] - modifiedμ_vector
         distances= η .* Δ
         for j in multiOrdersIndices
             linearJ = LinearIndices(multiOrdersIndices)[j]
@@ -201,16 +247,26 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
             numerator = prod(distances .^orders)
             denominator=prod(factorial.(orders))
             tmpTaylorCoeffs = numerator/denominator
-            TaylorExpansionCoeffs[linearJ,linearI]=tmpTaylorCoeffs 
+            tmpTaylorExpansionCoeffs[linearJ,i]=tmpTaylorCoeffs 
 
         end
     end
 
     # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
     
-    aa=transpose(TaylorExpansionCoeffs)*TaylorExpansionCoeffs
+    aa=transpose(tmpTaylorExpansionCoeffs)*tmpTaylorExpansionCoeffs
     invaa= myInv(aa)
-    Cˡηlocal=invaa*transpose(TaylorExpansionCoeffs)
+    tmpCˡηlocal=invaa*transpose(tmpTaylorExpansionCoeffs)
+
+
+    Cˡηlocal = Array{Any,2}(undef,numberOfEtas,numberOfLs)
+
+    Cˡηlocal .= 0
+
+    for j in eachindex(tmpPointsIndices)
+        Cˡηlocal[linearIndicesUsed[j],:] = tmpCˡηlocal[j,:]
+    end
+
     return Cˡηlocal
 end
 
@@ -297,6 +353,150 @@ function illposedTaylorCoefficientsInversionSingleCentre(numberOfLs,numberOfEtas
     return Cˡηlocal
 end
 
+function getIngegralWYYKKK(params::Dict)
+    @unpack oB, oWB, νCoord, LCoord, ΔCoord, l_n_max = params
+    kernels = Array{Any,4}(undef,LCoord,LCoord,l_n_max+1,l_n_max+1)
+    modμ = nothing
+    for l_n_field in 0:1:l_n_max
+        for l_n_variable in 0:1:l_n_max
+            for μ in 1:1:LCoord
+                for μᶜ in 1:1:LCoord
+                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1]=integralBsplineTaylorKernels1DWithWindow1D!(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field,modμ)
+                end
+            end
+        end
+    end
+    # it happens that modμ is still nothing
+
+
+    return @strdict(intKernelforνLΔ=kernels,modμ=modμ)
+    # the target
+    #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
+end
+
+function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field,modμForCinversion)
+
+    # Don't worry the modμForCinversion is the only one to be replaced
+
+    # this computes the analytical value of the 1D integral between B-spline fns and weighted Taylor kernels
+    # \int dx Bspline Y_μᶜ Y_μ  K_{lᶜ-nᶜ}(y-y_μᶜ) K_{l-n}(y-y_μ)
+
+    # unlike the previous integralBsplineTaylorKernels1D, it computes for a specific ν
+    # Cˡη;μ are computed for a specific geometry, so even though the boundary condition reduce
+    # the number of available points, each Taylor expansion for K_{l-n}(y-y_μ) should be Okubo
+    
+    # however, the 'forgotten' μ (due to the whole) should be treated carefully 
+    # (which I do not yet implemented here): I think Y_ignoredμ should be added to the Y_availableneighbouringμ
+
+    # or maybe the 'forgotten' μ is anyways not available (and thus very probably not continuous)
+    # so we just let this be forgotten 
+
+        
+
+    #@show μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field
+
+    kernelValue=0.0
+   
+    
+
+    if BsplineOrder=== -1
+        # this is for an indicator function
+        if l_n_variable === 0 && l_n_field === 0
+            kernelValue=1.0
+        else
+            kernelValue=0
+        end
+    else
+        maximumOrder = maximum((BsplineOrder,WBsplineOrder))
+        params=@strdict maximumOrder numberNodes = L
+
+        #output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
+        
+        output=myProduceOrLoad(BsplineTimesPolynomialsIntegrated,params,"BsplineInt","Bspline")
+
+        nodeIndices,nodesSymbolic,b_deriv,integral_b,Δx,extFns,x,modμ =output["BsplineIntegraters"]
+        if modμForCinversion === nothing
+            modμForCinversion = modμ
+        end
+        # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
+        # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
+
+        Y_μᶜ = zeros(Num,L)
+        Y_μ = zeros(Num,L)
+
+        if WBsplineOrder === -1
+
+            if μᶜ === ν
+                Y_μᶜ = ones(Num,L) 
+            end
+
+            if μ === ν
+                Y_μ = ones(Num,L)
+            end
+
+        else
+            Y_μᶜ=b_deriv[:,μᶜ,1,WBsplineOrder+1]
+            Y_μ =b_deriv[:,μ ,1,WBsplineOrder+1]
+        end
+
+        # modμ[3,:,ι+1] is the symbolic expression of the centre to compute Taylor kernels, which can be staggered!!!
+
+        K_μᶜ=(x-Δx*modμ[3,μᶜ,WBsplineOrder+1])^l_n_variable
+        K_μ =(x-Δx*modμ[3,μ,WBsplineOrder+1])^l_n_field
+
+        # the convoluted function of all above
+        F = mySimplify.(Y_μᶜ .* Y_μ .* K_μᶜ .* K_μ)
+
+
+        # the target kernel integral
+
+        targetKernel = integral_b[ν,BsplineOrder+1]
+
+        dictionaryForSubstitute = Dict()
+    
+        for i in 0:1:BsplineOrder
+            F = integrateTaylorPolynomials.(F,x) # integrate already for the 1st partial of W
+            
+            # mathematically I need to understand why but F cannot be disturbed by supplementary complexities due to constants 
+            # that are arbitrarily put during the integral
+            
+            #F .-= substitute(F[ν],Dict(x=>nodesSymbolic[ν]))
+
+            # F should be continuous, in general but since all the integral by parts
+            # is done piecewisely we might not need this
+            #=
+            for iSegment in 2:1:L # this should be sequential
+                lastValue = substitute(F[iSegment-1],Dict(x=>nodesSymbolic[iSegment]))
+                startValue = substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
+                shiftValue = lastValue - startValue
+                F[iSegment]=F[iSegment]+shiftValue
+            end
+            =#
+
+            F .= mySimplify(F)
+
+            for iSegment in nodeIndices
+                dictionaryForSubstitute[extFns[1,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment]))
+                dictionaryForSubstitute[extFns[2,iSegment,i+1]]=substitute(F[iSegment],Dict(x=>nodesSymbolic[iSegment+1]))
+            end
+        end
+
+        #@show dictionaryForSubstitute,targetKernel
+        
+
+        kernelValue = substitute(targetKernel,dictionaryForSubstitute)  
+        
+        kernelValue = substitute(kernelValue,Dict(Δx=>Δ))/(BigInt(factorial(l_n_field))*BigInt(factorial(l_n_variable)))
+    
+
+        #a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
+        #@show a
+    end
+    return kernelValue
+    
+end
+
+
 
 function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 
@@ -321,7 +521,7 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
 
     elseif BsplineOrder >= 0
         maximumOrder = BsplineOrder
-        params=@strdict maximumOrder
+        params=@strdict maximumOrder numberNodes=L
         output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
         numberNodes,integral_b_polys,N,Δx=output["BsplineIntegraters"]
         #fns=eval.(build_function.(integral_b_polys,N,Δx))
@@ -346,6 +546,8 @@ function integralBsplineTaylorKernels1D(BsplineOrder,Δ,l_n_variable,l_n_field)
         #extreme_value = (Δ^{l_n_variable+l_n_field+1})/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(l_n_variable)*factorial(l_n_field))
     end
     =#
+
+
     return middle_value,nearboundaries_values
 end
 
@@ -386,18 +588,20 @@ end
 
 function OPTobj(operatorConfigurations::Dict)
     # this is just a wrapper for the OPTobj function below, for DrWatson package
-    @unpack famousEquationType, Δnum, orderBtime, orderBspace, pointsInSpace, pointsInTime,IneedExternalSources, iExperiment= operatorConfigurations
+    @unpack famousEquationType, Δnum, orderBtime, orderBspace, WorderBtime,WorderBspace,supplementaryOrder,pointsInSpace, pointsInTime,IneedExternalSources, iExperiment= operatorConfigurations
+
     exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
-  
+
+    TaylorOptions=(WorderBtime=WorderBtime,WorderBspace=WorderBspace,supplementaryOrder=supplementaryOrder)
     trialFunctionsCharacteristics=(orderBtime=orderBtime,orderBspace=orderBspace,pointsInSpace=pointsInSpace,pointsInTime=pointsInTime)
-    @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum,iExperiment=iExperiment)
+    @time operatorData=OPTobj(exprs,fields,vars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,TaylorOptions=TaylorOptions,Δnum = Δnum,iExperiment=iExperiment)
     #AjiννᶜU=operatorData[1]
     #utilities=operatorData[2]   
 
     operatorForceData=nothing
     # if you do not want to apply external forces, it is possible to skip below
     if IneedExternalSources 
-        @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,Δnum = Δnum,iExperiment=iExperiment)  
+        @time operatorForceData=OPTobj(extexprs,extfields,extvars; coordinates=coordinates,trialFunctionsCharacteristics=trialFunctionsCharacteristics,TaylorOptions=TaylorOptions,Δnum = Δnum,iExperiment=iExperiment)  
         #@show Γg = operatorForceData[1]
         #utilitiesForce = operatorForceData[2]
     end
@@ -406,7 +610,7 @@ function OPTobj(operatorConfigurations::Dict)
     return @strdict(operators)
 end
 
-function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing,iExperiment =nothing)
+function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderBtime=1,WorderBspace=1,supplementaryOrder=2), trialFunctionsCharacteristics=(orderBtime=1,orderBspace=1, pointsInSpace=2,pointsInTime=2),CˡηSymbolicInversion=false,testOnlyCentre=true,Δnum = nothing,iExperiment =nothing)
 
     #region General introduction, some cautions
 
@@ -465,6 +669,7 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
 
     @unpack orderBtime, orderBspace, pointsInSpace, pointsInTime = trialFunctionsCharacteristics
+    @unpack WorderBtime, WorderBspace,supplementaryOrder = TaylorOptions
 
     NtypeofExpr=length(exprs)   # number of governing equations
     NtypeofMaterialVariables=length(vars) # number of material coefficients
@@ -521,25 +726,29 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     # the orders of B-spline functions, depending on fields 
 
     orderBspline=zeros(Int,Ndimension)
+    WorderBspline=zeros(Int,Ndimension)
 
     if timeMarching
         orderBspline[Ndimension]=orderBtime*fieldDependency[Ndimension]
         orderBspline[1:Ndimension-1]=orderBspace*fieldDependency[1:Ndimension-1]
+        WorderBspline[Ndimension]=WorderBtime*fieldDependency[Ndimension]
+        WorderBspline[1:Ndimension-1]=WorderBspace*fieldDependency[1:Ndimension-1]
     else
         orderBspline[1:Ndimension]=orderBspace*fieldDependency[1:Ndimension]
+        WorderBspline[1:Ndimension]=WorderBspace*fieldDependency[1:Ndimension]
     end
     
-    # the number of points used in the vicinity of the node, which is independent of the order of B-spline functions (see our paper)
+    # the maximum number of points used in the vicinity of the node, which is independent of the order of B-spline functions (see our paper)
     pointsUsedForFields=(pointsUsed.-1).*fieldDependency.+1
 
     # orderExpressions is the maximal orders of partials that we could expect in the expressions
-    orderExpressions=pointsUsedForFieldsed
+    orderExpressions=pointsUsedForFields
     
     # numbers of points to evaluate the integral for the governing equation filtered by the test functions
     
-    # orderU is the maximal orders for the fields that we will use for OPT coefficients' exploration
-    orderU = (pointsUsedForFields.-1).+2 .+1 
-    # we restore this orderU since we need to control this (we set this to the twice the size of the number of used points)
+    # orderU is the maximum orders for the fields that we will use for OPT coefficients' exploration
+    orderU = (orderExpressions .-1) .+ (supplementaryOrder .*fieldDependency).+1 
+    # we restore this orderU since we need to control this 
 
     #endregion
 
@@ -550,12 +759,13 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     for iExpr in eachindex(exprs)
         for iField in eachindex(fields)
             
-            tmpNonZeroAlphas,varM=PDECoefFinder(orderExpressions,coordinates,exprs[iExpr],fields[iField],vars) 
+            tmpNonZeroAlphas=PDECoefFinder(orderExpressions,coordinates,exprs[iExpr],fields[iField],vars) 
             # we assume that the pointsUsedForFields represent the highest order of partials
             bigα[iField,iExpr]=unique(tmpNonZeroAlphas)
         end
     end
-    @show bigα
+    varM=varMmaker(pointsUsedForFields,coordinates,vars)
+    @show bigα,varM
     #endregion
 
     #region Preparation for Taylor expansion
@@ -574,15 +784,16 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     #region Cartesian indices that can be available to use (normally: iGeometry=1)
 
     multiPointsIndices=CartesianIndices(pointsInSpaceTime)
+    # this is the whole local Cartesian grids (without any lacking points)
     
-
-    tmpVecForMiddlePoint = (car2vec(multiPointsIndices[end]).-1 ).÷2 .+1 # only valid for testOnlyCentre
+    tmpVecForMiddlePoint = ((car2vec(multiPointsIndices[end]).-1 ).÷2 ).+1 # only valid for testOnlyCentre
     midTimeCoord = nothing
     if timeMarching
         midTimeCoord=car2vec(multiPointsIndices[end])[end]-1
         tmpVecForMiddlePoint[end]=midTimeCoord
         #AjiννᶜU = Array{Num,2}(undef,length(multiPointsIndices)÷(midTimeCoord+1),NtypeofExpr)
     end
+    #@show tmpVecForMiddlePoint 
     middleν=vec2car(tmpVecForMiddlePoint)
 
 
@@ -610,8 +821,8 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
     for iConfigGeometry in eachindex(availablePointsConfigurations) 
         pointsIndices=availablePointsConfigurations[iConfigGeometry]
         middleLinearν=centrePointConfigurations[iConfigGeometry]
-        #varM is given above but this should change ...
-        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ,varM,bigα)
+        #varM is given above for the max number of points used 
+        tmpAjiννᶜU,tmpUlocal=AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
         AjiννᶜU=push!(AjiννᶜU,tmpAjiννᶜU)
         Ulocal=push!(Ulocal,tmpUlocal)
     end
@@ -623,10 +834,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 
     #region outputs
     
-    utilities=(middlepoint=middleν,middlepointLinear=middleLinearν,localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal)
+    utilities=(middlepoint=middleν,middlepointLinear=centrePointConfigurations[1],localPointsIndices=multiPointsIndices,localMaterials=varM,localFields=Ulocal[1])
     if testOnlyCentre
-        smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
-        smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
+        #smallAjiννᶜU = Array{Num,2}(undef,1,NtypeofExpr) # shrinking but the dimension is still the same
+        #smallAjiννᶜU[1,:] = AjiννᶜU[middleLinearν,:]
+        smallAjiννᶜU = AjiννᶜU[1]
         return smallAjiννᶜU,utilities
     else
         return AjiννᶜU,utilities
@@ -637,23 +849,46 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), trialFunctionsCharacte
 end
 
 
-function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,Δ,varM,bigα)
+function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
 
     # the contents of OPTobj which is now renamed as AuSymbolic since we compute Au for different pointsIndices
+
+
+    #region preparation 
+
+    L_MINUS_N = multiOrdersIndices
+    L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
+
+    #endregion
+
+    #region we compute the integral for 1D domain(s)
+
+    integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
+    modifiedμ=Array{Any,1}(undef,length(coordinates))
+    for iCoord in eachindex(coordinates)
+        integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
+        output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
+        integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
+        modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
+    end
+
+    #endregion
+
 
     #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
 
 
-    coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ
-    Cˡη, _ = produce_or_load(TaylorCoefInversion,coefInversionDict,datadir("taylorCoefInv");filename = config -> savename("TaylorInv",coefInversionDict))
-   
+    coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ WorderBspline modifiedμ
+
+    output=myProduceOrLoad(TaylorCoefInversion,coefInversionDict,"taylorCoefInv")
+    Cˡη=output["CˡηGlobal"]
+
 
     #endregion
 
     #region making the (symbolic-numerical-hybrid) operator calling the factorial kernels and test functions
 
-    L_MINUS_N = multiOrdersIndices
-    L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
+
 
     
     # the order is: (νᶜ,) ν, i, j  here
@@ -671,14 +906,15 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
 
     AjiννᶜU .= 0
 
+
     for iExpr in eachindex(exprs) # j in eq. 52
         for iField in eachindex(fields) # i in eq. 52
             α = bigα[iExpr,iField]
-            
 
-            # this is the ν point in space-time domain
+            # this is the ν point in the relative space-time domain
 
-            linearν = middleLinearν
+            #linearν = middleLinearν  
+
             CoefU = 0
 
             for linearμᶜ in eachindex(pointsIndices)
@@ -689,65 +925,60 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,middleLinearν,
 
                     tmpCˡημ=Cˡη[:,:,linearμ] # C^{(l)}_{μ+η;μ,ν}
 
-                    for linearηᶜ in eachindex(pointsIndices.-pointsIndices[linearμᶜ])
 
-                        for linearνᶜ in eachindex(pointsIndices)
+                    for linearμ_plus_η in eachindex(pointsIndices) # relative position νᶜ-ν
 
-                            vectorνᶜ_ν = pointsIndices[linearνᶜ]-pointsIndices[linearν] # this is μ+η
+                        U_HERE = Ulocal[linearμ_plus_η,iField]
+                        
+                        for eachα in α
+                            
+                            nodeValue=eachα.node
+                            nᶜ = eachα.nᶜ
+                            n = eachα.n
 
-                            vectorη = vectorνᶜ_ν-pointsIndices(linearμ)
-
-
-                            if vectorη ∈ pointsIndices
-
-                                U_HERE = Ulocal[linearνᶜ,iField]
+                            for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
                                 
-                                for eachα in α
-                                    nodeValue=eachα.node
-                                    nᶜ = eachα.nᶜ
-                                    n = eachα.n
+                                linearμᶜ_plus_ηᶜ_in_the_whole = LinearIndices(multiOrdersIndices)[vec2car(pointsIndices[linearμᶜ_plus_ηᶜ])]
 
-                                    for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
+                                localmapηᶜ=Dict()
 
-                                        #vectorηᶜ = pointsIndices(linearμᶜ_plus_ηᶜ) - pointsIndices(linearμᶜ)
-                                                
-                                        localmapηᶜ=Dict()
-
-                                        for iVar in eachindex(vars)
-                                            localmapηᶜ[vars[iVar]]=varM[iVar,linearμᶜ_plus_ηᶜ][]
-                                        end
-                                        
-                                        for l in n .+ L_MINUS_N
-                                            if l ∈ L_MINUS_N
-                                                linearl = LinearIndices(multiOrdersIndices)[l]
-                                                for lᶜ in nᶜ.+ L_MINUS_N
-                                                    if l ∈ L_MINUS_N
-                                                        linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
-                                                        kernelProducts = 1
-                                                        for iCoord in eachindex(coordinates)
-                                                            l_n_field = Tuple(l-n)[iCoord]
-                                                            l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
-                                                            # here I take only the middle_value
-                                                            kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
-                                                        end
-                                                        
-                                                        #nodeValue=Symbol(nodeValue)
-                                                        #@show localExpression=substitute(nodeValue,localmap)
-                                                        #@show typeof(nodeValue)
-                                                        #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
-                                                        
-                                                        substitutedValue = substitute(nodeValue, localmapηᶜ)
-
-                                                        CoefU +=tmpCˡημᶜ[linearμᶜ_plus_ηᶜ,linearlᶜ]*tmpCˡημ[linearνᶜ,linearl]*kernelProducts*substitutedValue*U_HERE
-                                                    end
+                                for iVar in eachindex(vars)
+                                    localmapηᶜ[vars[iVar]]=varM[iVar,linearμᶜ_plus_ηᶜ_in_the_whole][]
+                                end
+                                
+                                for l in n .+ L_MINUS_N
+                                    if l ∈ L_MINUS_N
+                                        linearl = LinearIndices(multiOrdersIndices)[l]
+                                        for lᶜ in nᶜ.+ L_MINUS_N
+                                            if lᶜ ∈ L_MINUS_N
+                                                linearlᶜ = LinearIndices(multiOrdersIndices)[lᶜ]
+                                                kernelProducts = 1
+                                                for iCoord in eachindex(coordinates)
+                                                    l_n_field = Tuple(l-n)[iCoord]
+                                                    l_n_variable = Tuple(lᶜ-nᶜ)[iCoord]
+                                                    # here I take only the middle_value
+                                                    #kernelProducts*=integralBsplineTaylorKernels1D(orderBspline[iCoord],Δ[iCoord],l_n_variable,l_n_field)[1]
+                                                    kernelProducts*=integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable+1,l_n_field+1]
+                                                    #kernelProducts*=integralBsplineTaylorKernels1DWithWindow1D(orderBspline[iCoord],WorderBspline[iCoord],pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],pointsIndices[linearν][iCoord],multiPointsIndices[end][iCoord], Δ[iCoord],l_n_variable,l_n_field)
                                                 end
+                                                
+                                                #nodeValue=Symbol(nodeValue)
+                                                #@show localExpression=substitute(nodeValue,localmap)
+                                                #@show typeof(nodeValue)
+                                                #newExpr = mySimplify.(map((e) -> substitute(e, Dict(localmap)), nodeValue))
+                                                
+                                                substitutedValue = substitute(nodeValue, localmapηᶜ)
+
+                                                CoefU +=tmpCˡημᶜ[linearμᶜ_plus_ηᶜ,linearlᶜ]*tmpCˡημ[linearμ_plus_η,linearl]*kernelProducts*substitutedValue*U_HERE
                                             end
                                         end
-                                        
                                     end
                                 end
+                                
                             end
+                            
                         end
+              
                     end
                 end
             end

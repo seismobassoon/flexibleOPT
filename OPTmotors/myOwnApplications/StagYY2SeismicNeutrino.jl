@@ -29,14 +29,18 @@ function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
         arrayRadius = push!(arrayRadius,rcmb)
     end
 
-    @show arrayRadius, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius, "above")
+    @show arrayRadius, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
 
     f=Figure()
     #lines(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ, markersize=1,color=:red)
     lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
     scatter!(f[1,1],arrayRadius, arrayParams.ρ, markersize=3,color=:blue)
     display(f)
-end
+
+
+    return field1, Xnode, Ynode, rcmb
+
+end 
 
 #dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025"
 dir="/Users/nobuaki/Documents/MantleConvectionTakashi/op_first_run"
@@ -88,7 +92,7 @@ rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 
 
 
-
+#@show length(rhoFiles)
 
 # iTime definition
 
@@ -96,10 +100,15 @@ iTime = 100
 
 rhoField=nothing
 wtrField=nothing
+
+
+
 file1=rhoFiles[iTime]
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
 
-#field1, Xnode, Ynode, rcmb = extendToCoreWithρ(field1, Xnode, Ynode, rcmb, dR)
+
+
+field1, Xnode, Ynode, rcmb = extendToCoreWithρ(field1, Xnode, Ynode, rcmb, dR)
 
 fi1,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field1,correlationLength,epsilon2);
 rhoField = quarterDiskExtrapolation(fi1,nX,nY);
@@ -111,10 +120,17 @@ field2, Xnode, Ynode, rcmb = readStagYYFiles(file2)
 fi2,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field2,correlationLength,epsilon2);
 wtrField = quarterDiskExtrapolation(fi2,nX,nY);
 
+
+# this is NOT a good equation to estimate electron density!!
+
 fₚ = 0.5 .- 0.25 .* wtrField + 0.5 .* wtrField # Z/A
+
+
+
 nₑField=rhoField .* fₚ / (massProton) 
 nₑ0Field=rhoField  .* (0.5/massProton)
 dnₑField = (nₑField - nₑ0Field)   ./nₑ0Field
+
 #fig = heatmap(wtrField)
 #display(fig)
 fig = Figure()
@@ -123,13 +139,14 @@ ax = Axis(fig[1,1])#
 hm=heatmap!(ax,dnₑField,colormap=cgrad(:viridis))
 Colorbar(fig[:, 2], hm)
 display(fig)
+@show length(wtrFiles)
 
 # below is for making a video
 
-for file in wtrFiles[100:100]
+for file in compositionFiles[100:100]
     local field, Xnode, Ynode= readStagYYFiles(file)
     local fi,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
-    #local fi = quarterDiskExtrapolation(fi,nX,nY);
+    local fi = quarterDiskExtrapolation(fi,nX,nY);
     local fig = Figure()
     local ax = Axis(fig[1,1],aspect = 1)
    
