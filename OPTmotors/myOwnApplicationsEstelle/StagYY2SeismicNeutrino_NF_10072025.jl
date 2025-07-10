@@ -19,8 +19,8 @@ end
 
 iTime=200
 
-function myPlot2DConvectionModel(fieldname, filename)
-
+function myPlot2DConvectionModel(iTime, fieldname, filename)
+#only if the field in DIVandrun is the same as in readStagYYFiles
     file = filename[iTime]
     field, Xnode, Ynode, rcmb = readStagYYFiles(file)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
@@ -41,7 +41,7 @@ function myPlot2DConvectionModel(fieldname, filename)
 
     end
     
-    hm=heatmap!(ax, fi, colormap=colormap)#, colorrange=(-0.005,0.005))
+    hm=heatmap!(ax, fi, colormap=colormap)#, colorrange=()) if needed
     Colorbar(fig[:,2], hm)
     display(fig)
 end
@@ -119,6 +119,7 @@ rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 compositionFiles=myListDir(dir; pattern=r"test_c\d");
 temperatureFiles=myListDir(dir; pattern=r"test_t\d");
 wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
+
 # below is for making a video
 
 #==
@@ -139,10 +140,8 @@ for file in rhoFiles[3:3]
 end
 ==#
 
-iTime = 200
-
-#==
 #plot (rho(r)-rhoprem(r)/rhoprem(r))
+iTime = 200
 file1=rhoFiles[iTime]
 
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
@@ -162,39 +161,9 @@ Colorbar(fig2[:, 2], hm2)
 display(fig2)
 
 
-
-file3 = temperatureFiles[iTime]
-
-field3, Xnode, Ynode, rcmb = readStagYYFiles(file3)
-fiT,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field3,correlationLength,epsilon2);
-fig3 =Figure()
-ax3 = Axis(fig3[1,1],aspect = 1)
-hm3=heatmap!(ax3,fiT,colormap=cgrad(:seismic))
-Colorbar(fig3[:,2],hm3)
-display(fig3)
+myPlot2DConvectionModel(200, "wtr", wtrFiles)
+myPlot2DConvectionModel(200, "rho", rhoFiles)
+myPlot2DConvectionModel(200, "temperature", temperatureFiles)
+myPlot2DConvectionModel(200, "composition", compositionFiles)
 
 
-file = compositionFiles[iTime]
-
-fieldC, Xnode, Ynode, rcmb = readStagYYFiles(file)
-fiC,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),fieldC,correlationLength,epsilon2);
-fig4 =Figure()
-ax4 = Axis(fig4[1,1],aspect = 1)
-hm4=heatmap!(ax4,fiC,colormap=cgrad(:viridis))
-Colorbar(fig4[:,2],hm4)
-display(fig4)
-
-
-
-
-file3 = wtrFiles[iTime]
-
-field3, Xnode, Ynode, rcmb = readStagYYFiles(file3)
-fiT,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field3,correlationLength,epsilon2);
-fig3 =Figure()
-ax3 = Axis(fig3[1,1],aspect = 1)
-hm3=heatmap!(ax3,fiT,colormap=cgrad(:blues),colorrange=(0.0,0.01))
-Colorbar(fig3[:,2],hm3)
-display(fig3)
-==#
-myPlot2DConvectionModel("rho", rhoFiles)

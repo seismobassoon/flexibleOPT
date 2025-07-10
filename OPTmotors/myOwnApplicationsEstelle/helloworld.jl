@@ -1,5 +1,4 @@
 dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_first_run/"
-
 rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 
 #function to plot (rho(r)-rhoprem(r)/rhoprem(r))
