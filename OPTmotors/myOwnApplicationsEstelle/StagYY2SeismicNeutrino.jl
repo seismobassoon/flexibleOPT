@@ -172,7 +172,6 @@ end
 frho = (field1*1.e-3 .- newpremDensities) ./ newpremDensities
 fi3,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
 
-
 #mat_frho = reshape(frho, 33540,1) #pour avoir une matrice dans heatmap!
 #mat_frho_itp = interpolate(mat_frho,(BSpline(Linear()), NoInterp())) #car vecteur a 1 colonne
 #mat_frho_itp_resam = Resampler(mat_frho) #trop de données donc resampler

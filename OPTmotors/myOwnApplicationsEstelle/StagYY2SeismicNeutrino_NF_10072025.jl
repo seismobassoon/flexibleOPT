@@ -17,10 +17,33 @@ function myDensityFrom1DModel(arrayRadius)
     return density
 end
 
-function myPlot2DConvectionModel(field,fieldname)
-    if fieldname==="temperature"
-        colorbar="seismic"
+iTime=200
+
+function myPlot2DConvectionModel(iTime, fieldname, filename)
+#only if the field in DIVandrun is the same as in readStagYYFiles
+    file = filename[iTime]
+    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
+    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
+    fig = Figure()
+    ax = Axis(fig[1,1], aspect = 1)
+
+    if fieldname ==="temperature"
+        colormap=cgrad(:seismic)
+
+    elseif fieldname === "rho" || fieldname === "composition"
+        colormap=cgrad(:viridis)
+
+    elseif fieldname === "wtr"
+        colormap=cgrad(:blues)
+
+    else 
+        colormap=cgrad(:viridis)
+
     end
+    
+    hm=heatmap!(ax, fi, colormap=colormap)#, colorrange=()) if needed
+    Colorbar(fig[:,2], hm)
+    display(fig)
 end
 
 function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
@@ -55,7 +78,7 @@ DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM
 end
 
 #dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025"
-dir="C:/Users/user/Desktop/stage 2A/données/test_estelle2/data2025"
+dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025"
 
 
 boolFlat = true # we can read but for me it is better to have this information before reading since DIVAnd_rectdom can be applied before reading
@@ -89,24 +112,14 @@ else
                                             range(minZ,stop=maxZ,length=nZ));
 end
 
-
-# taking core info from PREM (or something else)
-
-
-
 # file types
-dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025/"
-#dir="C:/Users/user/Desktop/stage 2A/données/test_estelle2/data2025"
-
-
-
-
-dir="/Users/nobuaki/Documents/MantleConvectionTakashi/op_old_full_mars_2025/"
-#dir="C:/Users/user/Desktop/stage 2A/données/test_estelle2/op_first_run"
+dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025/"
+dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_first_run/"
 rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 compositionFiles=myListDir(dir; pattern=r"test_c\d");
 temperatureFiles=myListDir(dir; pattern=r"test_t\d");
 wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
+
 # below is for making a video
 
 #==
@@ -127,12 +140,8 @@ for file in rhoFiles[3:3]
 end
 ==#
 
-
-
-iTime = 150
-
-
-#function to plot (rho(r)-rhoprem(r)/rhoprem(r))
+#plot (rho(r)-rhoprem(r)/rhoprem(r))
+iTime = 200
 file1=rhoFiles[iTime]
 
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
@@ -140,30 +149,9 @@ arrayRadius = sqrt.(Xnode.^2 .+ Ynode.^2)
 
 
 premDensities = myDensityFrom1DModel.(arrayRadius)
-
-#enlever NaN et Infs
-epsilon = 1e-6 
-newpremDensities = []
-for x in premDensities
-    if !isfinite(x) 
-        #push!(newpremDensities, epsilon)
-        @show x
-    else
-        #push!(newpremDensities,x)
-    end
-end
-
 newpremDensities = premDensities
 frho = ifelse.(newpremDensities .== 0.0, 0.0, (field1 .* 1e-3 .- newpremDensities) ./ newpremDensities)
-
-
-#frho = (field1*1.e-3 .- newpremDensities) ./ newpremDensities
 fi3,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
-
-
-#mat_frho = reshape(frho, 33540,1) #pour avoir une matrice dans heatmap!
-#mat_frho_itp = interpolate(mat_frho,(BSpline(Linear()), NoInterp())) #car vecteur a 1 colonne
-#mat_frho_itp_resam = Resampler(mat_frho) #trop de données donc resampler
 
 fig2 = Figure()
 ax2 = Axis(fig2[1,1],aspect = 1)
@@ -173,40 +161,9 @@ Colorbar(fig2[:, 2], hm2)
 display(fig2)
 
 
+myPlot2DConvectionModel(200, "wtr", wtrFiles)
+myPlot2DConvectionModel(200, "rho", rhoFiles)
+myPlot2DConvectionModel(200, "temperature", temperatureFiles)
+myPlot2DConvectionModel(200, "composition", compositionFiles)
 
 
-
-file3 = temperatureFiles[iTime]
-
-field3, Xnode, Ynode, rcmb = readStagYYFiles(file3)
-fiT,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field3,correlationLength,epsilon2);
-fig3 =Figure()
-ax3 = Axis(fig3[1,1],aspect = 1)
-hm3=heatmap!(ax3,fiT,colormap=cgrad(:seismic))
-Colorbar(fig3[:,2],hm3)
-display(fig3)
-
-
-
-file = compositionFiles[iTime]
-
-fieldC, Xnode, Ynode, rcmb = readStagYYFiles(file)
-fiC,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),fieldC,correlationLength,epsilon2);
-fig4 =Figure()
-ax4 = Axis(fig4[1,1],aspect = 1)
-hm4=heatmap!(ax4,fiC,colormap=cgrad(:viridis))
-Colorbar(fig4[:,2],hm4)
-display(fig4)
-
-
-
-
-file3 = wtrFiles[iTime]
-
-field3, Xnode, Ynode, rcmb = readStagYYFiles(file3)
-fiT,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field3,correlationLength,epsilon2);
-fig3 =Figure()
-ax3 = Axis(fig3[1,1],aspect = 1)
-hm3=heatmap!(ax3,fiT,colormap=cgrad(:blues),colorrange=(0.0,0.01))
-Colorbar(fig3[:,2],hm3)
-display(fig3)
