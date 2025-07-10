@@ -537,6 +537,36 @@ function compute1DseismicParamtersFromPolynomialCoefficients(Coefs::DSM1DPSVmode
     return radius, parameter
 end
 
+function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(Coefs::DSM1DPSVmodel, tmpRadius::Float64)
+    #this is the scalar version of the lengthy function below
+
+    nLayers=Coefs.nzone
+    x = tmpRadius/Coefs.averagedPlanetRadiusInKilometer
+    zoneIndex = 0
+
+    for i in 1:nLayers
+        if Coefs.bottomRadius[i] < tmpRadius <= Coefs.topRadius[i]
+            zoneIndex = i
+
+        if tmpRadius === Coefs.bottomRadius[i+1] === Coefs.topRadius[i]
+            zoneIndex = i+1
+        end
+    end
+
+
+    if zoneIndex === 0 && tmpRadius === 0.0 #center of the Earth
+        zoneIndex = 1
+    end
+
+    i = zoneIndex
+    ρ =0.0
+    if zoneIndex !== 0 
+        i = zoneIndex
+        ρ = Coefs.C_ρ[i,1]+Coefs.C_ρ[i,2]*x+Coefs.C_ρ[i,3]*x^2+Coefs.C_ρ[i,4]*x^3
+    end 
+    return ρ
+end
+end
 
 
 
@@ -582,7 +612,7 @@ function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(
         if 深さインデックス < N深さインデックス
             if tmpNormalisedRadii[深さインデックス] == tmpNormalisedRadii[深さインデックス+1]
                 twoPointsAtTheSameRadius = true
-                @show tmpRadiiInKilometer[深さインデックス]
+                #@show tmpRadiiInKilometer[深さインデックス]
             else
                 twoPointsAtTheSameRadius = false
             end
@@ -641,4 +671,3 @@ function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(
 
     return tmpRadiiInKilometer, parameter
 end
-
