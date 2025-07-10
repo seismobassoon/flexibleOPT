@@ -11,8 +11,9 @@ include("../src/DSM1D.jl")
 using .DSM1D
 
 
+@show typeof(DSM1D.my1DDSMmodel)
 
-writeClassicDSM1DPSVmodel(DSM1D.my1DDSMmodel,"moon.inf")
+DSM1D.writeClassicDSM1DPSVmodel(DSM1D.my1DDSMmodel,"moon.inf")
 
 arrayRadius, arrayParams=DSM1D.compute1DseismicParamtersFromPolynomialCoefficients(DSM1D.my1DDSMmodel,10)
 f=Figure()
