@@ -567,26 +567,28 @@ function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(
     for i in 1:nLayers
         if Coefs.bottomRadius[i] < tmpRadius <= Coefs.topRadius[i]
             zoneIndex = i
-
-        if tmpRadius === Coefs.bottomRadius[i+1] === Coefs.topRadius[i]
-            zoneIndex = i+1
         end
     end
 
 
-    if zoneIndex === 0 && tmpRadius === 0.0 #center of the Earth
+    if tmpRadius === 0.0 #center of the Earth
         zoneIndex = 1
     end
 
+
+
+
     i = zoneIndex
     ρ =0.0
-    if zoneIndex !== 0 
+    if zoneIndex === 0 
+        ρ = 0.0
+    else
         i = zoneIndex
         ρ = Coefs.C_ρ[i,1]+Coefs.C_ρ[i,2]*x+Coefs.C_ρ[i,3]*x^2+Coefs.C_ρ[i,4]*x^3
     end 
     return ρ
 end
-end
+
 
 
 
