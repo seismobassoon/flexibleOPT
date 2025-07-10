@@ -6,7 +6,7 @@
 #modelFile, mars/ModelDW-AKGeoth.tvel.txt
 #modelFile, earth/PREM.psv.model
 
-modelFile, moon/BMLmodel_0001.nd 
+modelFile, mars/BMLmodel_0001.nd 
 
 # maxFrequencyMin [Hz] is the desired maximal frequency that flexOPT will compute 
 # (it could compute even higher)

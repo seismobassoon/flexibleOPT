@@ -1,6 +1,12 @@
 using Printf
 
 
+# VERY SERIOUS PROBLEM!! :
+
+# I don't remember why but all the polynomial coefficients are stored in the weird order [izone, iOrder]
+# I am reluctant to modify this for the moment but it should be done soon (10/07/2025)
+# NF
+
 mutable struct Input
     modelFile::String
     averagedPlanetRadius::Float64
@@ -298,14 +304,13 @@ mutable struct VerticalGridStructure
         #@show Coefs.normalisedTopRadius
         for i in 1:Coefs.nzone
 
-            @show Coefs.normalisedBottomRadius[i], Coefs.normalisedTopRadius[i],Coefs.C_Vpv[i,:]
+            #@show Coefs.normalisedBottomRadius[i], Coefs.normalisedTopRadius[i],Coefs.C_Vpv[i,:]
             if Coefs.solid_or_fluid[i] == "S"
                 vmin=min(getParameterForOnePoint(Coefs.C_Vsv[i,:],Coefs.normalisedBottomRadius[i]),getParameterForOnePoint(Coefs.C_Vsv[i,:],Coefs.normalisedTopRadius[i])) 
             else
                 vmin=min(getParameterForOnePoint(Coefs.C_Vpv[i,:],Coefs.normalisedBottomRadius[i]),getParameterForOnePoint(Coefs.C_Vpv[i,:],Coefs.normalisedTopRadius[i]))
             end
 
-            @show vmin
 
             rmax=Coefs.topRadius[i]
             kₓ=(locallCritical+5.e-1)/rmax
@@ -552,6 +557,36 @@ function compute1DseismicParamtersFromPolynomialCoefficients(Coefs::DSM1DPSVmode
     return radius, parameter
 end
 
+function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(Coefs::DSM1DPSVmodel, tmpRadius::Float64)
+    #this is the scalar version of the lengthy function below
+
+    nLayers=Coefs.nzone
+    x = tmpRadius/Coefs.averagedPlanetRadiusInKilometer
+    zoneIndex = 0
+
+    for i in 1:nLayers
+        if Coefs.bottomRadius[i] < tmpRadius <= Coefs.topRadius[i]
+            zoneIndex = i
+
+        if tmpRadius === Coefs.bottomRadius[i+1] === Coefs.topRadius[i]
+            zoneIndex = i+1
+        end
+    end
+
+
+    if zoneIndex === 0 && tmpRadius === 0.0 #center of the Earth
+        zoneIndex = 1
+    end
+
+    i = zoneIndex
+    ρ =0.0
+    if zoneIndex !== 0 
+        i = zoneIndex
+        ρ = Coefs.C_ρ[i,1]+Coefs.C_ρ[i,2]*x+Coefs.C_ρ[i,3]*x^2+Coefs.C_ρ[i,4]*x^3
+    end 
+    return ρ
+end
+end
 
 
 
@@ -659,25 +694,27 @@ end
 
 
 
-
 function writeClassicDSM1DPSVmodel(Coefs::DSM1DPSVmodel,filename::String)
     # this needs 'using Printf'
     fmtDepth(x) = @sprintf("%.2f",x)
     fmtCoefs(x) = @sprintf("%.5f",x)
+    fmtInt(x) = @sprintf("%d",x)
     io = open(filename,"w")
-    write(io,Coefs.nzone*'\n')
+    write(io,fmtInt(Coefs.nzone)*'\n')
+    
     for i in 1:Coefs.nzone
         write(io,fmtDepth(Coefs.bottomRadius[i])*' '*fmtDepth(Coefs.topRadius[i])*'\n')
-        write(io,fmtCoefs(Coefs.C_ρ[1,i])*' '*fmtCoefs(Coefs.C_ρ[2,i])*' '*fmtCoefs(Coefs.C_ρ[3,i])*' '*fmtCoefs(Coefs.C_ρ[4,i])*'\n')
-        write(io,fmtCoefs(Coefs.C_Vpv[1,i])*' '*fmtCoefs(Coefs.C_Vpv[2,i])*' '*fmtCoefs(Coefs.C_Vpv[3,i])*' '*fmtCoefs(Coefs.C_Vpv[4,i])*'\n')
-        write(io,fmtCoefs(Coefs.C_Vph[1,i])*' '*fmtCoefs(Coefs.C_Vph[2,i])*' '*fmtCoefs(Coefs.C_Vph[3,i])*' '*fmtCoefs(Coefs.C_Vph[4,i])*'\n')
-        write(io,fmtCoefs(Coefs.C_Vsv[1,i])*' '*fmtCoefs(Coefs.C_Vsv[2,i])*' '*fmtCoefs(Coefs.C_Vsv[3,i])*' '*fmtCoefs(Coefs.C_Vsv[4,i])*'\n')
-        write(io,fmtCoefs(Coefs.C_Vsh[1,i])*' '*fmtCoefs(Coefs.C_Vsh[2,i])*' '*fmtCoefs(Coefs.C_Vsh[3,i])*' '*fmtCoefs(Coefs.C_Vsh[4,i])*'\n')
-        write(io,fmtCoefs(Coefs.C_η[1,i])*' '*fmtCoefs(Coefs.C_η[2,i])*' '*fmtCoefs(Coefs.C_η[3,i])*' '*fmtCoefs(Coefs.C_η[4,i])*'\n')
-        write(io,fmtCoefs(Coefs.C_Qμ[1,i])*' 'fmtCoefs(Coefs.C_Qκ[1,i])*'\n')
+        write(io,fmtCoefs(Coefs.C_ρ[i,1])*' '*fmtCoefs(Coefs.C_ρ[i,2])*' '*fmtCoefs(Coefs.C_ρ[i,3])*' '*fmtCoefs(Coefs.C_ρ[i,4])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vpv[i,1])*' '*fmtCoefs(Coefs.C_Vpv[i,2])*' '*fmtCoefs(Coefs.C_Vpv[i,3])*' '*fmtCoefs(Coefs.C_Vpv[i,4])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vph[i,1])*' '*fmtCoefs(Coefs.C_Vph[i,2])*' '*fmtCoefs(Coefs.C_Vph[i,3])*' '*fmtCoefs(Coefs.C_Vph[i,4])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vsv[i,1])*' '*fmtCoefs(Coefs.C_Vsv[i,2])*' '*fmtCoefs(Coefs.C_Vsv[i,3])*' '*fmtCoefs(Coefs.C_Vsv[i,4])*'\n')
+        write(io,fmtCoefs(Coefs.C_Vsh[i,1])*' '*fmtCoefs(Coefs.C_Vsh[i,2])*' '*fmtCoefs(Coefs.C_Vsh[i,3])*' '*fmtCoefs(Coefs.C_Vsh[i,4])*'\n')
+        write(io,fmtCoefs(Coefs.C_η[i,1])*' '*fmtCoefs(Coefs.C_η[i,2])*' '*fmtCoefs(Coefs.C_η[i,3])*' '*fmtCoefs(Coefs.C_η[i,4])*'\n')
+        write(io,fmtCoefs(Coefs.C_Qμ[i,1])*' 'fmtCoefs(Coefs.C_Qκ[i,1])*'\n')
     end
+
     close(io)
 end
 
 
-export writeClassicDSM1DPSVmodel
+#export writeClassicDSM1DPSVmodel
