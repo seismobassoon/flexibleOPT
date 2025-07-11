@@ -8,22 +8,25 @@ using .DSM1D
 using DIVAnd,CairoMakie
 
 include("../src/batchStagYY.jl")
+
 include("../src/parameters.jl")
 
-function myDensityFrom1DModel(arrayRadius)
 
-    density  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius*1.e-3)
+function myDensityFrom1DModel(arrayRadius)
+    radiusInKilometer = arrayRadius*1.e-3
+    density  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, radiusInKilometer)
 
     return density
 end
 
-iTime=200
 
 function myPlot2DConvectionModel(iTime, fieldname, filename)
 #only if the field in DIVandrun is the same as in readStagYYFiles
     file = filename[iTime]
     field, Xnode, Ynode, rcmb = readStagYYFiles(file)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
+    fi = quarterDiskExtrapolation(fi,nX,nY)
+    
     fig = Figure()
     ax = Axis(fig[1,1], aspect = 1)
 
@@ -145,13 +148,15 @@ iTime = 200
 file1=rhoFiles[iTime]
 
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
+densitiesInGcm3 = field1*1e-3
 arrayRadius = sqrt.(Xnode.^2 .+ Ynode.^2)
 
 
 premDensities = myDensityFrom1DModel.(arrayRadius)
 newpremDensities = premDensities
-frho = ifelse.(newpremDensities .== 0.0, 0.0, (field1 .* 1e-3 .- newpremDensities) ./ newpremDensities)
+frho = ifelse.(newpremDensities .== 0.0, 0.0, (densitiesInGcm3 .- newpremDensities) ./ newpremDensities)
 fi3,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
+fi3 = quarterDiskExtrapolation(fi3,nX,nY)
 
 fig2 = Figure()
 ax2 = Axis(fig2[1,1],aspect = 1)
