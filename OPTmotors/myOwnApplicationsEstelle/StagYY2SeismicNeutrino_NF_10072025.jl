@@ -19,17 +19,7 @@ function myDensityFrom1DModel(arrayRadius)
     return density
 end
 
-
-function myPlot2DConvectionModel(iTime, fieldname, filename)
-#only if the field in DIVandrun is the same as in readStagYYFiles
-    file = filename[iTime]
-    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
-    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
-    fi = quarterDiskExtrapolation(fi,nX,nY)
-    
-    fig = Figure()
-    ax = Axis(fig[1,1], aspect = 1)
-
+function myChoiceColormap(fieldname)
     if fieldname ==="temperature"
         colormap=cgrad(:seismic)
 
@@ -43,10 +33,43 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
         colormap=cgrad(:viridis)
 
     end
+end 
+
+function myPlot2DConvectionModel(iTime, fieldname, filename)
+#only if the field in DIVandrun is the same as in readStagYYFiles
+    file = filename[iTime]
+    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
+    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
+    fi = quarterDiskExtrapolation(fi,nX,nY)
     
+    fig = Figure()
+    ax = Axis(fig[1,1], aspect = 1)
+
+    colormap = myChoiceColormap(fieldname)
     hm=heatmap!(ax, fi, colormap=colormap)#, colorrange=()) if needed
     Colorbar(fig[:,2], hm)
     display(fig)
+end
+
+# below is for making a video
+function myAnimation(step,iTime,fieldname,filename)
+    fi_list=[]
+    for file in filename[1:step:iTime]
+        field, Xnode, Ynode= readStagYYFiles(file)
+        fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
+        fi = quarterDiskExtrapolation(fi,nX,nY)
+        push!(fi_list, fi)
+    end
+
+    fig = Figure()
+    ax = Axis(fig[1,1],aspect = 1)
+    data = Observable(fi_list[1])
+    colormap = myChoiceColormap(fieldname)
+    hm=heatmap!(ax, data, colormap=colormap)#, colorrange=()) if needed
+    Colorbar(fig[:, 2], hm)
+    record(fig, "animation2D.mp4", 1:length(fi_list); framerate = 2) do i
+        data[] = fi_list[i]
+    end
 end
 
 function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
@@ -123,28 +146,9 @@ compositionFiles=myListDir(dir; pattern=r"test_c\d");
 temperatureFiles=myListDir(dir; pattern=r"test_t\d");
 wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
 
-# below is for making a video
-
-#==
-
-for file in rhoFiles[3:3]
-    local field, Xnode, Ynode= readStagYYFiles(file)
-    local fi,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
-    #local fi = quarterDiskExtrapolation(fi,nX,nY);
-    local fig = Figure()
-    local ax = Axis(fig[1,1],aspect = 1)
-   
-
-    local hm=heatmap!(ax,fi,colormap=cgrad(:viridis))
-    Colorbar(fig[:, 2], hm)
-    #display(fig)
-
-
-end
-==#
 
 #plot (rho(r)-rhoprem(r)/rhoprem(r))
-iTime = 200
+iTime = 150
 file1=rhoFiles[iTime]
 
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
@@ -156,19 +160,25 @@ premDensities = myDensityFrom1DModel.(arrayRadius)
 newpremDensities = premDensities
 frho = ifelse.(newpremDensities .== 0.0, 0.0, (densitiesInGcm3 .- newpremDensities) ./ newpremDensities)
 fi3,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
-fi3 = quarterDiskExtrapolation(fi3,nX,nY)
+#fi3 = quarterDiskExtrapolation(fi3,nX,nY)
 
 fig2 = Figure()
 ax2 = Axis(fig2[1,1],aspect = 1)
 hm2=heatmap!(ax2,fi3,colormap=cgrad(:viridis),colorrange=(-0.005,0.005))
 Colorbar(fig2[:, 2], hm2)
 
-display(fig2)
+#display(fig2)
 
 
+
+
+#==
+test
+
+myAnimation(20,200,"temperature", temperatureFiles)
 myPlot2DConvectionModel(200, "wtr", wtrFiles)
 myPlot2DConvectionModel(200, "rho", rhoFiles)
 myPlot2DConvectionModel(200, "temperature", temperatureFiles)
 myPlot2DConvectionModel(200, "composition", compositionFiles)
-
+==#
 
