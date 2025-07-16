@@ -168,10 +168,10 @@ hm2 = heatmap!(ax2,fi3,colormap=cgrad(:viridis),colorrange=(-0.005,0.005))
 
 Colorbar(fig2[:, 2], hm2)
 
-display(fig2)
+#display(fig2)
 
 
-function lineDensityElectron(positionDetector, NeutrinoSource)
+function lineDensityElectron1D(positionDetector, NeutrinoSource)
     n_pts = 1000
     x_values = range(NeutrinoSource[1], positionDetector[1] , length=n_pts)
     y_values = range(NeutrinoSource[2], positionDetector[2], length=n_pts)
@@ -180,16 +180,53 @@ function lineDensityElectron(positionDetector, NeutrinoSource)
     rad = sqrt.(x_values.^2 .+ y_values.^2 .+z_values.^2)
     radInMeter = rad.*1e3
     dens = myDensityFrom1DModel.(radInMeter)
-    dist = sqrt(sum((positionDetector.-NeutrinoSource).^2))
-    @show dist
-    dist_path = range(0, dist, length=n_pts)
-    plot(dist_path, dens)
+    dist = range(0, sqrt(sum((positionDetector.-NeutrinoSource).^2)), length=n_pts)
+    lines!(dist, dens)
 
 end
 
 
+using Interpolations
 
+function lineDensityElectron2D(positionDetector, NeutrinoSource)
 
+    file = rhoFiles[iTime]
+    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
+    densitiesInGcm3 = field*1e-3
+    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),densitiesInGcm3,correlationLength,epsilon2);
+    fi = quarterDiskExtrapolation(fi,nX,nY)
+    
+    n_pts=100
+    x_values = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
+    y_values = range(positionDetector[2], NeutrinoSource[2], length=n_pts)
+
+    itp = interpolate(fi, BSpline(Linear()), OnGrid())
+    dens = []
+    for i in 1:n_points
+        x = x_values[i]
+        y = y_values[i]
+        push!(dens, itp(x,y))
+    end
+
+    fig = Figure()
+    ax = Axis(fig[1,1],aspect = 1)
+    hm = heatmap!(ax,fi,colormap=cgrad(:viridis)) 
+    lines!(x_values,y_values) 
+    Colorbar(fig[:, 2], hm)
+    display(fig)
+
+    fig1 = Figure()
+    ax1 = Axis(fig1[1,1], aspect = 1)
+    dist = range(0, sqrt(sum((positionDetector.-NeutrinoSource).^2)), length=n_pts)
+    lines!(ax1, dist, dens)
+    display(fig1)
+
+end
+
+lineDensityElectron2D([450,100], [350,150])
+lineDensityElectron2D([450,100], [450,250])
+
+ 
 #==
 test
 
