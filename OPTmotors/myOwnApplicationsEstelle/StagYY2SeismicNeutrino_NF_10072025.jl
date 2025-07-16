@@ -155,19 +155,37 @@ field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
 densitiesInGcm3 = field1*1e-3
 arrayRadius = sqrt.(Xnode.^2 .+ Ynode.^2)
 
-
 premDensities = myDensityFrom1DModel.(arrayRadius)
 newpremDensities = premDensities
 frho = ifelse.(newpremDensities .== 0.0, 0.0, (densitiesInGcm3 .- newpremDensities) ./ newpremDensities)
 fi3,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
-#fi3 = quarterDiskExtrapolation(fi3,nX,nY)
+fi3 = quarterDiskExtrapolation(fi3,nX,nY)
+
 
 fig2 = Figure()
 ax2 = Axis(fig2[1,1],aspect = 1)
-hm2=heatmap!(ax2,fi3,colormap=cgrad(:viridis),colorrange=(-0.005,0.005))
+hm2 = heatmap!(ax2,fi3,colormap=cgrad(:viridis),colorrange=(-0.005,0.005))
+
 Colorbar(fig2[:, 2], hm2)
 
-#display(fig2)
+display(fig2)
+
+
+function lineDensityElectron(positionDetector, NeutrinoSource)
+    n_pts = 1000
+    x_values = range(NeutrinoSource[1], positionDetector[1] , length=n_pts)
+    y_values = range(NeutrinoSource[2], positionDetector[2], length=n_pts)
+    z_values = range(NeutrinoSource[3], positionDetector[3], length=n_pts)
+
+    rad = sqrt.(x_values.^2 .+ y_values.^2 .+z_values.^2)
+    radInMeter = rad.*1e3
+    dens = myDensityFrom1DModel.(radInMeter)
+    dist = sqrt(sum((positionDetector.-NeutrinoSource).^2))
+    @show dist
+    dist_path = range(0, dist, length=n_pts)
+    plot(dist_path, dens)
+
+end
 
 
 
@@ -181,4 +199,3 @@ myPlot2DConvectionModel(200, "rho", rhoFiles)
 myPlot2DConvectionModel(200, "temperature", temperatureFiles)
 myPlot2DConvectionModel(200, "composition", compositionFiles)
 ==#
-
