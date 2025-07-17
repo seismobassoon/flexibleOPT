@@ -196,13 +196,13 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),densitiesInGcm3,correlationLength,epsilon2);
     fi = quarterDiskExtrapolation(fi,nX,nY)
     
-    n_pts=100
+    n_pts = 100
     x_values = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     y_values = range(positionDetector[2], NeutrinoSource[2], length=n_pts)
 
     itp = interpolate(fi, BSpline(Linear()), OnGrid())
     dens = []
-    for i in 1:n_points
+    for i in 1:n_pts
         x = x_values[i]
         y = y_values[i]
         push!(dens, itp(x,y))
@@ -215,16 +215,25 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource)
     Colorbar(fig[:, 2], hm)
     display(fig)
 
+
+    #dist = range(0, sqrt(sum((positionDetector.-NeutrinoSource).^2)), length=n_pts)
+    a = (positionDetector[2]-NeutrinoSource[2])/(positionDetector[1]-NeutrinoSource[1])
+    @show a
+    if abs(a) <= tan(pi/4)
+        dist = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
+    else
+        dist = range(positionDetector[2], NeutrinoSource[2], length=n_pts)
+    end
+
     fig1 = Figure()
     ax1 = Axis(fig1[1,1], aspect = 1)
-    dist = range(0, sqrt(sum((positionDetector.-NeutrinoSource).^2)), length=n_pts)
     lines!(ax1, dist, dens)
     display(fig1)
 
 end
 
 lineDensityElectron2D([450,100], [350,150])
-lineDensityElectron2D([450,100], [450,250])
+lineDensityElectron2D([450,100], [410,250])
 
  
 #==
