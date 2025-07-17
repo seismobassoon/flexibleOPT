@@ -189,6 +189,7 @@ end
 using Interpolations
 
 function lineDensityElectron2D(positionDetector, NeutrinoSource)
+    #draw a line between positionDetector and NeutrinoSource (coordinates) and give the density/distance profile
 
     file = rhoFiles[iTime]
     field, Xnode, Ynode, rcmb = readStagYYFiles(file)
@@ -227,15 +228,63 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource)
 
     fig1 = Figure()
     ax1 = Axis(fig1[1,1], aspect = 1)
-    lines!(ax1, dist, dens)
+    lines!(ax1, dist, dens) #axe dist à modifier
     display(fig1)
 
 end
-
+#==
 lineDensityElectron2D([450,100], [350,150])
 lineDensityElectron2D([450,100], [410,250])
+==#
 
- 
+function detectorcosθ(positionDetector)
+    #draw n_vectors (diff θ) for a positionDetector (coordinates)
+
+    file = rhoFiles[200]
+    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
+    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
+    fi = quarterDiskExtrapolation(fi,nX,nY)
+    
+    fig = Figure()
+    ax = Axis(fig[1,1], aspect = 1)
+
+    colormap = myChoiceColormap("rho")
+    hm=heatmap!(ax, fi, colormap=colormap)#, colorrange=()) if needed
+    Colorbar(fig[:,2], hm)
+
+    n_vectors = 10
+    θ_values = range(0.0, 2*pi, length=n_vectors)
+    x0 = fill(positionDetector[1], n_vectors)
+    y0 = fill(positionDetector[2], n_vectors)
+
+    #pour agrandir les vecteurs
+    scale = 500
+    dx = scale.*cos.(θ_values)
+    dy = scale.*sin.(θ_values)
+
+    #si on depasse de la grille
+    X = dx .+ x0
+    Y = dy .+ y0
+    right = X.>521
+    dx[right] .= 521 .-x0[right] 
+    left = X.<0
+    dx[left] .= 0 .- x0[left]
+    above = Y.>521
+    dy[above] .= 521 .- y0[above]
+    below = Y.<0
+    dy[below] .= 0 .- y0[below]
+
+    quiver!(ax, x0, y0, dx, dy, tipwidth=8, tiplength=15, linewidth=1.5)
+    display(fig)
+
+end
+
+detectorcosθ([80, 80])
+detectorcosθ([80, 450])
+detectorcosθ([450, 450])
+detectorcosθ([450, 80])
+
+
 #==
 test
 
