@@ -6,6 +6,8 @@ ParamFile = "../test/testparam.csv"
 include("../src/DSM1D.jl")
 using .DSM1D
 using DIVAnd,CairoMakie
+using Interpolations
+
 
 include("../src/batchStagYY.jl")
 
@@ -42,13 +44,18 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
     fi = quarterDiskExtrapolation(fi,nX,nY)
     
+    diam = 1.2756e7
+    x = range(0, diam, length=521)
+    y = range(0, diam, length=521)
+
     fig = Figure()
     ax = Axis(fig[1,1], aspect = 1)
-
     colormap = myChoiceColormap(fieldname)
-    hm=heatmap!(ax, fi, colormap=colormap)#, colorrange=()) if needed
+    hm=heatmap!(ax, x, y, fi, colormap=colormap)#, colorrange=()) if needed
     Colorbar(fig[:,2], hm)
     display(fig)
+
+    return fig, ax, fi
 end
 
 # below is for making a video
@@ -161,11 +168,9 @@ frho = ifelse.(newpremDensities .== 0.0, 0.0, (densitiesInGcm3 .- newpremDensiti
 fi3,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
 fi3 = quarterDiskExtrapolation(fi3,nX,nY)
 
-
 fig2 = Figure()
 ax2 = Axis(fig2[1,1],aspect = 1)
 hm2 = heatmap!(ax2,fi3,colormap=cgrad(:viridis),colorrange=(-0.005,0.005))
-
 Colorbar(fig2[:, 2], hm2)
 
 #display(fig2)
@@ -186,103 +191,88 @@ function lineDensityElectron1D(positionDetector, NeutrinoSource)
 end
 
 
-using Interpolations
 
 function lineDensityElectron2D(positionDetector, NeutrinoSource)
     #draw a line between positionDetector and NeutrinoSource (coordinates) and give the density/distance profile
+    iTime = 200
+    fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
 
-    file = rhoFiles[iTime]
-    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
-    densitiesInGcm3 = field*1e-3
-    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),densitiesInGcm3,correlationLength,epsilon2);
-    fi = quarterDiskExtrapolation(fi,nX,nY)
-    
     n_pts = 100
-    x_values = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
-    y_values = range(positionDetector[2], NeutrinoSource[2], length=n_pts)
-
-    itp = interpolate(fi, BSpline(Linear()), OnGrid())
-    dens = []
-    for i in 1:n_pts
-        x = x_values[i]
-        y = y_values[i]
-        push!(dens, itp(x,y))
-    end
-
-    fig = Figure()
-    ax = Axis(fig[1,1],aspect = 1)
-    hm = heatmap!(ax,fi,colormap=cgrad(:viridis)) 
-    lines!(x_values,y_values) 
-    Colorbar(fig[:, 2], hm)
+    x_phys = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
+    y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
+    
+    lines!(x_phys,y_phys) 
     display(fig)
 
+    diam = 1.2756e7
+    dx = diam/521
+    dy = diam/521
+    x_grid = x_phys ./dx
+    y_grid = y_phys ./dy
+    itp = interpolate(fi, BSpline(Linear()), OnGrid())
+    exitp = extrapolate(itp, 0.0)
 
-    #dist = range(0, sqrt(sum((positionDetector.-NeutrinoSource).^2)), length=n_pts)
+    dens = []
+    for i in 1:n_pts
+        x = x_grid[i]
+        y = y_grid[i]
+        push!(dens, exitp(x,y))
+    end
+
     a = (positionDetector[2]-NeutrinoSource[2])/(positionDetector[1]-NeutrinoSource[1])
-    @show a
     if abs(a) <= tan(pi/4)
         dist = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     else
         dist = range(positionDetector[2], NeutrinoSource[2], length=n_pts)
     end
 
+
     fig1 = Figure()
     ax1 = Axis(fig1[1,1], aspect = 1)
-    lines!(ax1, dist, dens) #axe dist à modifier
+    lines!(ax1, dist, dens)
     display(fig1)
 
 end
-#==
-lineDensityElectron2D([450,100], [350,150])
-lineDensityElectron2D([450,100], [410,250])
-==#
 
-function detectorcosθ(positionDetector)
+
+function vectorsFromDetector(positionDetector)
     #draw n_vectors (diff θ) for a positionDetector (coordinates)
-
-    file = rhoFiles[200]
-    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
-    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
-    fi = quarterDiskExtrapolation(fi,nX,nY)
-    
-    fig = Figure()
-    ax = Axis(fig[1,1], aspect = 1)
-
-    colormap = myChoiceColormap("rho")
-    hm=heatmap!(ax, fi, colormap=colormap)#, colorrange=()) if needed
-    Colorbar(fig[:,2], hm)
+    iTime = 200
+    fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
 
     n_vectors = 10
     θ_values = range(0.0, 2*pi, length=n_vectors)
     x0 = fill(positionDetector[1], n_vectors)
     y0 = fill(positionDetector[2], n_vectors)
 
-    #pour agrandir les vecteurs
-    scale = 500
+    scale = 2e7
     dx = scale.*cos.(θ_values)
     dy = scale.*sin.(θ_values)
 
-    #si on depasse de la grille
+    diam = 1.2756e7
     X = dx .+ x0
     Y = dy .+ y0
-    right = X.>521
-    dx[right] .= 521 .-x0[right] 
+    right = X.>diam
+    dx[right] .= diam .-x0[right] 
     left = X.<0
     dx[left] .= 0 .- x0[left]
-    above = Y.>521
-    dy[above] .= 521 .- y0[above]
+    above = Y.>diam
+    dy[above] .= diam .- y0[above]
     below = Y.<0
     dy[below] .= 0 .- y0[below]
 
-    quiver!(ax, x0, y0, dx, dy, tipwidth=8, tiplength=15, linewidth=1.5)
+    quiver!(ax, x0, y0, dx, dy)
     display(fig)
+
+    for i in 1:n_vectors
+        detector = [x0[1], y0[1]]
+        source = [x0[1] + dx[i], y0[1] + dy[i]]
+        lineDensityElectron2D(detector,source)
+    end
 
 end
 
-detectorcosθ([80, 80])
-detectorcosθ([80, 450])
-detectorcosθ([450, 450])
-detectorcosθ([450, 80])
+vectorsFromDetector([2500000,2500000])
 
 
 #==
@@ -293,4 +283,9 @@ myPlot2DConvectionModel(200, "wtr", wtrFiles)
 myPlot2DConvectionModel(200, "rho", rhoFiles)
 myPlot2DConvectionModel(200, "temperature", temperatureFiles)
 myPlot2DConvectionModel(200, "composition", compositionFiles)
+lineDensityElectron2D([450,100], [350,150])
+lineDensityElectron2D([450,100], [410,250])
+#vectorsFromDetector([80, 450])
+#vectorsFromDetector([450, 450])
+#vectorsFromDetector([450, 80])
 ==#
