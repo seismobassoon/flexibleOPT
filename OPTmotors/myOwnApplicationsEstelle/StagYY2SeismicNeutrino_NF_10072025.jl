@@ -44,7 +44,7 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
     fi = quarterDiskExtrapolation(fi,nX,nY)
     
-    diam = 1.2756e7
+    diam = 1.2742e7
     x = range(0, diam, length=521)
     y = range(0, diam, length=521)
 
@@ -204,7 +204,7 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource)
     lines!(x_phys,y_phys) 
     display(fig)
 
-    diam = 1.2756e7
+    diam = 1.2742e7
     dx = diam/521
     dy = diam/521
     x_grid = x_phys ./dx
@@ -249,7 +249,7 @@ function vectorsFromDetector(positionDetector)
     dx = scale.*cos.(θ_values)
     dy = scale.*sin.(θ_values)
 
-    diam = 1.2756e7
+    diam = 1.2742e7
     X = dx .+ x0
     Y = dy .+ y0
     right = X.>diam
