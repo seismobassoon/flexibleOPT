@@ -7,6 +7,8 @@ include("../src/DSM1D.jl")
 using .DSM1D
 using DIVAnd,CairoMakie
 using Interpolations
+using GLMakie
+using Colors
 
 
 include("../src/batchStagYY.jl")
@@ -53,7 +55,6 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
     colormap = myChoiceColormap(fieldname)
     hm=heatmap!(ax, x, y, fi, colormap=colormap)#, colorrange=()) if needed
     Colorbar(fig[:,2], hm)
-    display(fig)
 
     return fig, ax, fi
 end
@@ -191,18 +192,16 @@ function lineDensityElectron1D(positionDetector, NeutrinoSource)
 end
 
 
-
-function lineDensityElectron2D(positionDetector, NeutrinoSource)
+function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1)
     #draw a line between positionDetector and NeutrinoSource (coordinates) and give the density/distance profile
     iTime = 200
     fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
-
     n_pts = 100
     x_phys = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
     
-    lines!(x_phys,y_phys) 
-    display(fig)
+    lines!(ax, x_phys,y_phys, color=colorname) 
+    display(GLMakie.Screen(), fig)
 
     diam = 1.2742e7
     dx = diam/521
@@ -227,23 +226,52 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource)
     end
 
 
-    fig1 = Figure()
-    ax1 = Axis(fig1[1,1], aspect = 1)
-    lines!(ax1, dist, dens)
-    display(fig1)
+    #fig1 = Figure()
+    #ax1 = Axis(fig1[1,1], aspect = 1)
+    lines!(ax1, dist, dens, color=colorname)
+    #display(GLMakie.Screen(), fig1)
 
 end
 
 
-function vectorsFromDetector(positionDetector)
-    #draw n_vectors (diff θ) for a positionDetector (coordinates)
+
+function interactiveDetector()
     iTime = 200
     fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
+    display(fig)
 
-    n_vectors = 10
+    clicked_point = Observable(Point2f(NaN, NaN))
+
+    on(events(fig.scene).mousebutton, priority = 0) do event
+        if event.button == Mouse.left
+            if event.action == Mouse.press
+                pos = mouseposition(ax.scene)
+                println("mouseposition(): $pos")
+                clicked_point[] = pos
+             end
+        end
+    end
+    return clicked_point, fig, ax, fi
+end
+
+
+function vectorsFromDetector()
+    #draw n_vectors (diff θ) for a positionDetector (coordinates)
+
+    clicked_point, fig, ax, fi = interactiveDetector()
+    println("Choose detector's position")
+
+    while isnan(clicked_point[][1])
+        sleep(0.1)
+    end
+
+    pos = clicked_point[]
+    x, y = pos[1], pos[2]
+
+    n_vectors = 7
     θ_values = range(0.0, 2*pi, length=n_vectors)
-    x0 = fill(positionDetector[1], n_vectors)
-    y0 = fill(positionDetector[2], n_vectors)
+    x0 = fill(x, n_vectors)
+    y0 = fill(y, n_vectors)
 
     scale = 2e7
     dx = scale.*cos.(θ_values)
@@ -264,15 +292,26 @@ function vectorsFromDetector(positionDetector)
     quiver!(ax, x0, y0, dx, dy)
     display(fig)
 
+
+    fig1 = Figure()
+    ax1 = Axis(fig1[1,1])
+    
     for i in 1:n_vectors
+        colorname = rand(collect(keys(Colors.color_names)))
         detector = [x0[1], y0[1]]
         source = [x0[1] + dx[i], y0[1] + dy[i]]
-        lineDensityElectron2D(detector,source)
+        lineDensityElectron2D(detector,source, colorname, ax1)
     end
 
+    display(fig1)
 end
 
-vectorsFromDetector([2500000,2500000])
+vectorsFromDetector()
+
+
+
+Z_over_A = fill(0.5, 521, 521)
+#electronDensity = Z_over_A *
 
 
 #==
