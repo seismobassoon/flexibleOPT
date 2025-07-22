@@ -6,6 +6,12 @@ using DIVAnd,CairoMakie
 
 include("../src/batchStagYY.jl")
 include("../src/parameters.jl")
+function myDensityFrom1DModel(arrayRadius)
+
+    density  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius*1.e-3)
+
+    return density
+end
 
 function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
     # local function here: this requires DSM1D.jl, testparam.csv
@@ -14,6 +20,8 @@ function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
     # with (r,ϕ) coordinates
 
     # the 1D core model will be given by specifying the file to use in testparam.csv 
+
+    if rcmb > 
 
     ### below is just a recall how to use DSM1D module
     # PREM 
@@ -29,18 +37,15 @@ function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
         arrayRadius = push!(arrayRadius,rcmb)
     end
 
-    @show arrayRadius, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
-
+    arrayRadius, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius, "above")
+    DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
     f=Figure()
     #lines(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ, markersize=1,color=:red)
     lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
     scatter!(f[1,1],arrayRadius, arrayParams.ρ, markersize=3,color=:blue)
     display(f)
+end
 
-
-    return field1, Xnode, Ynode, rcmb
-
-end 
 
 #dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025"
 dir="/Users/nobuaki/Documents/MantleConvectionTakashi/op_first_run"
