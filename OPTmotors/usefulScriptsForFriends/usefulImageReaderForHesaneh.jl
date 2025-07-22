@@ -15,6 +15,8 @@ colormap = "hot" #colormap can be RGB vector or predefined colormap
 floatMatrix=read2DimageModel(imagefile,colormap;min=1000,max=3300, showRecoveredImage=true) 
 @show size(floatMatrix)
 
+
+
 # Brocher (2005)
 function vp_from_rho(rho::Float64)
     return rho*1.5
