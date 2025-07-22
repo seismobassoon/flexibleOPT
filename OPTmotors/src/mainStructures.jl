@@ -714,7 +714,7 @@ function writeClassicDSM1DPSVmodel(Coefs::DSM1DPSVmodel,filename::String)
         write(io,fmtCoefs(Coefs.C_η[i,1])*' '*fmtCoefs(Coefs.C_η[i,2])*' '*fmtCoefs(Coefs.C_η[i,3])*' '*fmtCoefs(Coefs.C_η[i,4])*'\n')
         write(io,fmtCoefs(Coefs.C_Qμ[i,1])*' 'fmtCoefs(Coefs.C_Qκ[i,1])*'\n')
     end
-
+    write(io,"end"*'\n')
     close(io)
 end
 
