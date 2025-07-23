@@ -250,7 +250,7 @@ function correctedPosition(x,y; center = [6.5e6, 6.5e6])
     dist_radiale = sqrt(dx^2 + dy^2)
     new_x = center[1] + 6.5e6*dx/dist_radiale #modifier la valeur de 6.5e6 pour la vraie valeur du rayon?
     new_y = center[2] + 6.5e6*dy/dist_radiale
-    return new_x, new_y
+    return new_x, new_y, dist_radiale, dx
 end
 
 function vectorsFromDetector(n_vectors = 7, scale = 2e7, diam = maxX - minX)
@@ -265,13 +265,15 @@ function vectorsFromDetector(n_vectors = 7, scale = 2e7, diam = maxX - minX)
 
     pos = clicked_point[]
     x, y = pos[1], pos[2]
-    new_x, new_y = correctedPosition(x,y)
-    θ_values = range(0.0, 2*pi, length=n_vectors)
+    new_x, new_y, dist_radiale, dx = correctedPosition(x,y)
+
     x0 = fill(new_x, n_vectors)
     y0 = fill(new_y, n_vectors)
-
+    θ0 = acos(dx/dist_radiale)
+    θ_values = range(θ0, θ0 + 2*pi, length=n_vectors +1)[1:end-1]
     dx = scale.*cos.(θ_values)
     dy = scale.*sin.(θ_values)
+    
     X = dx .+ x0
     Y = dy .+ y0
     right = X.>diam
@@ -301,8 +303,6 @@ function vectorsFromDetector(n_vectors = 7, scale = 2e7, diam = maxX - minX)
 end
 
 vectorsFromDetector()
-
-
 
 
 
