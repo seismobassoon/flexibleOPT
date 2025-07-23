@@ -46,7 +46,7 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
     fi = quarterDiskExtrapolation(fi,nX,nY)
     
-    diam = 1.2742e7
+    diam = maxX - minX
     x = range(0, diam, length=521)
     y = range(0, diam, length=521)
 
@@ -60,7 +60,7 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
 end
 
 # below is for making a video
-function myAnimation(step,iTime,fieldname,filename)
+function myAnimation(step, iTime, fieldname, filename)
     fi_list=[]
     for file in filename[1:step:iTime]
         field, Xnode, Ynode= readStagYYFiles(file)
@@ -147,10 +147,8 @@ else
 end
 
 # file types
-#dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025/"
-#dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_first_run/"
-
-dir="/Users/nobuaki/Documents/MantleConvectionTakashi/op_first_run/"
+dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025/"
+dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_first_run/"
 rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 compositionFiles=myListDir(dir; pattern=r"test_c\d");
 temperatureFiles=myListDir(dir; pattern=r"test_t\d");
@@ -179,8 +177,7 @@ Colorbar(fig2[:, 2], hm2)
 #display(fig2)
 
 
-function lineDensityElectron1D(positionDetector, NeutrinoSource)
-    n_pts = 1000
+function lineDensityElectron1D(positionDetector, NeutrinoSource; n_pts=1000)
     x_values = range(NeutrinoSource[1], positionDetector[1] , length=n_pts)
     y_values = range(NeutrinoSource[2], positionDetector[2], length=n_pts)
     z_values = range(NeutrinoSource[3], positionDetector[3], length=n_pts)
@@ -194,9 +191,8 @@ function lineDensityElectron1D(positionDetector, NeutrinoSource)
 end
 
 
-function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1, dR; n_pts = 100)
+function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1, dR; n_pts = 100, iTime = 200)
     #draw a line between positionDetector and NeutrinoSource (coordinates) and give the density/distance profile
-    iTime = 200
     fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
     x_phys = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
@@ -204,9 +200,6 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
     lines!(ax, x_phys,y_phys, color=colorname)  # (x,y)_phys in m
     display(GLMakie.Screen(), fig)
 
-    #diam = 1.2742e7
-    #dx = diam/521
-    #dy = diam/521
     x_grid = x_phys ./dR
     y_grid = y_phys ./dR
     itp = interpolate(fi, BSpline(Linear()), OnGrid())
@@ -226,18 +219,13 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
         dist = range(positionDetector[2], NeutrinoSource[2], length=n_pts)
     end
 
-
-    #fig1 = Figure()
-    #ax1 = Axis(fig1[1,1], aspect = 1)
     lines!(ax1, dist, dens, color=colorname)
-    #display(GLMakie.Screen(), fig1)
 
 end
 
 
 
-function interactiveDetector()
-    iTime = 200
+function interactiveDetector(iTime = 200)
     fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
     display(fig)
 
@@ -255,8 +243,17 @@ function interactiveDetector()
     return clicked_point, fig, ax, fi
 end
 
+function correctedPosition(x,y; center = [6.5e6, 6.5e6])
+    dx = x - center[1]
+    dy = y - center[2]
 
-function vectorsFromDetector()
+    dist_radiale = sqrt(dx^2 + dy^2)
+    new_x = center[1] + 6.5e6*dx/dist_radiale #modifier la valeur de 6.5e6 pour la vraie valeur du rayon?
+    new_y = center[2] + 6.5e6*dy/dist_radiale
+    return new_x, new_y
+end
+
+function vectorsFromDetector(n_vectors = 7, scale = 2e7, diam = maxX - minX)
     #draw n_vectors (diff θ) for a positionDetector (coordinates)
 
     clicked_point, fig, ax, fi = interactiveDetector()
@@ -268,17 +265,13 @@ function vectorsFromDetector()
 
     pos = clicked_point[]
     x, y = pos[1], pos[2]
-
-    n_vectors = 7
+    new_x, new_y = correctedPosition(x,y)
     θ_values = range(0.0, 2*pi, length=n_vectors)
-    x0 = fill(x, n_vectors)
-    y0 = fill(y, n_vectors)
+    x0 = fill(new_x, n_vectors)
+    y0 = fill(new_y, n_vectors)
 
-    scale = 2e7
     dx = scale.*cos.(θ_values)
     dy = scale.*sin.(θ_values)
-
-    diam = 1.2742e7
     X = dx .+ x0
     Y = dy .+ y0
     right = X.>diam
@@ -301,7 +294,7 @@ function vectorsFromDetector()
         colorname = rand(collect(keys(Colors.color_names)))
         detector = [x0[1], y0[1]]
         source = [x0[1] + dx[i], y0[1] + dy[i]]
-        lineDensityElectron2D(detector,source, colorname, ax1,dR)
+        lineDensityElectron2D(detector,source, colorname, ax1, dR)
     end
 
     display(fig1)
@@ -311,7 +304,9 @@ vectorsFromDetector()
 
 
 
-Z_over_A = fill(0.5, 521, 521)
+
+
+#Z_over_A = fill(0.5, 521, 521)
 #electronDensity = Z_over_A *
 
 

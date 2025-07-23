@@ -310,7 +310,7 @@ vectorsFromDetector()
 
 
 
-Z_over_A = fill(0.5, 521, 521)
+#Z_over_A = fill(0.5, 521, 521)
 #electronDensity = Z_over_A *
 
 
