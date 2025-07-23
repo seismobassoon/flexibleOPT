@@ -251,9 +251,13 @@ mutable struct DSM1DPSVmodel
         end
 
         tmpaveragedPlanetRadius=0.e0
+        tmpaveragedPlanetCMB=0.e0
         for i in 1:nzone
             if CC_Vsv[i,:] == zeros(4)
                 Csolid_or_fluid[i] = "F"
+                if i < nzone && CC_Vsv[i+1,:] !== zeros(4)
+                    tmpaveragedPlanetCMB=CtopRadius[i]
+                end
             else
                 Csolid_or_fluid[i] = "S"
                 tmpaveragedPlanetRadius=CtopRadius[i]

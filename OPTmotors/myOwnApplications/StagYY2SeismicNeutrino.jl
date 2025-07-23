@@ -1,3 +1,5 @@
+cd(@__DIR__)
+Pkg.activate("../..")
 
 ParamFile = "../test/testparam.csv"
 include("../src/DSM1D.jl")
@@ -21,7 +23,7 @@ function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
 
     # the 1D core model will be given by specifying the file to use in testparam.csv 
 
-    if rcmb > 
+#    if rcmb > #
 
     ### below is just a recall how to use DSM1D module
     # PREM 
