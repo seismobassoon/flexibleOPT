@@ -9,6 +9,8 @@ using DIVAnd,CairoMakie
 using Interpolations
 using GLMakie
 using Colors
+using LinearAlgebra
+
 
 
 include("../src/batchStagYY.jl")
@@ -224,7 +226,6 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
 end
 
 
-
 function interactiveDetector(iTime = 200)
     fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
     display(fig)
@@ -243,6 +244,7 @@ function interactiveDetector(iTime = 200)
     return clicked_point, fig, ax, fi
 end
 
+
 function correctedPosition(x,y; center = [6.5e6, 6.5e6])
     dx = x - center[1]
     dy = y - center[2]
@@ -250,10 +252,11 @@ function correctedPosition(x,y; center = [6.5e6, 6.5e6])
     dist_radiale = sqrt(dx^2 + dy^2)
     new_x = center[1] + 6.5e6*dx/dist_radiale #modifier la valeur de 6.5e6 pour la vraie valeur du rayon?
     new_y = center[2] + 6.5e6*dy/dist_radiale
-    return new_x, new_y, dist_radiale, dx
+    return new_x, new_y
 end
 
-function vectorsFromDetector(n_vectors = 7, scale = 2e7, diam = maxX - minX)
+
+function vectorsFromDetector(n_vectors = 6, scale = 2e7, diam = maxX - minX)
     #draw n_vectors (diff θ) for a positionDetector (coordinates)
 
     clicked_point, fig, ax, fi = interactiveDetector()
@@ -265,12 +268,11 @@ function vectorsFromDetector(n_vectors = 7, scale = 2e7, diam = maxX - minX)
 
     pos = clicked_point[]
     x, y = pos[1], pos[2]
-    new_x, new_y, dist_radiale, dx = correctedPosition(x,y)
+    new_x, new_y = correctedPosition(x,y)
 
     x0 = fill(new_x, n_vectors)
     y0 = fill(new_y, n_vectors)
-    θ0 = acos(dx/dist_radiale)
-    θ_values = range(θ0, θ0 + 2*pi, length=n_vectors +1)[1:end-1]
+    θ_values = range(0, 2*pi, length=n_vectors)
     dx = scale.*cos.(θ_values)
     dy = scale.*sin.(θ_values)
     
@@ -302,12 +304,57 @@ function vectorsFromDetector(n_vectors = 7, scale = 2e7, diam = maxX - minX)
     display(fig1)
 end
 
-vectorsFromDetector()
+#vectorsFromDetector()
+
+
+function solveQuadraticEquation(a,b,c)
+    Δ = b.^2 .- 4 .*a.*c
+    x1 = fill(0.0, length(Δ))
+    x2 = fill(0.0 , length(Δ))
+
+    pos = Δ.>0
+    x1[pos] .= ((.-b[pos] .- sqrt.(Δ[pos]))./(2 .*a[pos]))
+    x2[pos] = ((.-b[pos] .+ sqrt.(Δ[pos]))./(2 .*a[pos]))
+    zero = Δ.==0
+    x1[zero] = .-b[zero]./(2 .*a)
+    x2[zero] = x1[zero]
+
+    #neg = Δ.<0 est ce que on traite le cas en nombres complexes?
+    #Δc = Complex(Δ[neg])
+    #x1[neg] = ((.-b[neg] .- sqrt.(Δc))./(2 .*a[neg]))
+    #x2[neg] = ((.-b[neg] .+ sqrt.(Δc))./(2 .*a[neg]))
+
+    return x1
+end
+
+
+function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vectors=6)
+    (xc, yc) = center[1], center[2]
+    (xd, yd) = positionDetector[1], positionDetector[2]
+    
+    #source = [X, Y]
+    #A = [X .- xd ; Y .- yd]
+    B = [xd .- xc ; yd .- yc]
+
+    cos_θ = range(-1, 0, n_vectors) # et on sait que cos_(θ) = A_part*B_part
+
+    #si on fait + pr le signe de sin
+    cos_Θ = solveQuadraticEquation(B[1].^2 .+ B[2].^2, 2 .*cos_θ.*norm(B).*B[1], cos_θ.^2 .*norm(B) .- B[2].^2) #marche pas pr le moment
+    sin_Θ = sqrt.(1 .-cos_Θ.^2) 
+    @show cos_Θ, sin_Θ
+
+    normA_1, normA_2 = solveQuadraticEquation(cos_Θ.^2 .+ sin_Θ.^2, 2 .*(cos_Θ.*B[1] .+ sin_Θ.*B[2]), B[1].^2 .+ B[2].^2 .- earthRadius.^2)
+    X = normA_1.*cos_Θ .+ xd #cmt savoir quelle solution utilisée?
+    Y = normA_1.*sin_Θ .+ yd
+    return X,Y
+end
+
+
+#sourcePosition((6.5e6, 6.5e6), (6.5e6, 8e6))
 
 
 
-#Z_over_A = fill(0.5, 521, 521)
-#electronDensity = Z_over_A *
+
 
 
 #==
