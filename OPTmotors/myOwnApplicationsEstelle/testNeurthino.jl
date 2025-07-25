@@ -13,7 +13,7 @@ ParamFile = "../test/testparam.csv"
 include("../src/DSM1D.jl")
 include("../src_Neurthino/Neurthino.jl")
 
-using .Neurthino: OscillationParameters
+using .Neurthino: OscillationParameters, setθ!, setδ!, setΔm²!
 using .DSM1D
 
 
@@ -28,4 +28,6 @@ setθ!(osc, 2=>3, 0.84)
 setδ!(osc, 1=>3, 3.86)
 
 setΔm²!(osc, 2=>3, -2.523e-3)
-setΔm²!(osc, 1=>2, -7.39e-5)
+@show setΔm²!(osc, 1=>2, -7.39e-5)
+
+p = Pνν(osc, 1, 10000)
