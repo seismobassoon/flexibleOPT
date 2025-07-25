@@ -271,6 +271,7 @@ mutable struct DSM1DPSVmodel
 
         CnormalisedBottomRadius = CbottomRadius/averagedPlanetRadius
         CnormalisedTopRadius = CtopRadius/averagedPlanetRadius
+        CnormalisedCMB = tmpaveragedPlanetCMB/averagedPlanetRadius
 
         return new(nzone,averagedPlanetRadius,Csolid_or_fluid,
         CbottomRadius,CtopRadius,CnormalisedBottomRadius,CnormalisedTopRadius,
