@@ -32,7 +32,7 @@ function _generate_ordered_index_pairs(n::Integer)
 end
 
 """
-$(SIGNATURES)
+
 
 Set a mixing angle of an oscillation parameters struct
 
@@ -53,7 +53,7 @@ function mixingangle!(osc::OscillationParameters, indices::Pair{T, T}, value::S)
 end
 
 """
-$(SIGNATURES)
+
 
 Set a mixing angle of an oscillation parameters struct
 
@@ -109,7 +109,6 @@ function _completed_mass_matrix(osc::OscillationParameters)
 end
 
 """
-$(SIGNATURES)
 
 Set a mass squared difference of an oscillation parameters struct
 
@@ -135,7 +134,6 @@ function masssquareddiff!(osc::OscillationParameters, indices::Pair{T, T}, value
 end
 
 """
-$(SIGNATURES)
 
 Set a mass squared difference of an oscillation parameters struct
 
@@ -153,7 +151,6 @@ end
 const setΔm²! = masssquareddiff!
 
 """
-$(SIGNATURES)
 
 Set a CP phase of an oscillation parameters struct
 
@@ -174,7 +171,6 @@ function cpphase!(osc::OscillationParameters, indices::Pair{T, T}, value::S) whe
 end
 
 """
-$(SIGNATURES)
 
 Set a CP phase of an oscillation parameters struct
 
@@ -193,7 +189,6 @@ const setδ! = cpphase!
 
 function PMNSMatrix(osc_params::OscillationParameters; anti=false)
 """
-$(SIGNATURES)
 
 Create rotation matrix (PMNS) based on the given oscillation parameters
 
@@ -229,7 +224,6 @@ end
 
 function Hamiltonian(osc_params::OscillationParameters)
 """
-$(SIGNATURES)
 
 Create modified hamiltonian matrix consisting of the squared mass differences
 based on the given oscillation parameters
@@ -243,7 +237,6 @@ end
 
 function Hamiltonian(osc_params::OscillationParameters, lambda)
 """
-$(SIGNATURES)
 
 Create modified hamiltonian matrix consisting of the squared mass differences
 based on the given oscillation parameters
@@ -285,7 +278,6 @@ end
 
 
 """
-$(SIGNATURES)
 
 Calculate the transistion probabilities between the neutrino flavours
 
@@ -310,7 +302,7 @@ const oscprob(U, H, energy::T, baseline::Vector{S}) where {S,T <: Real} = oscpro
 const oscprob(U, H, energy, baseline::T) where {T <: Real} = oscprob(U, H, energy, [baseline])
 
 """
-$(SIGNATURES)
+
 
 Calculate the transistion probabilities between the neutrino flavours
 
@@ -330,7 +322,7 @@ end
 const Pνν = oscprob
 
 """
-$(SIGNATURES)
+
 
 Returns the number of CP violating phases at given number of neutrino types
 
@@ -349,7 +341,7 @@ function cpphases(n)
 end
 
 """
-$(SIGNATURES)
+
 
 Returns the number of mixing angles at given number of neutrino types
 

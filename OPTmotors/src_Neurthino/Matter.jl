@@ -10,7 +10,7 @@ Base.iterate(p::Path, state=1) = state > length(p.density) ? nothing : ( (p.dens
 Base.length(p::Path) = length(p.density)
 
 """
-$(SIGNATURES)
+
 
 Create modified oscillation parameters for neutrino propagation through matter
 
@@ -29,7 +29,7 @@ end
 
 
 """
-$(SIGNATURES)
+
 
 Create modified oscillation parameters for neutrino propagation through matter
 
@@ -62,7 +62,7 @@ function MatterOscillationMatrices(H_eff, energy, density; zoa=0.5, anti=false)
 end
 
 """
-$(SIGNATURES)
+
 
 Create modified oscillation parameters for neutrino propagation through matter
 
@@ -82,7 +82,7 @@ function MatterOscillationMatrices(osc_vacuum::OscillationParameters, energy, de
 end
 
 """
-$(SIGNATURES)
+
 
 # Arguments
 - `U`: Vacuum PMNS Matrix
@@ -127,7 +127,7 @@ const oscprob(U, H, energy::T, path::Vector{Path}; zoa=0.5, anti=false) where {T
 const oscprob(U, H, energy, path::Path; zoa=0.5, anti=false) = oscprob(U, H, energy, [path]; zoa=zoa, anti=anti)
 
 """
-$(SIGNATURES)
+
 
 # Arguments
 - `osc_vacuum::OscillationParameters`: Vacuum oscillation parameters

@@ -1,13 +1,15 @@
+
+
 module Neurthino
 
 using LinearAlgebra
 using SparseArrays
-using StaticArrays
-using Polynomials
-using DocStringExtensions
-using LRUCache
+#using StaticArrays
+#using Polynomials
+#using DocStringExtensions
+#using LRUCache
 #using LightGraphs
-using AxisArrays
+#using AxisArrays
 
 import Base
 
@@ -26,6 +28,6 @@ isnothing(::Nothing) = true
 
 include("Oscillation.jl")
 include("Matter.jl")
-include("PREM.jl")
+#include("PREM.jl")
 
 end # module

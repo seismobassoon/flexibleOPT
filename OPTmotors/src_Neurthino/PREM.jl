@@ -41,7 +41,7 @@ end
 
 function tracklength(zenith, zposition)
 """
-$(SIGNATURES)
+
 
 Total path length through earth from detector position
 
@@ -70,7 +70,7 @@ end
 
 function prempath(zenith::Vector{Float64}, zposition; samples=100, discrete_densities=nothing)
 """
-$(SIGNATURES)
+
 
 # Arguments
 - `zenith::Vector{Float64}`: Zenith angles of the paths with respect to the detector frame [rad]
@@ -83,7 +83,7 @@ end
 
 function prempath(zenith::T, zposition; samples=100, discrete_densities=nothing) where {T <: Number}
 """
-$(SIGNATURES)
+
 
 # Arguments
 - `zenith::Float64`: Zenith angle of the path with respect to the detector frame [rad]
