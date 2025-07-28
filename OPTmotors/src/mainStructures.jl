@@ -41,11 +41,13 @@ end
 mutable struct DSM1DPSVmodel 
     nzone::Int64
     averagedPlanetRadiusInKilometer::Float64
+    averagedPlanetCMBInKilometer::Float64
     solid_or_fluid::Array{String,1} # U: unknown, S: solid, F: fluid
     bottomRadius::Array{Float64,1}
     topRadius::Array{Float64,1}
     normalisedBottomRadius::Array{Float64,1} # normalised to averagedPlanetRadiusInKilometer
     normalisedTopRadius::Array{Float64,1}
+    normalisedCMB::Float64
     C_ρ     ::Array{Float64,2}
     C_Vpv   ::Array{Float64,2}
     C_Vph   ::Array{Float64,2}
@@ -68,9 +70,12 @@ mutable struct DSM1DPSVmodel
     end
     function DSM1DPSVmodel(nzone::Int64,averagedPlanetRadius::Float64)
         # This constructs an empty struct with the right dimensions
-        return new(nzone,averagedPlanetRadius,Array{String,1}(undef,nzone),
+        averagedPlanetCMBInKilometer::Float64 = 0.0
+        normalisedCMB::Float64 = 0.0
+        return new(nzone,averagedPlanetRadius,averagedPlanetCMBInKilometer,Array{String,1}(undef,nzone),
         Array{Float64,1}(undef,nzone),Array{Float64,1}(undef,nzone),
         Array{Float64,1}(undef,nzone),Array{Float64,1}(undef,nzone),
+        normalisedCMB,
         Array{Float64,2}(undef,nzone,4),Array{Float64,2}(undef,nzone,4),Array{Float64,2}(undef,nzone,4),
         Array{Float64,2}(undef,nzone,4),Array{Float64,2}(undef,nzone,4),Array{Float64,2}(undef,nzone,4),
         Array{Float64,2}(undef,nzone,4),Array{Float64,2}(undef,nzone,4),Array{Float64,2}(undef,nzone,4),
@@ -272,9 +277,10 @@ mutable struct DSM1DPSVmodel
         CnormalisedBottomRadius = CbottomRadius/averagedPlanetRadius
         CnormalisedTopRadius = CtopRadius/averagedPlanetRadius
         CnormalisedCMB = tmpaveragedPlanetCMB/averagedPlanetRadius
+     
 
-        return new(nzone,averagedPlanetRadius,Csolid_or_fluid,
-        CbottomRadius,CtopRadius,CnormalisedBottomRadius,CnormalisedTopRadius,
+        return new(nzone,averagedPlanetRadius,tmpaveragedPlanetCMB,Csolid_or_fluid,
+        CbottomRadius,CtopRadius,CnormalisedBottomRadius,CnormalisedTopRadius,CnormalisedCMB,
         CC_ρ,CC_Vpv,CC_Vph,CC_Vsv,CC_Vsh,CC_Qκ,CC_Qμ,CC_QκPower,CC_QμPower,CC_η)
     end
 end

@@ -87,7 +87,7 @@ function prempath(zenith::T, zposition; samples=100, discrete_densities=nothing)
 
 # Arguments
 - `zenith::Float64`: Zenith angle of the path with respect to the detector frame [rad]
-- `zposition::Float64` Distance below the surface of the Earth (positive value) [km]
+- `zposition::Float64` Detector depth (positive value) [km] 
 - `samples` The number of steps with equal distance
 """
     trklen = tracklength(zenith, zposition)
