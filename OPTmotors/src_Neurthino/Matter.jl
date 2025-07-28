@@ -1,3 +1,4 @@
+
 struct Path
     density::Vector{Float64}
     baseline::Vector{Float64}
