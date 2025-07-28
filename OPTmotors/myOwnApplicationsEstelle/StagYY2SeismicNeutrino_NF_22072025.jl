@@ -256,7 +256,7 @@ function correctedPosition(x,y; center = [6.5e6, 6.5e6])
 end
 
 
-function vectorsFromDetector(n_vectors = 6, scale = 2e7, diam = maxX - minX)
+function vectorsFromDetector(n_vectors = 4, scale = 2e7, diam = maxX - minX)
     #draw n_vectors (diff θ) for a positionDetector (coordinates)
 
     clicked_point, fig, ax, fi = interactiveDetector()
@@ -266,12 +266,15 @@ function vectorsFromDetector(n_vectors = 6, scale = 2e7, diam = maxX - minX)
         sleep(0.1)
     end
 
+
     pos = clicked_point[]
     x, y = pos[1], pos[2]
     new_x, new_y = correctedPosition(x,y)
 
+    XY = sourcePosition((6.5e6,6.5e6), (new_x, new_y)) #liste des pts sources neutrinos 
     x0 = fill(new_x, n_vectors)
     y0 = fill(new_y, n_vectors)
+#==
     θ_values = range(0, 2*pi, length=n_vectors)
     dx = scale.*cos.(θ_values)
     dy = scale.*sin.(θ_values)
@@ -287,9 +290,9 @@ function vectorsFromDetector(n_vectors = 6, scale = 2e7, diam = maxX - minX)
     below = Y.<0
     dy[below] .= 0 .- y0[below]
 
-    quiver!(ax, x0, y0, dx, dy)
+    quiver!(ax, x0, y0, X, Y)
     display(fig)
-
+==#
 
     fig1 = Figure()
     ax1 = Axis(fig1[1,1])
@@ -297,64 +300,74 @@ function vectorsFromDetector(n_vectors = 6, scale = 2e7, diam = maxX - minX)
     for i in 1:n_vectors
         colorname = rand(collect(keys(Colors.color_names)))
         detector = [x0[1], y0[1]]
-        source = [x0[1] + dx[i], y0[1] + dy[i]]
+        source = XY[i][1], XY[i][2] #[x0[1] + dx[i], y0[1] + dy[i]]
         lineDensityElectron2D(detector,source, colorname, ax1, dR)
     end
 
     display(fig1)
 end
 
-#vectorsFromDetector()
+vectorsFromDetector()
 
 
 function solveQuadraticEquation(a,b,c)
-    Δ = b.^2 .- 4 .*a.*c
-    x1 = fill(0.0, length(Δ))
-    x2 = fill(0.0 , length(Δ))
+    Δ = b^2 - 4*a*c
 
-    pos = Δ.>0
-    x1[pos] .= ((.-b[pos] .- sqrt.(Δ[pos]))./(2 .*a[pos]))
-    x2[pos] = ((.-b[pos] .+ sqrt.(Δ[pos]))./(2 .*a[pos]))
-    zero = Δ.==0
-    x1[zero] = .-b[zero]./(2 .*a)
-    x2[zero] = x1[zero]
+    if Δ>0
+        x1 = ((-b - sqrt(Δ))/(2*a))
+        x2 = ((-b + sqrt(Δ))/(2*a))
+    else
+        x1 = -b/(2 *a)
+        x2 = x1
+    end
+    return x1, x2
 
-    #neg = Δ.<0 est ce que on traite le cas en nombres complexes?
-    #Δc = Complex(Δ[neg])
-    #x1[neg] = ((.-b[neg] .- sqrt.(Δc))./(2 .*a[neg]))
-    #x2[neg] = ((.-b[neg] .+ sqrt.(Δc))./(2 .*a[neg]))
-
-    return x1
 end
 
-
-function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vectors=6)
+function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vectors=4)
     (xc, yc) = center[1], center[2]
     (xd, yd) = positionDetector[1], positionDetector[2]
-    
-    #source = [X, Y]
-    #A = [X .- xd ; Y .- yd]
-    B = [xd .- xc ; yd .- yc]
+    B = [xd - xc ; yd - yc]
+    XY = []
 
-    cos_θ = range(-1, 0, n_vectors) # et on sait que cos_(θ) = A_part*B_part
+    cos_θ = range(-1, 0, length = n_vectors)
 
-    #si on fait + pr le signe de sin
-    cos_Θ = solveQuadraticEquation(B[1].^2 .+ B[2].^2, 2 .*cos_θ.*norm(B).*B[1], cos_θ.^2 .*norm(B) .- B[2].^2) #marche pas pr le moment
-    sin_Θ = sqrt.(1 .-cos_Θ.^2) 
-    @show cos_Θ, sin_Θ
+    for i in 1:n_vectors
+        cos_Φα1, cos_Φα2 = solveQuadraticEquation(1, -2 + 2*cos_θ[i], 1 - 2*cos_θ[i]^2)
+        @show cos_Φα1, cos_Φα2
 
-    normA_1, normA_2 = solveQuadraticEquation(cos_Θ.^2 .+ sin_Θ.^2, 2 .*(cos_Θ.*B[1] .+ sin_Θ.*B[2]), B[1].^2 .+ B[2].^2 .- earthRadius.^2)
-    X = normA_1.*cos_Θ .+ xd #cmt savoir quelle solution utilisée?
-    Y = normA_1.*sin_Θ .+ yd
-    return X,Y
+        if 1 > cos_Φα1^2
+            cos_Φα = cos_Φα1
+        else
+            cos_Φα =cos_Φα2
+        end
+
+        sin_Φα = - sqrt(1 - cos_Φα^2)
+        @show cos_Φα, sin_Φα
+  
+
+        α = atan((yd-yc)/(xd-xc))
+        cos_Φ = cos_Φα *cos(α) - sin_Φα *sin(α)
+        sin_Φ = sqrt(1-cos_Φ^2)
+        @show cos_Φ
+        @show sin_Φ
+
+        X = xc + earthRadius*cos_Φ
+        Y = yc + earthRadius*sin_Φ
+        push!(XY, (X,Y))
+        @show XY
+
+        fig = Figure()
+        fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
+        scatter!(X,Y)
+        display(fig)
+    end
+    return XY
+
+
 end
 
-
-#sourcePosition((6.5e6, 6.5e6), (6.5e6, 8e6))
-
-
-
-
+#sourcePosition((6.5e6,6.5e6), (2.5e6,2.5e6))
 
 
 #==
@@ -366,8 +379,4 @@ myPlot2DConvectionModel(200, "rho", rhoFiles)
 myPlot2DConvectionModel(200, "temperature", temperatureFiles)
 myPlot2DConvectionModel(200, "composition", compositionFiles)
 lineDensityElectron2D([450,100], [350,150])
-lineDensityElectron2D([450,100], [410,250])
-#vectorsFromDetector([80, 450])
-#vectorsFromDetector([450, 450])
-#vectorsFromDetector([450, 80])
 ==#
