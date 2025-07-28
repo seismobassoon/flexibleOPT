@@ -1,3 +1,4 @@
+using Graphs: SimpleDiGraph
 
 @enum NeutrinoFlavour begin
   Electron = 1

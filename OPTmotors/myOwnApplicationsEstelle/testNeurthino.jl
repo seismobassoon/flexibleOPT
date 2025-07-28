@@ -2,7 +2,7 @@
 #
 # (https://github.com/KM3NeT/Neurthino.jl) but still we have to acknowledge this repository when we use this
 
-using  Pkg, BenchmarkTools
+using  Pkg, BenchmarkTools, Graphs
 
 cd(@__DIR__)
 Pkg.activate("../..")
@@ -29,6 +29,16 @@ setθ!(osc, 2=>3, 0.84)
 setδ!(osc, 1=>3, 3.86)
 
 setΔm²!(osc, 2=>3, -2.523e-3)
-@show setΔm²!(osc, 1=>2, -7.39e-5)
+setΔm²!(osc, 1=>2, -7.39e-5)
 
 p = Pνν(osc, 1, 10000)
+@show p[Energy=1, Baseline=1, InitFlav=Muon, FinalFlav=Tau]
+
+U = PMNSMatrix(osc)
+H = Hamiltonian(osc)
+@show Pνν(U, H, 1, 10000)
+
+
+# here every zenith angle can have a different nₑ profile (note that nₑ= ρ * "Z/A" )
+
+zenith = acos.(range(-1,stop=0,length=200))
