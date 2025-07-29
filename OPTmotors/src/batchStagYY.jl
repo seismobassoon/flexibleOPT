@@ -279,18 +279,20 @@ end
 
 
 function quarterDiskExtrapolationRawGrid!(fi, Xnode, Ynode)
+    fiO=copy(fi)
+    XnodeO=copy(Xnode)
+    YnodeO=copy(Ynode)
+    append!(fi,fiO)
+    append!(Xnode,-YnodeO)
+    append!(Ynode,XnodeO)
+
+    append!(fi,fiO)
+    append!(Xnode,-XnodeO)
+    append!(Ynode,-YnodeO)
     
-    append!(fi,fi)
-    append!(Xnode,-Ynode)
-    append!(Ynode,Xnode)
-
-    append!(fi,fi)
-    append!(Xnode,-Xnode)
-    append!(Ynode,-Ynode)
-
-    #append!(fi,fi)
-    #append!(Xnode,Ynode)
-    #append!(Ynode,-Xnode)
+    append!(fi,fiO)
+    append!(Xnode,YnodeO)
+    append!(Ynode,-XnodeO)
     return 
 end
 
