@@ -29,6 +29,7 @@ isnothing(::Nothing) = true
 
 include("Oscillation.jl")
 include("Matter.jl")
+include("earthModels2Dor3D.jl")
 #include("PREM.jl")
 
 end # module

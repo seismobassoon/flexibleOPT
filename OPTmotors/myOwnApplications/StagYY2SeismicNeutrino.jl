@@ -15,60 +15,6 @@ function myDensityFrom1DModel(arrayRadius)
     return density
 end
 
-function extendToCoreWithρ!(ρfield, Xnode, Ynode, rcmb, dR; dθ=2*π/360.0)
-    # local function here: this requires DSM1D.jl, testparam.csv
-    #
-    # This function will add the ρ field computed only for the core 
-
-    # Xnode and Ynodes are the one that we give but 
-
-    # the 1D core model will be given by specifying the file to use in testparam.csv 
-
-#    if rcmb > #
-
-    ### below is just a recall how to use DSM1D module
-    # PREM 
-    #arrayRadius, arrayParams=DSM1D.compute1DseismicParamtersFromPolynomialCoefficients(DSM1D.my1DDSMmodel,10)
-
-    #arrayRadius = [0.0, 30., 100., 1000., 3630., 3630., 5971., 6370., 40., 6371., 3480., 3480]
-
-    # note that compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray is 
-    # an awesome function but here I use it very naively
-
-    #@show DSM1D.my1DDSMmodel.averagedPlanetCMBInKilometer # this is in [km]
-    #@show rcmb # this is in [m]
-
-
-    premCMB = DSM1D.my1DDSMmodel.averagedPlanetCMBInKilometer * 1.e3
-
-    arrayRadius = collect(0:dR:rcmb)
-    if arrayRadius[end] != rcmb
-        arrayRadius = push!(arrayRadius,rcmb)
-    end
-    arrayRadiusFaked = min.(arrayRadius,premCMB) .* 1.e-3
-
-
-
-    _, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadiusFaked, "below")
-    #DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
-    @show tmpDensity=arrayParams.ρ
-
-    tmpXnode = [(tmpRadius*cos(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
-    tmpYnode = [(tmpRadius*sin(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
-    tmpValue = [(1.e3*tmpDensity[iRadius]) for iRadius in eachindex(arrayRadius) for tmpθ in collect(0:dθ:2π)]
-    @show minimum(tmpXnode),maximum(tmpXnode)
-
-    f=Figure()
-    #lines(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ, markersize=1,color=:red)
-    lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
-    #scatter!(f[1,1],arrayRadius, arrayParams.ρ, markersize=3,color=:blue)
-    display(f)
-
-    Xnode=append!(Xnode,tmpXnode)
-    Ynode=append!(Ynode,tmpYnode)
-    ρfield=append!(ρfield,tmpValue)
-
-end
 
 
 #dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025"
@@ -135,8 +81,9 @@ wtrField=nothing
 file1=rhoFiles[iTime]
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
 extendToCoreWithρ!(field1, Xnode, Ynode, rcmb, dR)
+quarterDiskExtrapolationRawGrid!(field1, Xnode, Ynode)
 fi,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field1,correlationLength,epsilon2);
-fi = quarterDiskExtrapolation(fi,nX,nY);
+#fi = quarterDiskExtrapolation(fi,nX,nY);
 fig = Figure()
 ax = Axis(fig[1,1],aspect = 1)
 hm=heatmap!(ax,fi,colormap=cgrad(:viridis))
