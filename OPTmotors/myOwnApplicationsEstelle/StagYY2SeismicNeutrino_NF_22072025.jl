@@ -256,60 +256,6 @@ function correctedPosition(x,y; center = [6.5e6, 6.5e6])
 end
 
 
-function vectorsFromDetector(n_vectors = 4, scale = 2e7, diam = maxX - minX)
-    #draw n_vectors (diff θ) for a positionDetector (coordinates)
-
-    clicked_point, fig, ax, fi = interactiveDetector()
-    println("Choose detector's position")
-
-    while isnan(clicked_point[][1])
-        sleep(0.1)
-    end
-
-
-    pos = clicked_point[]
-    x, y = pos[1], pos[2]
-    new_x, new_y = correctedPosition(x,y)
-
-    XY = sourcePosition((6.5e6,6.5e6), (new_x, new_y)) #liste des pts sources neutrinos 
-    x0 = fill(new_x, n_vectors)
-    y0 = fill(new_y, n_vectors)
-#==
-    θ_values = range(0, 2*pi, length=n_vectors)
-    dx = scale.*cos.(θ_values)
-    dy = scale.*sin.(θ_values)
-    
-    X = dx .+ x0
-    Y = dy .+ y0
-    right = X.>diam
-    dx[right] .= diam .-x0[right] 
-    left = X.<0
-    dx[left] .= 0 .- x0[left]
-    above = Y.>diam
-    dy[above] .= diam .- y0[above]
-    below = Y.<0
-    dy[below] .= 0 .- y0[below]
-
-    quiver!(ax, x0, y0, X, Y)
-    display(fig)
-==#
-
-    fig1 = Figure()
-    ax1 = Axis(fig1[1,1])
-    
-    for i in 1:n_vectors
-        colorname = rand(collect(keys(Colors.color_names)))
-        detector = [x0[1], y0[1]]
-        source = XY[i][1], XY[i][2] #[x0[1] + dx[i], y0[1] + dy[i]]
-        lineDensityElectron2D(detector,source, colorname, ax1, dR)
-    end
-
-    display(fig1)
-end
-
-vectorsFromDetector()
-
-
 function solveQuadraticEquation(a,b,c)
     Δ = b^2 - 4*a*c
 
@@ -324,17 +270,15 @@ function solveQuadraticEquation(a,b,c)
 
 end
 
-function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vectors=4)
+function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vectors=10)
     (xc, yc) = center[1], center[2]
     (xd, yd) = positionDetector[1], positionDetector[2]
-    B = [xd - xc ; yd - yc]
     XY = []
 
     cos_θ = range(-1, 0, length = n_vectors)
 
     for i in 1:n_vectors
         cos_Φα1, cos_Φα2 = solveQuadraticEquation(1, -2 + 2*cos_θ[i], 1 - 2*cos_θ[i]^2)
-        @show cos_Φα1, cos_Φα2
 
         if 1 > cos_Φα1^2
             cos_Φα = cos_Φα1
@@ -342,32 +286,69 @@ function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vecto
             cos_Φα =cos_Φα2
         end
 
-        sin_Φα = - sqrt(1 - cos_Φα^2)
-        @show cos_Φα, sin_Φα
-  
+        if yd > 6.5e6
+            sin_Φα = sqrt(1 - cos_Φα^2)
+        else
+            sin_Φα = - sqrt(1 - cos_Φα^2)
+        end
 
         α = atan((yd-yc)/(xd-xc))
         cos_Φ = cos_Φα *cos(α) - sin_Φα *sin(α)
-        sin_Φ = sqrt(1-cos_Φ^2)
-        @show cos_Φ
-        @show sin_Φ
 
+        if yd > 6.5e6
+            sin_Φ = - sqrt(1-cos_Φ^2)
+        else
+            sin_Φ = sqrt(1-cos_Φ^2)
+        end
+  
         X = xc + earthRadius*cos_Φ
         Y = yc + earthRadius*sin_Φ
         push!(XY, (X,Y))
-        @show XY
 
-        fig = Figure()
-        fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
-        scatter!(X,Y)
-        display(fig)
     end
     return XY
 
-
 end
 
-#sourcePosition((6.5e6,6.5e6), (2.5e6,2.5e6))
+
+function vectorsFromDetector(n_vectors = 10, scale = 2e7, diam = maxX - minX, center = [6.5e6, 6.5e6])
+    #draw n_vectors (diff θ) for a positionDetector (coordinates)
+
+    clicked_point, fig, ax, fi = interactiveDetector()
+    println("Choose detector's position")
+
+    while isnan(clicked_point[][1])
+        sleep(0.1)
+    end
+
+    pos = clicked_point[]
+    x, y = pos[1], pos[2]
+    new_x, new_y = correctedPosition(x,y)
+    XY = sourcePosition((center[1], center[2]), (new_x, new_y))
+
+    segments_pts = []
+    for source in XY
+        push!(segments_pts, (new_x, new_y))
+        push!(segments_pts, source)
+    end
+
+    linesegments!(ax, segments_pts)
+    display(fig)
+
+    fig1 = Figure()
+    ax1 = Axis(fig1[1,1])
+    
+    for i in 1:n_vectors
+        colorname = rand(collect(keys(Colors.color_names)))
+        detector = new_x, new_y
+        source = XY[i][1], XY[i][2]
+        lineDensityElectron2D(detector,source, colorname, ax1, dR)
+    end
+
+    display(fig1)
+end
+
+vectorsFromDetector()
 
 
 #==
