@@ -81,9 +81,9 @@ wtrField=nothing
 file1=rhoFiles[iTime]
 field1, Xnode, Ynode, rcmb = readStagYYFiles(file1)
 extendToCoreWithρ!(field1, Xnode, Ynode, rcmb, dR)
-#quarterDiskExtrapolationRawGrid!(fi, Xnode, Ynode)
+quarterDiskExtrapolationRawGrid!(field1, Xnode, Ynode)
 fi,s = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field1,correlationLength,epsilon2);
-fi = quarterDiskExtrapolation(fi,nX,nY);
+#fi = quarterDiskExtrapolation(fi,nX,nY);
 fig = Figure()
 ax = Axis(fig[1,1],aspect = 1)
 hm=heatmap!(ax,fi,colormap=cgrad(:viridis))
