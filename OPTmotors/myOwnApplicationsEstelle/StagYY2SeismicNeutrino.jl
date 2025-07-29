@@ -82,36 +82,6 @@ function myAnimation(step, iTime, fieldname, filename)
     end
 end
 
-function extendToCoreWithρ(ρfield, Xnode, Ynode, rcmb, dR)
-    # local function here: this requires DSM1D.jl, testparam.csv
-    #
-    # This function will put the ρ field computed only for the mantle (and the surface) 
-    # with (r,ϕ) coordinates
-
-    # the 1D core model will be given by specifying the file to use in testparam.csv 
-
-    ### below is just a recall how to use DSM1D module
-    # PREM 
-    #arrayRadius, arrayParams=DSM1D.compute1DseismicParamtersFromPolynomialCoefficients(DSM1D.my1DDSMmodel,10)
-
-    #arrayRadius = [0.0, 30., 100., 1000., 3630., 3630., 5971., 6370., 40., 6371., 3480., 3480]
-
-    # note that compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray is 
-    # an awesome function but here I use it very naively
-
-    arrayRadius = collect(0:dR:rcmb)
-    if arrayRadius[end] != rcmb
-        arrayRadius = push!(arrayRadius,rcmb)
-    end
-
-arrayRadius, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius, "above")
-DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
-    f=Figure()
-    #lines(f[1,1],arrayRadius*DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer, arrayParams.ρ, markersize=1,color=:red)
-    lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
-    scatter!(f[1,1],arrayRadius, arrayParams.ρ, markersize=3,color=:blue)
-    display(f)
-end
 
 #dir="/Users/nobuaki/Documents/MantleConvectionTakashi/data2025"
 dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025"

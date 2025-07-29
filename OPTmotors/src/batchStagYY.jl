@@ -277,6 +277,17 @@ end
 
 
 
+
+function quarterDiskExtrapolationRawGrid!(fi, Xnode, Ynode)
+    append!(fi,fi)
+    append!(Xnode,-Xnode)
+    append!(Ynode,Ynode)
+    
+
+    return 
+end
+
+
 function quarterDiskExtrapolation(fi,nX,nY)
 #it depends but  the discontinuities are sometimes visible
     halfnX = (nX-1) ÷ 2
@@ -497,7 +508,7 @@ function extendToCoreWithρ!(ρfield, Xnode, Ynode, rcmb, dR; dθ=2*π/360.0, iC
 
     _, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadiusFaked, "below")
     #DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
-    #@show tmpDensity=arrayParams.ρ
+    tmpDensity=arrayParams.ρ
 
     tmpXnode = [(tmpRadius*cos(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
     tmpYnode = [(tmpRadius*sin(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
