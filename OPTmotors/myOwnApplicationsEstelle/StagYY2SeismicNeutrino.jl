@@ -207,21 +207,45 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
     itp = interpolate(fi, BSpline(Linear()), OnGrid())
     exitp = extrapolate(itp, 0.0)
 
-    dens = []
+    densGrids = []
     for i in 1:n_pts
         x = x_grid[i]
         y = y_grid[i]
-        push!(dens, exitp(x,y))
+        push!(densGrids, exitp(x,y))
     end
 
-    a = (positionDetector[2]-NeutrinoSource[2])/(positionDetector[1]-NeutrinoSource[1])
-    if abs(a) <= tan(pi/4)
-        dist = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
+    dens=[]
+
+    for i in 1:n_pts-1
+        push!(dens, 0.5*(densGrids[i]+densGrids[i+1]))
+    end
+
+    segmentLength = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[2])) * 1.e-3 # in km
+
+    sections = segmentLength .* ones(Float64,n_pts-1)
+
+
+    
+    #===
+
+    a = nothing
+    slope = nothing
+
+    if positionDetector[1]-NeutrinoSource[1] !== 0.0
+        a = (positionDetector[2]-NeutrinoSource[2])/(positionDetector[1]-NeutrinoSource[1])
+        slope = sqrt(1+a^2)
+    end
+
+    if a !== nothing
+        dist = slope .* range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     else
         dist = range(positionDetector[2], NeutrinoSource[2], length=n_pts)
     end
+    ===#
 
-    lines!(ax1, dist, dens, color=colorname)
+    dist = segmentLength*collect(0:1:n_pts)
+
+    lines!(ax1, dist, densGrids, color=colorname)
 
 end
 
