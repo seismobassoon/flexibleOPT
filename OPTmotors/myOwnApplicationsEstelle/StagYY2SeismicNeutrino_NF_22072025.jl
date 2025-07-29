@@ -311,7 +311,18 @@ function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vecto
 end
 
 
-function vectorsFromDetector(n_vectors = 10, scale = 2e7, diam = maxX - minX, center = [6.5e6, 6.5e6])
+function posOrNeg(cos_θ, sign = :positive)
+    if sign== :positive
+        θ = acos.(cos_θ)
+    else
+        θ = .- acos.(cos_θ)
+    end
+    @show θ
+end
+
+#theta = posOrNeg(range(-1, 0, 4), :negative)
+
+function vectorsFromDetector(n_vectors = 10, center = [6.5e6, 6.5e6])
     #draw n_vectors (diff θ) for a positionDetector (coordinates)
 
     clicked_point, fig, ax, fi = interactiveDetector()
