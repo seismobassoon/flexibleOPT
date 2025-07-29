@@ -246,7 +246,7 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
     dist = segmentLength*collect(0:1:n_pts)
 
     lines!(ax1, dist, densGrids, color=colorname)
-
+    return dens, sections
 end
 
 
