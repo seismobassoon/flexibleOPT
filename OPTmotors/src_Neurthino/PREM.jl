@@ -4,7 +4,8 @@ struct Layer
     name::AbstractString
     r_min
     r_max
-    density::Polynomial
+    #density::Polynomial
+    density::Real
 end
 
 
@@ -14,6 +15,7 @@ end
 
 
 PREM = EarthModel(
+    #===
     [
         Layer("Inner Core", 0.0, 1221.5, Polynomial([13.0885, 0.0, -8.8381])),
         Layer("Outer Core", 1221.5, 3480.0, Polynomial([12.5815, -1.2638, -3.6426, -5.5281])),
@@ -27,13 +29,19 @@ PREM = EarthModel(
         Layer("Crust 2", 6356.0, 6368.0, Polynomial([2.6])),
         Layer("Ocean", 6368.0, 6371.0, Polynomial([1.020]))
     ]
+    ===#
+    [
+        Layer("Whole Earth", 0.0, 6371.0, 1.0)
+    ]
+
 )
 
 
 function (m::EarthModel)(r)
     for layer ∈ m.layers
         if r < layer.r_max && r >= layer.r_min
-            return layer.density(r / m.layers[end].r_max)
+            return 1.0
+            #return layer.density(r / m.layers[end].r_max)
         end
     end
 end
@@ -102,4 +110,5 @@ function prempath(zenith::T, zposition; samples=100, discrete_densities=nothing)
         densities = map(i->discrete_densities[i], idx)
     end
     Path(densities, sections)
+    @show densities, sections
 end

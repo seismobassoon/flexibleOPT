@@ -472,3 +472,51 @@ function readStagYYFiles(file)
    #fieldInterpolated=interpolate(nodes,newField,Gridded(Linear()))
 
 end
+
+
+
+function extendToCoreWithρ!(ρfield, Xnode, Ynode, rcmb, dR; dθ=2*π/360.0, iCheckCoreModel=true)
+    # local function here: this requires DSM1D.jl, testparam.csv
+    #
+    # This function will add the ρ field computed only for the core 
+
+    # Xnode and Ynodes are the one that we give but 
+
+    # the 1D core model will be given by specifying the file to use in testparam.csv 
+
+
+    premCMB = DSM1D.my1DDSMmodel.averagedPlanetCMBInKilometer * 1.e3
+
+    arrayRadius = collect(0:dR:rcmb)
+    if arrayRadius[end] != rcmb
+        arrayRadius = push!(arrayRadius,rcmb)
+    end
+    arrayRadiusFaked = min.(arrayRadius,premCMB) .* 1.e-3
+
+
+
+    _, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadiusFaked, "below")
+    #DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
+    #@show tmpDensity=arrayParams.ρ
+
+    tmpXnode = [(tmpRadius*cos(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
+    tmpYnode = [(tmpRadius*sin(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
+    tmpValue = [(1.e3*tmpDensity[iRadius]) for iRadius in eachindex(arrayRadius) for tmpθ in collect(0:dθ:2π)]
+    #@show minimum(tmpXnode),maximum(tmpXnode)
+
+    if iCheckCoreModel
+        f=Figure()
+    
+        lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
+
+        display(f)
+    end
+
+
+    Xnode=append!(Xnode,tmpXnode)
+    Ynode=append!(Ynode,tmpYnode)
+    ρfield=append!(ρfield,tmpValue)
+
+    return
+    
+end

@@ -42,3 +42,4 @@ H = Hamiltonian(osc)
 # here every zenith angle can have a different nₑ profile (note that nₑ= ρ * "Z/A" )
 
 zenith = acos.(range(-1,stop=0,length=200))
+@show paths = Neurthino.prempath(zenith, 2.5, samples=100, discrete_densities=0:0.1:14);
