@@ -19,5 +19,5 @@ global:
 
     modelFolder: ../data/model/
 # 6. interpolation method fo 1D model
-    傾き許容度: 2
+    傾き許容度: 0.01
     eps: 1.5e-3
