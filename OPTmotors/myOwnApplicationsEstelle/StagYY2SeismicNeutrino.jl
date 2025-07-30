@@ -271,6 +271,8 @@ function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vecto
 
     cos_θ = range(-1, 0, length = n_vectors)
 
+
+
     for i in 1:n_vectors
         cos_Φα1, cos_Φα2 = solveQuadraticEquation(1, -2 + 2*cos_θ[i], 1 - 2*cos_θ[i]^2)
 
@@ -279,6 +281,10 @@ function sourcePosition(center, positionDetector; earthRadius = 6.371e6, n_vecto
         else
             cos_Φα =cos_Φα2
         end
+
+
+        
+
 
         if yd > 6.5e6
             sin_Φα = sqrt(1 - cos_Φα^2)
