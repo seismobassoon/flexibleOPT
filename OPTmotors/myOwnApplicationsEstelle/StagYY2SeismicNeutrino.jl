@@ -261,9 +261,7 @@ function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius =
     rotation = cos_epi .+ im .* sin_epi
 
 
-
     for i in eachindex(cos_θ)
-  
         equ = ((xd - xc) + (yd-yc)*im) * rotation[i]
         X = real(equ)+xc
         Y = imag(equ)+yc
@@ -272,14 +270,13 @@ function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius =
         newX = nothing
         newY = nothing
         if cos_θ[i] !== 0.0
-                     
             if X-xd != 0.0
                 slope = (Y-yd)/(X-xd)
 
-                deuxiemeCoef = 1+slope^2
-                premierCoef = -2*xc + 2*Y*slope-2*slope^2*X-2*slope*yc
-                zeroiemeCoef = xc^2 + Y^2 - 2*Y*slope*X + slope^2*X^2 -2*Y*yc + 2*slope*X*yc +yc^2 - earthRadius^2
-                sol1,sol2 = solveQuadraticEquation(deuxiemeCoef,premierCoef,zeroiemeCoef)
+                a = 1+slope^2
+                b = -2*xc + 2*Y*slope-2*slope^2*X-2*slope*yc
+                c = xc^2 + Y^2 - 2*Y*slope*X + slope^2*X^2 -2*Y*yc + 2*slope*X*yc +yc^2 - earthRadius^2
+                sol1,sol2 = solveQuadraticEquation(a,b,c)
                 if (sol1-xd)*(X-xd)>0.0
                     newX = sol1
                     newY = Y + slope* (newX - X)
@@ -289,6 +286,19 @@ function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius =
                 end
 
             else
+                slope = (X-xd)/(Y-yd)
+                
+                a = 1+slope^2
+                b = -2*yc + 2*X*slope-2*slope^2*Y-2*slope*xc
+                c = yc^2 + X^2 - 2*X*slope*Y + slope^2*Y^2 -2*X*xc + 2*slope*Y*xc +xc^2 - earthRadius^2
+                sol1,sol2 = solveQuadraticEquation(a,b,c)
+                if (sol1-yd)*(Y-yd)>0.0
+                    newY = sol1
+                    newX = Y + slope* (newY - Y)
+                else
+                    newY = sol2
+                    newX = Y + slope* (newY - Y)
+                end
 
             end
 
