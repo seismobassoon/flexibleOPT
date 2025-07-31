@@ -17,7 +17,7 @@ import Base
 export oscprob, Pνν, OscillationParameters, PMNSMatrix, Hamiltonian, MatterOscillationMatrices
 export masssquareddiff!, setΔm²!, cpphase!, setδ!, mixingangle!, setθ!
 export cpphases, mixingangles
-
+export Path
 export NeutrinoFlavour, Electron, Muon, Tau
 
 const N_A = 6.022e23 #[mol^-1]
