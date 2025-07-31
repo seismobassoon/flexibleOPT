@@ -272,22 +272,20 @@ function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius =
         newX = nothing
         newY = nothing
         if cos_θ[i] !== 0.0
-            #matrixA = [X Y ; xd yd]
-           
                      
-            if Y-yd != 0.0
-                slope = (X-xd)/(Y-yd)
+            if X-xd != 0.0
+                slope = (Y-yd)/(X-xd)
 
                 deuxiemeCoef = 1+slope^2
                 premierCoef = -2*xc + 2*Y*slope-2*slope^2*X-2*slope*yc
                 zeroiemeCoef = xc^2 + Y^2 - 2*Y*slope*X + slope^2*X^2 -2*Y*yc + 2*slope*X*yc +yc^2 - earthRadius^2
                 sol1,sol2 = solveQuadraticEquation(deuxiemeCoef,premierCoef,zeroiemeCoef)
-                if abs(sol1-xd) < 2*zposition
+                if (sol1-xd)*(X-xd)>0.0
                     newX = sol1
-                    newY = (-coef[1]*newX -1)/coef[2]
+                    newY = Y + slope* (newX - X)
                 else
                     newX = sol2
-                    newY = (-coef[1]*newX -1)/coef[2]
+                    newY = Y + slope* (newX - X)
                 end
 
             else
@@ -296,8 +294,8 @@ function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius =
 
         else
             segmentfromDtoS = sqrt(earthRadius^2-(earthRadius-zposition)^2)
-            newX = xd + (-yd+yc)/(earthRadius-zposition)*segmentfromDtoS
-            newY = yd + (-xd+xc)/(earthRadius-zposition)*segmentfromDtoS
+            newX = xd + -(yd-yc)/(earthRadius-zposition)*segmentfromDtoS
+            newY = yd + (xd-xc)/(earthRadius-zposition)*segmentfromDtoS
         end
         push!(XY, (newX,newY))
 
@@ -358,12 +356,12 @@ function vectorsFromDetector(n_vectors = 7, center = [6.5e6, 6.5e6])
 
     end
 
-    display(fig1)
+    #display(fig1)
     return densities_list, sections_list
 end
 
-#densities ,sections=vectorsFromDetector()
-#export densities, sections
+densities ,sections=vectorsFromDetector()
+export densities, sections
 
 
 
