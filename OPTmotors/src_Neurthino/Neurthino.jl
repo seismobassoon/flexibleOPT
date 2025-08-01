@@ -8,7 +8,7 @@ using Graphs
 #using StaticArrays
 #using Polynomials
 #using DocStringExtensions
-#using LRUCache
+using LRUCache
 #using LightGraphs
 using AxisArrays
 
