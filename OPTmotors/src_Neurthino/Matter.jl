@@ -1,10 +1,12 @@
-
 struct Path
     density::Vector{Float64}
     baseline::Vector{Float64}
 end
 
 Path(density::Number, baseline::Number) = Path([density],[baseline])
+
+
+
 
 Base.iterate(p::Path, state=1) = state > length(p.density) ? nothing : ( (p.density[state], p.baseline[state]),  state+1)
 
@@ -110,9 +112,12 @@ function oscprob(U, H, energy::Vector{T}, path::Vector{Path}; zoa=0.5, anti=fals
             tmp = Matrix{ComplexF64}(1I, size(U))
             for (m,b) in enumerate(p.baseline)
                 @inbounds ρ = p.density[m]
+
                 U_mat, H_mat = get!(lru, (E, ρ)) do
                     MatterOscillationMatrices(copy(H_eff), E, ρ; zoa=zoa, anti=anti)
                 end  
+
+                #U_mat, H_mat = MatterOscillationMatrices(copy(H_eff), E, ρ; zoa=zoa, anti=anti)
                 tmp *= Neurthino._oscprobampl(U_mat, H_mat, E, b)
             end
             @inbounds A[k, l,  :, :] = tmp        
@@ -123,9 +128,9 @@ function oscprob(U, H, energy::Vector{T}, path::Vector{Path}; zoa=0.5, anti=fals
     AxisArray(P; Energy=energy, Path=path, InitFlav=flavrange, FinalFlav=flavrange)
 end
 
-const oscprob(U, H, energy::T, path::Vector{Path}; zoa=0.5, anti=false) where {T <: Real} = oscprob(U, H, [energy], path; zoa=zoa, anti=anti)
+#const oscprob(U, H, energy::T, path::Vector{Path}; zoa=0.5, anti=false) where {T <: Real} = oscprob(U, H, [energy], path; zoa=zoa, anti=anti)
 
-const oscprob(U, H, energy, path::Path; zoa=0.5, anti=false) = oscprob(U, H, energy, [path]; zoa=zoa, anti=anti)
+#const oscprob(U, H, energy, path::Path; zoa=0.5, anti=false) = oscprob(U, H, energy, [path]; zoa=zoa, anti=anti)
 
 """
 

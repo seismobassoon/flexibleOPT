@@ -109,6 +109,8 @@ function prempath(zenith::T, zposition; samples=100, discrete_densities=nothing)
         idx = map(d->searchsortedfirst(discrete_densities,d), densities)
         densities = map(i->discrete_densities[i], idx)
     end
-    Path(densities, sections)
-    @show densities, sections
+    #return Path(densities, sections)
+    #@show densities, sections
+
+    return [Path(ρ,L) for (ρ,L) in zip(densities, sections)]
 end

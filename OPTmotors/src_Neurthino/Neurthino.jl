@@ -8,13 +8,13 @@ using Graphs
 #using StaticArrays
 #using Polynomials
 #using DocStringExtensions
-#using LRUCache
+using LRUCache
 #using LightGraphs
 using AxisArrays
 
 import Base
 
-export oscprob, Pνν, OscillationParameters, PMNSMatrix, Hamiltonian, MatterOscillationMatrices
+export oscprob, Pνν, Pνν, OscillationParameters, PMNSMatrix, Hamiltonian, MatterOscillationMatrices
 export masssquareddiff!, setΔm²!, cpphase!, setδ!, mixingangle!, setθ!
 export cpphases, mixingangles
 export Path
