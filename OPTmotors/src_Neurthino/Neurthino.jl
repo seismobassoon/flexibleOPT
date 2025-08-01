@@ -14,7 +14,7 @@ using AxisArrays
 
 import Base
 
-export oscprob, Pνν, OscillationParameters, PMNSMatrix, Hamiltonian, MatterOscillationMatrices
+export oscprob, Pνν, Pνν, OscillationParameters, PMNSMatrix, Hamiltonian, MatterOscillationMatrices
 export masssquareddiff!, setΔm²!, cpphase!, setδ!, mixingangle!, setθ!
 export cpphases, mixingangles
 
