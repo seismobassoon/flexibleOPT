@@ -10,12 +10,9 @@ using DIVAnd,CairoMakie
 using Interpolations
 using GLMakie
 using Colors
-using LinearAlgebra
-
-
 include("../src/batchStagYY.jl")
-#include("testNeurthino.jl")
-
+include("../src_Neurthino/Neurthino.jl")
+using .Neurthino
 
 
 function myDensityFrom1DModel(arrayRadius)
@@ -198,7 +195,7 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
     
     dist = segmentLength*collect(0:1:n_pts-1) #revoir pourquoi pb de dimension
 
-    lines!(ax1, dist, densGrids, color=colorname) #valeurs axe des abscisses à revoir
+    lines!(ax1, dist, densGrids, color=colorname)
     return dens, sections
 end
 
@@ -213,7 +210,6 @@ function interactiveDetector(iTime = 200)
         if event.button == Mouse.left
             if event.action == Mouse.press
                 pos = mouseposition(ax.scene)
-                println("mouseposition(): $pos")
                 clicked_point[] = pos
              end
         end
@@ -248,13 +244,26 @@ function solveQuadraticEquation(a,b,c)
 
 end
 
-function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius = 6.371e6, n_vectors=7)
+
+n_vectors=7
+
+function posOrNeg(cos_θ, sign = :positive)
+    if sign == :positive
+        θ = acos.(cos_θ)
+    else
+        θ = .- acos.(cos_θ)
+    end
+    return θ
+end
+
+
+function sourcePosition(center, positionDetector, n_vectors; zposition=2.5e3, earthRadius = 6.371e6)
     (xc, yc) = center[1], center[2]
     (xd, yd) = positionDetector[1], positionDetector[2]
     XY = []
 
     cos_θ = range(-1, 0, length = n_vectors)
-    θ = acos.(cos_θ)
+    θ = posOrNeg(cos_θ, :positive)
     doubleθ = 2 .*θ
     cos_epi = cos.(doubleθ .- π)
     sin_epi = sin.(doubleθ .- π)
@@ -304,8 +313,13 @@ function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius =
 
         else
             segmentfromDtoS = sqrt(earthRadius^2-(earthRadius-zposition)^2)
-            newX = xd + -(yd-yc)/(earthRadius-zposition)*segmentfromDtoS
-            newY = yd + (xd-xc)/(earthRadius-zposition)*segmentfromDtoS
+            if θ[i] > 0
+                newX = xd - (yd-yc)/(earthRadius-zposition)*segmentfromDtoS
+                newY = yd + (xd-xc)/(earthRadius-zposition)*segmentfromDtoS
+            else 
+                newX = xd + (yd-yc)/(earthRadius-zposition)*segmentfromDtoS
+                newY = yd - (xd-xc)/(earthRadius-zposition)*segmentfromDtoS
+            end
         end
         push!(XY, (newX,newY))
 
@@ -314,20 +328,8 @@ function sourcePosition(center, positionDetector; zposition=2.5e3, earthRadius =
 
 end
 
-#== à continuer
-function posOrNeg(cos_θ, sign = :positive)
-    if sign== :positive
-        θ = acos.(cos_θ)
-    else
-        θ = .- acos.(cos_θ)
-    end
-    @show θ
-end
 
-#theta = posOrNeg(range(-1, 0, 4), :negative)
-==#
-
-function vectorsFromDetector(n_vectors = 7, center = [6.5e6, 6.5e6])
+function vectorsFromDetector(n_vectors;center = [6.5e6, 6.5e6])
     #draw n_vectors (diff θ) for a positionDetector (coordinates)
 
     clicked_point, fig, ax, fi = interactiveDetector()
@@ -340,7 +342,7 @@ function vectorsFromDetector(n_vectors = 7, center = [6.5e6, 6.5e6])
     pos = clicked_point[]
     x, y = pos[1], pos[2]
     new_x, new_y,zposition = correctedPosition(x,y) 
-    XY = sourcePosition((center[1], center[2]), (new_x, new_y); zposition=zposition)
+    XY = sourcePosition((center[1], center[2]), (new_x, new_y), n_vectors; zposition=zposition)
 
     segments_pts = []
     for source in XY
@@ -358,45 +360,70 @@ function vectorsFromDetector(n_vectors = 7, center = [6.5e6, 6.5e6])
     sections_list = []
     for i in 1:n_vectors
         colorname = rand(collect(keys(Colors.color_names)))
-        @show detector = new_x, new_y
-        @show source = XY[i][1], XY[i][2]
+        detector = new_x, new_y
+        source = XY[i][1], XY[i][2]
         dens, section = lineDensityElectron2D(detector,source, colorname, ax1, dR)
+
         push!(densities_list, dens)
         push!(sections_list, section)
 
     end
 
-    #display(fig1)
+    display(fig1)
     return densities_list, sections_list
 end
 
-densities ,sections=vectorsFromDetector()
+densities ,sections=vectorsFromDetector(n_vectors)
 export densities, sections
 
 
-
-
-
-
-
 #==
-function linkWithNeurthino()
-    densities_list, sections_list = vectorsFromDetector()
-    for i in 1:7
-        paths = Path(densities_list[i], sections_list[i])
-        energies = 10 .^ range(0, stop=2, length=7);
-        prob = Pνν(U, H, energies, paths);
+function creationPaths(n_vectors;depthDetectorInM=2.5e3)
+
+    dens, section = vectorsFromDetector(n_vectors) 
+
+    paths = []
+    for i in eachindex(dens)
+        Path(dens[i],section[i])
+        push!(paths, Path(dens[i],section[i]))
     end
+    return paths
+end
+
+
+function linkWithNeurthino()
+    osc = OscillationParameters(3)
+    setθ!(osc, 1=>2, 0.59)
+    setθ!(osc, 1=>3, 0.15)
+    setθ!(osc, 2=>3, 0.84)
+    setδ!(osc, 1=>3, 3.86)
+    setΔm²!(osc, 2=>3, -2.523e-3)
+    setΔm²!(osc, 1=>2, -7.39e-5)
+    U = PMNSMatrix(osc)
+    H = Hamiltonian(osc)
+
+
+    paths = creationPaths(n_vectors)
+    energies = 10 .^ range(0, stop=2, length=n_vectors)   
+    prob = [Pνν(U, H, energies, path) for path in paths]
+
+
+    fig = Figure()
+    ax = Axis(fig[1,1], aspect = 1)
+    hm=heatmap!(ax, energies, cos_θ, prob, colormap=inferno)
+    Colorbar(fig[:,2], hm)
+    display(fig)
+
     return energies, prob
 end
 
-#energies, prob = linkWithNeurthino()
-#@show energies, prob
-==#
+energies, prob = linkWithNeurthino()
+@show energies, prob
 
 
 
-#==
+
+
 test
 
 myAnimation(20,200,"temperature", temperatureFiles)
