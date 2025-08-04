@@ -8,7 +8,7 @@ include("../src/batchUseful.jl")
 using .DSM1D
 using DIVAnd,CairoMakie
 using Interpolations
-using GLMakie
+import GLMakie
 using Colors
 include("../src/batchStagYY.jl")
 include("../src_Neurthino/Neurthino.jl")
@@ -170,7 +170,7 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
     y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
     
     lines!(ax, x_phys,y_phys, color=colorname)  # (x,y)_phys in m
-    display(GLMakie.Screen(), fig)
+    display(fig)
 
     x_grid = x_phys ./dR
     y_grid = y_phys ./dR
@@ -190,7 +190,7 @@ function lineDensityElectron2D(positionDetector, NeutrinoSource, colorname, ax1,
         push!(dens, 0.5*(densGrids[i]+densGrids[i+1]))
     end
 
-    segmentLength = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[1])) * 1.e-3 # in km
+    segmentLength = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[1])^2) * 1.e-3 # in km
     sections = segmentLength .* ones(Float64,n_pts-1)
     
     dist = segmentLength*collect(0:1:n_pts-1) #revoir pourquoi pb de dimension
@@ -201,15 +201,32 @@ end
 
 
 function interactiveDetector(iTime = 200)
-    fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
-    display(fig)
+    filename = rhoFiles
+    fieldname = "rho"
+    file = filename[iTime]
+    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
+    extendToCoreWithρ!(field, Xnode, Ynode, rcmb, dR, iCheckCoreModel=false)
+    quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
+    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
+    
+    diam = maxX - minX
+    x = range(0, diam, length=521)
+    y = range(0, diam, length=521)
+    GLMakie.activate!()
+    fig = GLMakie.Figure()
+    ax = GLMakie.Axis(fig[1,1], aspect = 1)
+    colormap = myChoiceColormap(fieldname)
+    hm=GLMakie.heatmap!(ax, x, y, fi, colormap=colormap)#, colorrange=()) if needed
+    GLMakie.Colorbar(fig[:,2], hm)
 
-    clicked_point = Observable(Point2f(NaN, NaN))
+    GLMakie.display(fig)
 
-    on(events(fig.scene).mousebutton, priority = 0) do event
-        if event.button == Mouse.left
-            if event.action == Mouse.press
-                pos = mouseposition(ax.scene)
+    clicked_point = GLMakie.Observable(GLMakie.Point2f(NaN, NaN))
+
+    GLMakie.on(GLMakie.events(fig.scene).mousebutton, priority = 0) do event
+        if event.button == GLMakie.Mouse.left
+            if event.action == GLMakie.Mouse.press
+                pos = GLMakie.mouseposition(ax.scene)
                 clicked_point[] = pos
              end
         end
@@ -332,8 +349,9 @@ end
 function vectorsFromDetector(n_vectors;center = [6.5e6, 6.5e6])
     #draw n_vectors (diff θ) for a positionDetector (coordinates)
 
-    clicked_point, fig, ax, fi = interactiveDetector()
+    clicked_point, fig, ax, _ = interactiveDetector()
     println("Choose detector's position")
+    
 
     while isnan(clicked_point[][1])
         sleep(0.1)
@@ -350,9 +368,11 @@ function vectorsFromDetector(n_vectors;center = [6.5e6, 6.5e6])
         push!(segments_pts, (source[1], source[2]))
     end
 
-    linesegments!(ax, segments_pts)
-    display(fig)
+    GLMakie.linesegments!(ax, segments_pts)
+    GLMakie.display(fig)
 
+
+    CairoMakie.activate!()
     fig1 = Figure()
     ax1 = Axis(fig1[1,1])
 
@@ -362,7 +382,7 @@ function vectorsFromDetector(n_vectors;center = [6.5e6, 6.5e6])
         colorname = rand(collect(keys(Colors.color_names)))
         detector = new_x, new_y
         source = XY[i][1], XY[i][2]
-        dens, section = lineDensityElectron2D(detector,source, colorname, ax1, dR)
+        dens, section = lineDensityElectron2D(detector,source, colorname, ax1, dR) #probleme affichage profil
 
         push!(densities_list, dens)
         push!(sections_list, section)
