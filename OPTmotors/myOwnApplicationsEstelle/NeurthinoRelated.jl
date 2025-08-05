@@ -63,21 +63,20 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     itp = interpolate(fi, BSpline(Linear()), OnGrid())
     exitp = extrapolate(itp, 0.0)
 
-    densGrids = []
+    densGrids = Float64[]
     for i in 1:n_pts
         x = x_grid[i]
         y = y_grid[i]
         push!(densGrids, exitp(x,y))
     end
 
-    dens=[]
+    dens=Float64[]
     for i in 1:n_pts-1
         push!(dens, 0.5*(densGrids[i]+densGrids[i+1]))
     end
 
     segmentLength = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[1])^2) * 1.e-3 # in km
-    sections = segmentLength .* ones(Float64,n_pts-1)
-    
+    sections = segmentLength .* ones(Float64,n_pts-1) #on peut mettre juste npts non?
     dist = segmentLength*collect(0:1:n_pts-1)
 
     lines!(ax1, dist, densGrids, color=colorname)
@@ -254,19 +253,21 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
     fig1 = Figure()
     ax1 = Axis(fig1[1,1])
 
-    densities_list = []
-    sections_list = []
+    #densities_list = []
+    #sections_list = []
+    dens = nothing
+    section = nothing
     for i in 1:n_vectors
         colorname = rand(collect(keys(Colors.color_names)))
         detector = new_x, new_y
         source = XY[i][1], XY[i][2]
-        dens, section = lineDensityElectron2D(n_pts, iTime, detector,source, colorname, ax1, dR) #probleme affichage profil
+        dens, section = lineDensityElectron2D(n_pts, iTime, detector,source, colorname, ax1, dR)
 
-        push!(densities_list, dens)
-        push!(sections_list, section)
+        #push!(densities_list, dens)
+        #push!(sections_list, section)
 
     end
 
     display(fig1)
-    return densities_list, sections_list
+    return dens, section
 end

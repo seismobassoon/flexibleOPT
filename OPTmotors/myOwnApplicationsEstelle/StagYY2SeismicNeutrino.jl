@@ -63,20 +63,20 @@ n_pts = 100
 n_vectors = 7
 zposition = 2.5e3 
 
-densities ,sections = vectorsFromDetector(n_vectors, zposition)
-export densities, sections
+#vectorsFromDetector(n_vectors, zposition)
 
 
-#==
-function creationPaths(n_vectors;depthDetectorInM=2.5e3)
+# Neurthino tests
+function creationPaths(n_vectors, zposition)
 
-    dens, section = vectorsFromDetector(n_vectors) 
+    dens, section = vectorsFromDetector(n_vectors, zposition) 
+    
+    paths = Vector{Vector{Path}}(undef, n_vectors)  
 
-    paths = []
-    for i in eachindex(dens)
-        Path(dens[i],section[i])
-        push!(paths, Path(dens[i],section[i]))
+    for i in 1:n_vectors
+        paths[i]= [Path(dens[j],section[j]) for j in 1:n_pts-1]
     end
+
     return paths
 end
 
@@ -91,29 +91,31 @@ function linkWithNeurthino()
     setΔm²!(osc, 1=>2, -7.39e-5)
     U = PMNSMatrix(osc)
     H = Hamiltonian(osc)
+    cos_θ = range(-1, 0, length = n_vectors)
 
-
-    paths = creationPaths(n_vectors)
+    paths = creationPaths(n_vectors, zposition)
     energies = 10 .^ range(0, stop=2, length=n_vectors)   
-    prob = [Pνν(U, H, energies, path) for path in paths]
-
+    #probs = collect(Pνν(U, H, energies, path) for path in paths)
+    probs = [Pνν(U, H, energies[j], path)[1, 1, 1, 2] for path in paths, j in eachindex(energies)]
+    
 
     fig = Figure()
-    ax = Axis(fig[1,1], aspect = 1)
-    hm=heatmap!(ax, energies, cos_θ, prob, colormap=inferno)
+    ax = Axis(fig[1,1], aspect = 1, xscale=log10)
+    hm=heatmap!(ax, energies, cos_θ, probs, colormap=cgrad(:inferno))
     Colorbar(fig[:,2], hm)
     display(fig)
 
-    return energies, prob
+    return energies, probs
 end
 
-energies, prob = linkWithNeurthino()
-@show energies, prob
+linkWithNeurthino()
 
 
 
 
+#==#
 
+#==
 test
 
 myAnimation(20,200,"temperature", temperatureFiles)

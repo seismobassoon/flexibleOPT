@@ -16,6 +16,7 @@ include("../src_Neurthino/Neurthino.jl")
 #using .Neurthino: OscillationParameters, setθ!, setδ!, setΔm²!
 using .Neurthino
 using .DSM1D
+using CairoMakie
 
 
 osc = OscillationParameters(3)
@@ -49,8 +50,14 @@ paths = Neurthino.prempath(zenith, 2.5, samples=100, discrete_densities=0:0.1:14
     #paths[i]=tmpPaths
 #end
 # paths = PATH(vector(density discretised),vector(segment lenghts in km))
-@show typeof(paths)
-
+@show paths[1]
+cos_θ = range(-1, 0, length = 200)
 energies = 10 .^ range(0, stop=2, length=200)
 #@show prob = Pνν(U, H, energies, paths)
-probs = collect(Pνν(U, H, energies, path) for path in paths)
+probs = [Pνν(U, H, energies[j], path)[1, 1, 1, 2] for path in paths, j in eachindex(energies)]
+
+fig = Figure()
+ax = Axis(fig[1,1], aspect = 1, xscale=log10)
+hm=heatmap!(ax, energies, cos_θ, probs, colormap=cgrad(:inferno))
+Colorbar(fig[:,2], hm)
+display(fig)
