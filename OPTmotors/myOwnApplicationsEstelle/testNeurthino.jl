@@ -50,11 +50,10 @@ paths = Neurthino.prempath(zenith, 2.5, samples=100, discrete_densities=0:0.1:14
     #paths[i]=tmpPaths
 #end
 # paths = PATH(vector(density discretised),vector(segment lenghts in km))
-@show paths[1]
 cos_θ = range(-1, 0, length = 200)
 energies = 10 .^ range(0, stop=2, length=200)
 #@show prob = Pνν(U, H, energies, paths)
-probs = [Pνν(U, H, energies[j], path)[1, 1, 1, 2] for path in paths, j in eachindex(energies)]
+probs = [Pνν(U, H, energies[j], path)[1, 1, 1, 1] for j in eachindex(energies), path in paths]
 
 fig = Figure()
 ax = Axis(fig[1,1], aspect = 1, xscale=log10)

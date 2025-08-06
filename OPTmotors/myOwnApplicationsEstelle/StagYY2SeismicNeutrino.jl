@@ -63,9 +63,9 @@ n_pts = 100
 n_vectors = 7
 zposition = 2.5e3 
 
-#vectorsFromDetector(n_vectors, zposition)
+vectorsFromDetector(n_vectors, zposition)
 
-
+#==
 # Neurthino tests
 function creationPaths(n_vectors, zposition)
 
@@ -96,8 +96,7 @@ function linkWithNeurthino()
     paths = creationPaths(n_vectors, zposition)
     energies = 10 .^ range(0, stop=2, length=n_vectors)   
     #probs = collect(Pνν(U, H, energies, path) for path in paths)
-    probs = [Pνν(U, H, energies[j], path)[1, 1, 1, 2] for path in paths, j in eachindex(energies)]
-    
+    probs = [Pνν(U, H, energies[j], path)[1, 1, 2, 2] for j in eachindex(energies), path in paths]
 
     fig = Figure()
     ax = Axis(fig[1,1], aspect = 1, xscale=log10)
@@ -113,7 +112,7 @@ linkWithNeurthino()
 
 
 
-#==#
+==#
 
 #==
 test
