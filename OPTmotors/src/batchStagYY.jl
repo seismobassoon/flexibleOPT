@@ -161,7 +161,7 @@ function read_header(io,inputILEN,magic)
     end
     
     if magic >=7 # core radius for cylindrical or spherical geometry
-        @show rcmb= binRead(io,floatDataType)
+        rcmb= binRead(io,floatDataType)
 
         if rcmb==-1.
             boolSpherical= false  #cartesian
@@ -181,8 +181,8 @@ function read_header(io,inputILEN,magic)
 
 
     if magic >= 3
-        @show iStep = binRead(io,intDataType)
-        @show time =  binRead(io,floatDataType)
+        iStep = binRead(io,intDataType)
+        time =  binRead(io,floatDataType)
     else
         istep = 0
         time = 0.0

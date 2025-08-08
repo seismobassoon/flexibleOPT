@@ -20,11 +20,15 @@ function densityVariation(iTime; fieldname="rho", filename=rhoFiles)
     quarterDiskExtrapolationRawGrid!(frho, Xnode, Ynode)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
 
+    diam = maxX - minX
+    x = range(0, diam, length=521)
+    y = range(0, diam, length=521)
+
     fig = Figure()
     ax = Axis(fig[1,1],aspect = 1)
     colormap = myChoiceColormap(fieldname)
-    hm = heatmap!(ax,fi,colormap=colormap,colorrange=(-0.005,0.005))
-    Colorbar(fig[:, 2], hm)
+    hm = heatmap!(ax, x, y, fi,colormap=colormap,colorrange=(-0.005,0.005))
+    Colorbar(fig[:, 2], hm, label = "(ρ(r)-ρPREM(r))/ρPREM(r)")
 
     display(fig)
 end
@@ -67,16 +71,18 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     for i in 1:n_pts
         x = x_grid[i]
         y = y_grid[i]
-        push!(densGrids, exitp(x,y))
+        push!(densGrids, exitp(x,y)*1e-3)
     end
 
     dens=Float64[]
     for i in 1:n_pts-1
         push!(dens, 0.5*(densGrids[i]+densGrids[i+1]))
     end
+    @show densGrids[1]
+    @show dens[1]
 
     segmentLength = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[1])^2) * 1.e-3 # in km
-    sections = segmentLength .* ones(Float64,n_pts-1) #on peut mettre juste npts non?
+    sections = segmentLength .* ones(Float64,n_pts-1)
     dist = segmentLength*collect(0:1:n_pts-1)
 
     lines!(ax1, dist, densGrids, color=colorname)
@@ -246,12 +252,12 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
         push!(segments_pts, (source[1], source[2]))
     end
 
-    GLMakie.linesegments!(ax, segments_pts)
+    GLMakie.linesegments!(ax, segments_pts, color=:black)
     GLMakie.display(fig)
 
     CairoMakie.activate!()
     fig1 = Figure()
-    ax1 = Axis(fig1[1,1])
+    ax1 = Axis(fig1[1,1], xlabel="Path (km)", ylabel="Density (kg/m3)")
 
     #densities_list = []
     #sections_list = []

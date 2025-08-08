@@ -51,26 +51,25 @@ end
 # file types
 dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025/"
 dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_first_run/"
+#dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_old_full_mars_2025/"
 rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 compositionFiles=myListDir(dir; pattern=r"test_c\d");
 temperatureFiles=myListDir(dir; pattern=r"test_t\d");
 wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
+#wtrFiles = filter(f -> !occursin(r"/\._", f), wtrFiles) #si données op_old_full_mars_2025
 
 
-#affichage des profils densité/distance pour n_vectors à partir d'un détecteur placé par l'utilisateur
 iTime = 200
 n_pts = 100
-n_vectors = 7
+n_vectors = 10
 zposition = 2.5e3 
 
-vectorsFromDetector(n_vectors, zposition)
+#vectorsFromDetector(n_vectors, zposition)
 
-#==
 # Neurthino tests
 function creationPaths(n_vectors, zposition)
 
     dens, section = vectorsFromDetector(n_vectors, zposition) 
-    
     paths = Vector{Vector{Path}}(undef, n_vectors)  
 
     for i in 1:n_vectors
@@ -94,25 +93,26 @@ function linkWithNeurthino()
     cos_θ = range(-1, 0, length = n_vectors)
 
     paths = creationPaths(n_vectors, zposition)
-    energies = 10 .^ range(0, stop=2, length=n_vectors)   
+    energies = 10 .^ range(0, stop=2, length=n_vectors)
     #probs = collect(Pνν(U, H, energies, path) for path in paths)
     probs = [Pνν(U, H, energies[j], path)[1, 1, 2, 2] for j in eachindex(energies), path in paths]
 
     fig = Figure()
-    ax = Axis(fig[1,1], aspect = 1, xscale=log10)
-    hm=heatmap!(ax, energies, cos_θ, probs, colormap=cgrad(:inferno))
-    Colorbar(fig[:,2], hm)
+    ax = Axis(fig[1,1], aspect = 1, xscale=log10, xlabel="Energy (GeV)", ylabel="cos(θ)")
+    hm=heatmap!(ax, energies, cos_θ, probs, colormap=cgrad(:inferno))#, colorrange=(0,1))
+    Colorbar(fig[:,2], hm, label="Probability")
     display(fig)
 
     return energies, probs
 end
 
-linkWithNeurthino()
+#linkWithNeurthino()
 
 
+#fig, _, _ = myPlot2DConvectionModel(200, "temperature", temperatureFiles)
+#display(fig)
 
-
-==#
+#==#
 
 #==
 test

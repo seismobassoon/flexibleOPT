@@ -22,15 +22,18 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
     quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
     
-    diam = maxX - minX
-    x = range(0, diam, length=521)
-    y = range(0, diam, length=521)
+    diam = maxX - minX #earth
+    #diam = 3389e3*2 #mars
+    x = range(0, diam, length=size(fi)[1])
+    y = range(0, diam, length=size(fi)[2])
 
     fig = Figure()
     ax = Axis(fig[1,1], aspect = 1)
     colormap = myChoiceColormap(fieldname)
-    hm=heatmap!(ax, x, y, fi, colormap=colormap)#, colorrange=()) if needed
-    Colorbar(fig[:,2], hm)
+    @show extrema(fi)
+    #colorrange = extrema(fi)
+    hm=heatmap!(ax,x, y, fi, colormap=colormap)
+    Colorbar(fig[:,2], hm, label="Density 'kg/m3")
 
     return fig, ax, fi
 end
