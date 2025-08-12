@@ -30,10 +30,8 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
     fig = Figure()
     ax = Axis(fig[1,1], aspect = 1)
     colormap = myChoiceColormap(fieldname)
-    @show extrema(fi)
-    #colorrange = extrema(fi)
     hm=heatmap!(ax,x, y, fi, colormap=colormap)
-    Colorbar(fig[:,2], hm, label="Density 'kg/m3")
+    Colorbar(fig[:,2], hm, label="Density (kg/m3)")
 
     return fig, ax, fi
 end

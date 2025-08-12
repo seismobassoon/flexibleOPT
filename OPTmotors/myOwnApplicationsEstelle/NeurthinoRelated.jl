@@ -21,8 +21,8 @@ function densityVariation(iTime; fieldname="rho", filename=rhoFiles)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
 
     diam = maxX - minX
-    x = range(0, diam, length=521)
-    y = range(0, diam, length=521)
+    x = range(0, diam, length=size(fi)[1])
+    y = range(0, diam, length=size(fi)[2])
 
     fig = Figure()
     ax = Axis(fig[1,1],aspect = 1)
@@ -36,7 +36,7 @@ end
 
 #not used
 function lineDensityElectron1D(positionDetector, NeutrinoSource, n_pts)
-    x_values = range(NeutrinoSource[1], positionDetector[1] , length=n_pts)
+    x_values = range(NeutrinoSource[1], positionDetector[1], length=n_pts)
     y_values = range(NeutrinoSource[2], positionDetector[2], length=n_pts)
     z_values = range(NeutrinoSource[3], positionDetector[3], length=n_pts)
 
@@ -65,25 +65,22 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     x_grid = x_phys ./dR
     y_grid = y_phys ./dR
     itp = interpolate(fi, BSpline(Linear()), OnGrid())
-    exitp = extrapolate(itp, 0.0)
 
     densGrids = Float64[]
-    for i in 1:n_pts
+    for i in eachindex(x_grid)
         x = x_grid[i]
         y = y_grid[i]
-        push!(densGrids, exitp(x,y)*1e-3)
+        push!(densGrids, itp(x,y)*1e-3)
     end
 
     dens=Float64[]
-    for i in 1:n_pts-1
+    for i in eachindex(densGrids)[1:end-1]
         push!(dens, 0.5*(densGrids[i]+densGrids[i+1]))
     end
-    @show densGrids[1]
-    @show dens[1]
 
-    segmentLength = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[1])^2) * 1.e-3 # in km
-    sections = segmentLength .* ones(Float64,n_pts-1)
-    dist = segmentLength*collect(0:1:n_pts-1)
+    segmentLengthInKm = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[1])^2) * 1.e-3
+    sections = segmentLengthInKm .* ones(Float64,n_pts-1)
+    dist = segmentLengthInKm*collect(0:1:n_pts-1)
 
     lines!(ax1, dist, densGrids, color=colorname)
     return dens, sections
@@ -98,16 +95,15 @@ function interactiveDetector(iTime; fieldname="rho", filename=rhoFiles)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
     
     diam = maxX - minX
-    x = range(0, diam, length=521)
-    y = range(0, diam, length=521)
+    x = range(0, diam, length=size(fi)[1])
+    y = range(0, diam, length=size(fi)[2])
 
     GLMakie.activate!()
     fig = GLMakie.Figure()
     ax = GLMakie.Axis(fig[1,1], aspect = 1)
     colormap = myChoiceColormap(fieldname)
-    hm = GLMakie.heatmap!(ax, x, y, fi, colormap=colormap)#, colorrange=()) if needed
+    hm = GLMakie.heatmap!(ax, x, y, fi, colormap=colormap)
     GLMakie.Colorbar(fig[:,2], hm)
-
     GLMakie.display(fig)
 
     clicked_point = GLMakie.Observable(GLMakie.Point2f(NaN, NaN))
@@ -168,9 +164,8 @@ function sourcePosition(center, positionDetector, n_vectors, zposition; earthRad
 
     cos_θ = range(-1, 0, length = n_vectors)
     θ = posOrNeg(cos_θ, :positive)
-    doubleθ = 2 .*θ
-    cos_epi = cos.(doubleθ .- π)
-    sin_epi = sin.(doubleθ .- π)
+    cos_epi = cos.(2 .*θ .- π)
+    sin_epi = sin.(2 .*θ .- π)
     rotation = cos_epi .+ im .* sin_epi
 
 
@@ -190,6 +185,7 @@ function sourcePosition(center, positionDetector, n_vectors, zposition; earthRad
                 b = -2*xc + 2*Y*slope-2*slope^2*X-2*slope*yc
                 c = xc^2 + Y^2 - 2*Y*slope*X + slope^2*X^2 -2*Y*yc + 2*slope*X*yc +yc^2 - earthRadius^2
                 sol1,sol2 = solveQuadraticEquation(a,b,c)
+
                 if (sol1-xd)*(X-xd)>0.0
                     newX = sol1
                     newY = Y + slope* (newX - X)
@@ -205,6 +201,7 @@ function sourcePosition(center, positionDetector, n_vectors, zposition; earthRad
                 b = -2*yc + 2*X*slope-2*slope^2*Y-2*slope*xc
                 c = yc^2 + X^2 - 2*X*slope*Y + slope^2*Y^2 -2*X*xc + 2*slope*Y*xc +xc^2 - earthRadius^2
                 sol1,sol2 = solveQuadraticEquation(a,b,c)
+                
                 if (sol1-yd)*(Y-yd)>0.0
                     newY = sol1
                     newX = Y + slope* (newY - Y)
@@ -254,16 +251,15 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
 
     GLMakie.linesegments!(ax, segments_pts, color=:black)
     GLMakie.display(fig)
-
+    
     CairoMakie.activate!()
     fig1 = Figure()
     ax1 = Axis(fig1[1,1], xlabel="Path (km)", ylabel="Density (kg/m3)")
 
-    #densities_list = []
-    #sections_list = []
+
     dens = nothing
     section = nothing
-    for i in 1:n_vectors
+    for i in eachindex(XY)
         colorname = rand(collect(keys(Colors.color_names)))
         detector = new_x, new_y
         source = XY[i][1], XY[i][2]

@@ -59,6 +59,7 @@ wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
 #wtrFiles = filter(f -> !occursin(r"/\._", f), wtrFiles) #si données op_old_full_mars_2025
 
 
+
 iTime = 200
 n_pts = 100
 n_vectors = 10
@@ -106,13 +107,15 @@ function linkWithNeurthino()
     return energies, probs
 end
 
-#linkWithNeurthino()
+#==
+zoa_value = 0.5
+zoa = fill(zoa_value, size(fi)[1], size(fi)[2])
+densityModified = densities * 2 * zoa
+==#
+
+linkWithNeurthino()
 
 
-#fig, _, _ = myPlot2DConvectionModel(200, "temperature", temperatureFiles)
-#display(fig)
-
-#==#
 
 #==
 test
