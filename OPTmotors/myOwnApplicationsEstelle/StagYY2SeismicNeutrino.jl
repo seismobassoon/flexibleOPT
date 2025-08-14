@@ -73,6 +73,7 @@ function creationPaths(n_vectors, zposition)
     dens, section = vectorsFromDetector(n_vectors, zposition) 
     paths = Vector{Vector{Path}}(undef, n_vectors)  
 
+
     for i in 1:n_vectors
         paths[i]= [Path(dens[j],section[j]) for j in 1:n_pts-1]
     end
@@ -107,14 +108,14 @@ function linkWithNeurthino()
     return energies, probs
 end
 
+
+linkWithNeurthino()
+
 #==
 zoa_value = 0.5
 zoa = fill(zoa_value, size(fi)[1], size(fi)[2])
 densityModified = densities * 2 * zoa
 ==#
-
-linkWithNeurthino()
-
 
 
 #==

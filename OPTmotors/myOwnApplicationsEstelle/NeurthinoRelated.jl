@@ -254,7 +254,7 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
     
     CairoMakie.activate!()
     fig1 = Figure()
-    ax1 = Axis(fig1[1,1], xlabel="Path (km)", ylabel="Density (kg/m3)")
+    ax1 = Axis(fig1[1,1], xlabel="Path (km)", ylabel="Density (g/cm3)")
 
 
     dens = nothing
