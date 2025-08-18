@@ -1,4 +1,6 @@
-function myDensityFrom1DModel(arrayRadius)
+function myDensityFrom1DModel(arrayRadius) 
+    #dependencies : DSM1D
+
     radiusInKilometer = arrayRadius*1.e-3
     density  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, radiusInKilometer)
 
@@ -6,8 +8,10 @@ function myDensityFrom1DModel(arrayRadius)
 end
 
 
-#plot (rho(r)-rhoprem(r)/rhoprem(r))
 function densityVariation(iTime; fieldname="rho", filename=rhoFiles)
+    #to plot (rho(r)-rhoprem(r)/rhoprem(r))
+    #dependencies : Makie
+
     file=filename[iTime]
     field, Xnode, Ynode, rcmb = readStagYYFiles(file)
     densitiesInGcm3 = field*1e-3
@@ -53,8 +57,10 @@ end
 
 
 
-#draw a line between positionDetector and NeutrinoSource (coordinates) and give the density/distance profile
 function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, colorname, ax1, dR)
+    #draw a line between positionDetector and NeutrinoSource (coordinates) and give the density/distance profile
+    #dependencies : Makie
+
     fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
     x_phys = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
@@ -70,7 +76,7 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     for i in eachindex(x_grid)
         x = x_grid[i]
         y = y_grid[i]
-        push!(densGrids, itp(x,y)*1e-3)
+        push!(densGrids, itp(x,y)*1e-3) #g/cm3
     end
 
     dens=Float64[]
@@ -79,8 +85,8 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     end
 
     segmentLengthInKm = sqrt((x_phys[2]-x_phys[1])^2 + (y_phys[2]-y_phys[1])^2) * 1.e-3
-    sections = segmentLengthInKm .* ones(Float64,n_pts-1)
-    dist = segmentLengthInKm*collect(0:1:n_pts-1)
+    sections = segmentLengthInKm .* ones(Float64,n_pts-1) 
+    dist = segmentLengthInKm*collect(0:1:n_pts-1) #km
 
     lines!(ax1, dist, densGrids, color=colorname)
     return dens, sections
@@ -88,13 +94,16 @@ end
 
 
 function interactiveDetector(iTime; fieldname="rho", filename=rhoFiles)
+    #to create an interactive detector by clicking on the picture
+    #dependencies : GLMakie
+
     file = filename[iTime]
     field, Xnode, Ynode, rcmb = readStagYYFiles(file)
     extendToCoreWithρ!(field, Xnode, Ynode, rcmb, dR, iCheckCoreModel=false)
     quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
     
-    diam = maxX - minX
+    diam = maxX - minX #m
     x = range(0, diam, length=size(fi)[1])
     y = range(0, diam, length=size(fi)[2])
 
@@ -121,10 +130,12 @@ end
 
 
 function correctedPosition(x,y, zposition; center = [6.5e6, 6.5e6], earth_radius = 6.371e6)
+    #to place the detector precisely on the surface, then the detector is buried for zposition
+
     dx = x - center[1]
     dy = y - center[2]
 
-    real_pos = earth_radius - zposition
+    real_pos = earth_radius - zposition #m
     dist_radiale = sqrt(dx^2 + dy^2)
     new_x = center[1] + real_pos*dx/dist_radiale
     new_y = center[2] + real_pos*dy/dist_radiale
@@ -146,8 +157,8 @@ function solveQuadraticEquation(a,b,c)
 
 end
 
-#to choose if we want a positive or a negative angle
 function posOrNeg(cos_θ, sign = :positive)
+    #to choose if we want a positive or a negative angle
     if sign == :positive
         θ = acos.(cos_θ)
     else
@@ -158,8 +169,10 @@ end
 
 
 function sourcePosition(center, positionDetector, n_vectors, zposition; earthRadius = 6.371e6)
-    (xc, yc) = center[1], center[2]
-    (xd, yd) = positionDetector[1], positionDetector[2]
+    #to get the position of the different sources
+
+    (xc, yc) = center[1], center[2] #m 
+    (xd, yd) = positionDetector[1], positionDetector[2] #m
     XY = []
 
     cos_θ = range(-1, 0, length = n_vectors)
@@ -229,8 +242,10 @@ function sourcePosition(center, positionDetector, n_vectors, zposition; earthRad
 
 end
 
-#draw n_vectors (diff θ) from a detector (placed by interaction) and return density profiles for each vector through the Earth
 function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
+    #draw n_vectors (diff θ) from a detector (placed by interaction) and return density profiles for each vector through the Earth
+    #dependencies : GLMakie, Makie, Colors
+
     clicked_point, fig, ax, _ = interactiveDetector(iTime)
     println("Choose detector's position")
     

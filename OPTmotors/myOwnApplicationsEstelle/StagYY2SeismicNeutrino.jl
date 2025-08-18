@@ -96,8 +96,12 @@ function linkWithNeurthino()
 
     paths = creationPaths(n_vectors, zposition)
     energies = 10 .^ range(0, stop=2, length=n_vectors)
-    #probs = collect(Pνν(U, H, energies, path) for path in paths)
-    probs = [Pνν(U, H, energies[j], path)[1, 1, 2, 2] for j in eachindex(energies), path in paths]
+    #
+
+    probsOld = collect(Pνν(U, H, energies, path) for path in paths)
+    probs = Pνν(U, H, energies, paths)[:, :, 2, 2]
+    #probs = [Pνν(U, H, energies, path)[1, 1, 2, 2] for path in paths]
+
 
     fig = Figure()
     ax = Axis(fig[1,1], aspect = 1, xscale=log10, xlabel="Energy (GeV)", ylabel="cos(θ)")
@@ -105,11 +109,17 @@ function linkWithNeurthino()
     Colorbar(fig[:,2], hm, label="Probability")
     display(fig)
 
-    return energies, probs
+    return energies, probs,probsOld, paths
 end
 
 
-linkWithNeurthino()
+energies, probs,probsOld, paths=linkWithNeurthino()
+export energies, probs, probsOld, paths
+
+
+
+
+
 
 #==
 zoa_value = 0.5
