@@ -51,6 +51,8 @@ paths = Neurthino.prempath(zenith, 2.5, samples=100, discrete_densities=0:0.1:14
 # paths = PATH(vector(density discretised),vector(segment lenghts in km))
 @show typeof(paths)
 
-energies = 10 .^ range(0, stop=2, length=200)
+energies = 10 .^ range(0, stop=20, length=200)
 #@show prob = Pνν(U, H, energies, paths)
 probs = collect(Pνν(U, H, energies, path) for path in paths)
+
+typeof(probs)
