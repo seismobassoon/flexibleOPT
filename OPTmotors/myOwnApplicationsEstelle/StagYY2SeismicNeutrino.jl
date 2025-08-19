@@ -62,7 +62,7 @@ wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
 
 iTime = 200
 n_pts = 100
-n_vectors = 10
+n_vectors = 100
 zposition = 2.5e3 
 
 #vectorsFromDetector(n_vectors, zposition)
@@ -70,12 +70,11 @@ zposition = 2.5e3
 # Neurthino tests
 function creationPaths(n_vectors, zposition)
 
-    dens, section = vectorsFromDetector(n_vectors, zposition) 
-    paths = Vector{Vector{Path}}(undef, n_vectors)  
+    densities_list, sections_list = vectorsFromDetector(n_vectors, zposition) 
+    paths = Vector{Path}(undef, n_vectors)  
 
-
-    for i in 1:n_vectors
-        paths[i]= [Path(dens[j],section[j]) for j in 1:n_pts-1]
+    for i in eachindex(paths)
+        paths[i]= Path(densities_list[i],sections_list[i])
     end
 
     return paths
@@ -96,25 +95,21 @@ function linkWithNeurthino()
 
     paths = creationPaths(n_vectors, zposition)
     energies = 10 .^ range(0, stop=2, length=n_vectors)
-    #
-
-    probsOld = collect(Pνν(U, H, energies, path) for path in paths)
-    probs = Pνν(U, H, energies, paths)[:, :, 2, 2]
-    #probs = [Pνν(U, H, energies, path)[1, 1, 2, 2] for path in paths]
-
+    probs = Pνν(U, H, energies, paths)[:,:,1,1]
+    matprobs=parent(probs)
 
     fig = Figure()
     ax = Axis(fig[1,1], aspect = 1, xscale=log10, xlabel="Energy (GeV)", ylabel="cos(θ)")
-    hm=heatmap!(ax, energies, cos_θ, probs, colormap=cgrad(:inferno))#, colorrange=(0,1))
+    hm=heatmap!(ax, energies, cos_θ, matprobs, colormap=cgrad(:inferno))
     Colorbar(fig[:,2], hm, label="Probability")
     display(fig)
 
-    return energies, probs,probsOld, paths
+    return energies, probs, paths
 end
 
 
-energies, probs,probsOld, paths=linkWithNeurthino()
-export energies, probs, probsOld, paths
+energies, probs, paths=linkWithNeurthino()
+export energies, probs, paths
 
 
 

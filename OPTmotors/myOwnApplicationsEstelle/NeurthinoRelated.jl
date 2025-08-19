@@ -65,8 +65,8 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     x_phys = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
     
-    lines!(ax, x_phys,y_phys, color=colorname)  # (x,y)_phys in m
-    display(fig)
+    #lines!(ax, x_phys,y_phys, color=colorname)  # (x,y)_phys in m
+    #display(fig)
 
     x_grid = x_phys ./dR
     y_grid = y_phys ./dR
@@ -88,7 +88,7 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     sections = segmentLengthInKm .* ones(Float64,n_pts-1) 
     dist = segmentLengthInKm*collect(0:1:n_pts-1) #km
 
-    lines!(ax1, dist, densGrids, color=colorname)
+    #lines!(ax1, dist, densGrids, color=colorname)
     return dens, sections
 end
 
@@ -272,19 +272,19 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
     ax1 = Axis(fig1[1,1], xlabel="Path (km)", ylabel="Density (g/cm3)")
 
 
-    dens = nothing
-    section = nothing
+    densities_list = []
+    sections_list = []
     for i in eachindex(XY)
         colorname = rand(collect(keys(Colors.color_names)))
         detector = new_x, new_y
         source = XY[i][1], XY[i][2]
         dens, section = lineDensityElectron2D(n_pts, iTime, detector,source, colorname, ax1, dR)
 
-        #push!(densities_list, dens)
-        #push!(sections_list, section)
+        push!(densities_list, dens)
+        push!(sections_list, section)
 
     end
 
     display(fig1)
-    return dens, section
+    return densities_list, sections_list
 end
