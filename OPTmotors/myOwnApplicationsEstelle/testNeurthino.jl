@@ -16,6 +16,7 @@ include("../src_Neurthino/Neurthino.jl")
 #using .Neurthino: OscillationParameters, setθ!, setδ!, setΔm²!
 using .Neurthino
 using .DSM1D
+using CairoMakie
 
 
 osc = OscillationParameters(3)
@@ -41,16 +42,17 @@ H = Hamiltonian(osc)
 
 # here every zenith angle can have a different nₑ profile (note that nₑ= ρ * "Z/A" )
 
-zenith = acos.(range(-1,stop=0,length=200))
-#paths=Array{Path,1}(undef,length(zenith))
-#for i in eachindex(zenith)
-paths = Neurthino.prempath(zenith, 2.5, samples=100, discrete_densities=0:0.1:14)
-    #push!(paths,tmpPaths)
-    #paths[i]=tmpPaths
-#end
-# paths = PATH(vector(density discretised),vector(segment lenghts in km))
-@show typeof(paths)
+zenith = acos.(range(-1,stop=0,length=200));
+paths = Neurthino.prempath(zenith, 2.5, samples=100, discrete_densities=0:0.1:14);
+energies = 10 .^ range(0, stop=2, length=200);
+prob = Pνν(U, H, energies, paths);
+probs = prob[:,:,1,1]
+matprobs=parent(probs)
 
-energies = 10 .^ range(0, stop=2, length=200)
-#@show prob = Pνν(U, H, energies, paths)
-probs = collect(Pνν(U, H, energies, path) for path in paths)
+cos_θ = range(-1, 0, length=200)
+fig = Figure()
+ax = Axis(fig[1,1], aspect = 1, xscale=log10, xlabel="Energy (GeV)", ylabel="cos(θ)")
+hm=heatmap!(ax, energies, cos_θ, matprobs, colormap=cgrad(:inferno))#, colorrange=(0,1))
+Colorbar(fig[:,2], hm, label="Probability")
+display(fig)
+
