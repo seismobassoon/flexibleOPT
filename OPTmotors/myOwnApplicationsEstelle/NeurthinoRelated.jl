@@ -65,8 +65,8 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     x_phys = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
     
-    #lines!(ax, x_phys,y_phys, color=colorname)  # (x,y)_phys in m
-    #display(fig)
+    lines!(ax, x_phys,y_phys, color=colorname)  # (x,y)_phys in m
+    display(fig)
 
     x_grid = x_phys ./dR
     y_grid = y_phys ./dR
@@ -88,7 +88,7 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     sections = segmentLengthInKm .* ones(Float64,n_pts-1) 
     dist = segmentLengthInKm*collect(0:1:n_pts-1) #km
 
-    #lines!(ax1, dist, densGrids, color=colorname)
+    lines!(ax1, dist, densGrids, color=colorname)
     return dens, sections
 end
 
@@ -287,4 +287,15 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
 
     display(fig1)
     return densities_list, sections_list
+end
+
+function roundExt(x,step)
+    #to round the values of H and U
+    if x isa Complex
+        xreal = round(real(x)/step)*step
+        ximag = round(imag(x)/step)*step
+        return complex(xreal, ximag)
+    else
+        return round(x/step)*step
+    end
 end

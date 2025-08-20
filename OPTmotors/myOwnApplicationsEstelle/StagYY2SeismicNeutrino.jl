@@ -91,11 +91,14 @@ function linkWithNeurthino()
     setΔm²!(osc, 1=>2, -7.39e-5)
     U = PMNSMatrix(osc)
     H = Hamiltonian(osc)
+    Uround = roundExt.(U, 0.01)
+    Hround = roundExt.(H, 0.00001)
+
     cos_θ = range(-1, 0, length = n_vectors)
 
     paths = creationPaths(n_vectors, zposition)
     energies = 10 .^ range(0, stop=2, length=n_vectors)
-    probs = Pνν(U, H, energies, paths)[:,:,1,1]
+    probs = Pνν(Uround, Hround, energies, paths)[:,:,1,1]
     matprobs=parent(probs)
 
     fig = Figure()
@@ -116,7 +119,7 @@ export energies, probs, paths
 
 
 
-#==
+#== 
 zoa_value = 0.5
 zoa = fill(zoa_value, size(fi)[1], size(fi)[2])
 densityModified = densities * 2 * zoa
