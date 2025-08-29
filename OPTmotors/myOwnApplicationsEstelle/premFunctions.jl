@@ -1,67 +1,74 @@
-function myDensityFrom1DModel(arrayRadius) 
-    #dependencies : DSM1D
+# to have a PREM version to compare with the model
+#PREM version of everything
 
-    radiusInKilometer = arrayRadius*1.e-3
-    density  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, radiusInKilometer)
+function extendWithρ!(ρfield, Xnode, Ynode, dR;rcmb=6.371e6, dθ=2*π/360.0, iCheckCoreModel=true)
+    # local function here: this requires DSM1D.jl, testparam.csv
 
-    return density
+    premCMB = DSM1D.my1DDSMmodel.averagedPlanetCMBInKilometer * 1.e3
+
+    arrayRadius = collect(0:dR:rcmb)
+    if arrayRadius[end] != rcmb
+        arrayRadius = push!(arrayRadius,rcmb)
+    end
+
+
+    _, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1e-3, "below")
+    #DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
+    tmpDensity=arrayParams.ρ
+
+
+    tmpXnode = [(tmpRadius*cos(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
+    tmpYnode = [(tmpRadius*sin(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
+    tmpValue = [(1.e3*tmpDensity[iRadius]) for iRadius in eachindex(arrayRadius) for tmpθ in collect(0:dθ:2π)]
+    #@show minimum(tmpXnode),maximum(tmpXnode)
+
+    if iCheckCoreModel
+        f=Figure()
+    
+        lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
+
+        display(f)
+    end
+
+
+    Xnode=append!(Xnode,tmpXnode)
+    Ynode=append!(Ynode,tmpYnode)
+    ρfield=append!(ρfield,tmpValue)
+
+    return
+    
 end
 
 
-function densityVariation(iTime; fieldname="rho", filename=rhoFiles)
-    #to plot (rho(r)-rhoprem(r)/rhoprem(r))
-    #dependencies : Makie
-
-    file=filename[iTime]
-    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
-    densitiesInGcm3 = field*1e-3
-    arrayRadius = sqrt.(Xnode.^2 .+ Ynode.^2)
-
-    premDensities = myDensityFrom1DModel.(arrayRadius)
-    newpremDensities = premDensities
-    frho = ifelse.(newpremDensities .== 0.0, 0.0, (densitiesInGcm3 .- newpremDensities) ./ newpremDensities)
-    #extendToCoreWithρ!(frho, Xnode, Ynode, rcmb, dR)
-    #quarterDiskExtrapolationRawGrid!(frho, Xnode, Ynode)
-    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),frho,correlationLength,epsilon2);
-
+function myPREMPlot2DConvectionModel(iTime, fieldname, filename)
+#only if the field in DIVandrun is the same as in readStagYYFiles
+    file = filename[iTime]
+    field, Xnode, Ynode, _ = readStagYYFiles(file)
+    extendWithρ!(field, Xnode, Ynode, dR, iCheckCoreModel=false)
+    #quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
+    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
+    
     diam = maxX - minX
     x = range(0, diam, length=size(fi)[1])
     y = range(0, diam, length=size(fi)[2])
 
     fig = Figure()
-    ax = Axis(fig[1,1],aspect = 1)
+    ax = Axis(fig[1,1], aspect = 1)
     colormap = myChoiceColormap(fieldname)
-    hm = heatmap!(ax, x, y, fi,colormap=colormap,colorrange=(-0.005,0.005))
-    Colorbar(fig[:, 2], hm, label = "(ρ(r)-ρPREM(r))/ρPREM(r)")
+    hm=heatmap!(ax,x, y, fi, colormap=colormap)
+    Colorbar(fig[:,2], hm, label="wtr (wt.%)")
 
-    display(fig)
+    return fig, ax, fi
 end
 
 
-#not used
-function lineDensityElectron1D(positionDetector, NeutrinoSource, n_pts)
-    x_values = range(NeutrinoSource[1], positionDetector[1], length=n_pts)
-    y_values = range(NeutrinoSource[2], positionDetector[2], length=n_pts)
-    z_values = range(NeutrinoSource[3], positionDetector[3], length=n_pts)
-
-    rad = sqrt.(x_values.^2 .+ y_values.^2 .+z_values.^2)
-    radInMeter = rad.*1e3
-    dens = myDensityFrom1DModel.(radInMeter)
-    dist = range(0, sqrt(sum((positionDetector.-NeutrinoSource).^2)), length=n_pts)
-    lines!(dist, dens)
-
-end
-#les 3 fonctions au dessus peut être à bouger car pas utiles pour Neurthino
 
 
-
-
-
-function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, colorname, ax1, dR)
+function PREMlineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, colorname, ax1, dR)
     #draw a line between positionDetector and NeutrinoSource (coordinates) and give the density/distance profile
     #dependencies : Makie
 
-    fig, ax, fi = myPlot2DConvectionModel(iTime, "rho", rhoFiles)
+    fig, ax, fi = myPREMPlot2DConvectionModel(iTime, "rho", rhoFiles)
     x_phys = range(positionDetector[1], NeutrinoSource[1], length=n_pts)
     y_phys = range(positionDetector[2], NeutrinoSource[2], length=n_pts)  
     
@@ -92,44 +99,7 @@ function lineDensityElectron2D(n_pts, iTime, positionDetector, NeutrinoSource, c
     return dens, sections
 end
 
-
-function interactiveDetector(iTime; fieldname="rho", filename=rhoFiles)
-    #to create an interactive detector by clicking on the picture
-    #dependencies : GLMakie
-
-    file = filename[iTime]
-    field, Xnode, Ynode, rcmb = readStagYYFiles(file)
-    extendToCoreWithρ!(field, Xnode, Ynode, rcmb, dR, iCheckCoreModel=false)
-    #quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
-    fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
-    
-    diam = maxX - minX #m
-    x = range(0, diam, length=size(fi)[1])
-    y = range(0, diam, length=size(fi)[2])
-
-    GLMakie.activate!()
-    fig = GLMakie.Figure()
-    ax = GLMakie.Axis(fig[1,1], aspect = 1)
-    colormap = myChoiceColormap(fieldname)
-    hm = GLMakie.heatmap!(ax, x, y, fi, colormap=colormap)
-    GLMakie.Colorbar(fig[:,2], hm)
-    GLMakie.display(fig)
-
-    clicked_point = GLMakie.Observable(GLMakie.Point2f(NaN, NaN))
-
-    GLMakie.on(GLMakie.events(fig.scene).mousebutton, priority = 0) do event
-        if event.button == GLMakie.Mouse.left
-            if event.action == GLMakie.Mouse.press
-                pos = GLMakie.mouseposition(ax.scene)
-                clicked_point[] = pos
-             end
-        end
-    end
-    return clicked_point, fig, ax, fi
-end
-
-
-function correctedPosition(x,y, zposition; center = [6.5e6, 6.5e6], earth_radius = 6.371e6)
+function PREMcorrectedPosition(x,y, zposition; center = [6.5e6, 6.5e6], earth_radius = 6.371e6)
     #to place the detector precisely on the surface, then the detector is buried for zposition
 
     dx = x - center[1]
@@ -168,7 +138,7 @@ function posOrNeg(cos_θ, sign = :positive)
 end
 
 
-function sourcePosition(center, positionDetector, n_vectors, zposition; earthRadius = 6.371e6)
+function PREMsourcePosition(center, positionDetector, n_vectors, zposition; earthRadius = 6.371e6)
     #to get the position of the different sources
 
     (xc, yc) = center[1], center[2] #m 
@@ -242,22 +212,16 @@ function sourcePosition(center, positionDetector, n_vectors, zposition; earthRad
 
 end
 
-function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
+function PREMvectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
     #draw n_vectors (diff θ) from a detector (placed by interaction) and return density profiles for each vector through the Earth
     #dependencies : GLMakie, Makie, Colors
 
-    clicked_point, fig, ax, _ = interactiveDetector(iTime)
-    println("Choose detector's position")
-    
-    while isnan(clicked_point[][1])
-        sleep(0.1)
-    end
 
-    pos = clicked_point[]
+    pos = Float32[1.8340824f6, 7.7562185f6] #you have to put manually the position of the detector to compare
     @show pos
     x, y = pos[1], pos[2]
-    new_x, new_y,zposition = correctedPosition(x,y, zposition) 
-    XY = sourcePosition((center[1], center[2]), (new_x, new_y), n_vectors, zposition)
+    new_x, new_y,zposition = PREMcorrectedPosition(x,y, zposition) 
+    XY = PREMsourcePosition((center[1], center[2]), (new_x, new_y), n_vectors, zposition)
 
     segments_pts = []
     for source in XY
@@ -265,8 +229,6 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
         push!(segments_pts, (source[1], source[2]))
     end
 
-    GLMakie.linesegments!(ax, segments_pts, color=:black)
-    GLMakie.display(fig)
     
     CairoMakie.activate!()
     fig1 = Figure()
@@ -279,7 +241,7 @@ function vectorsFromDetector(n_vectors, zposition ;center = [6.5e6, 6.5e6])
         colorname = rand(collect(keys(Colors.color_names)))
         detector = new_x, new_y
         source = XY[i][1], XY[i][2]
-        dens, section = lineDensityElectron2D(n_pts, iTime, detector,source, colorname, ax1, dR)
+        dens, section = PREMlineDensityElectron2D(n_pts, iTime, detector,source, colorname, ax1, dR)
 
         push!(densities_list, dens)
         push!(sections_list, section)
@@ -300,3 +262,47 @@ function roundExt(x,step)
         return round(x/step)*step
     end
 end
+
+
+function PREMcreationPaths(n_vectors, zposition)
+
+    densities_list, sections_list = PREMvectorsFromDetector(n_vectors, zposition) 
+    paths = Vector{Path}(undef, n_vectors)  
+
+    for i in eachindex(paths)
+        paths[i]= Path(densities_list[i],sections_list[i])
+    end
+
+    return paths
+end
+
+
+function linkWithNeurthinoPREM()
+    osc = OscillationParameters(3)
+    setθ!(osc, 1=>2, 0.59)
+    setθ!(osc, 1=>3, 0.15)
+    setθ!(osc, 2=>3, 0.84)
+    setδ!(osc, 1=>3, 3.86)
+    setΔm²!(osc, 2=>3, -2.523e-3)
+    setΔm²!(osc, 1=>2, -7.39e-5)
+    U = PMNSMatrix(osc)
+    H = Hamiltonian(osc)
+    Uround = roundExt.(U, 0.01)
+    Hround = roundExt.(H, 0.00001)
+    cos_θ = range(-1, 0, length = n_vectors)
+
+    paths = PREMcreationPaths(n_vectors, zposition)
+    energies = 10 .^ range(0, stop=2, length=n_vectors)
+    probs2 = Pνν(Uround, Hround, energies, paths)[:,:,1,2]
+    matprobs2=parent(probs2)
+
+    fig = Figure()
+    ax = Axis(fig[1,1], aspect = 1, xscale=log10, xlabel="Energy (GeV)", ylabel="cos(θ)")
+    hm=heatmap!(ax, energies, cos_θ, matprobs2, colormap=cgrad(:inferno))
+    Colorbar(fig[:,2], hm, label="Probability")
+    display(fig)
+
+    return probs2
+end
+
+

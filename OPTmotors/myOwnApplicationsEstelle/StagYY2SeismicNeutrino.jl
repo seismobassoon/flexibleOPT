@@ -15,6 +15,7 @@ include("../src_Neurthino/Neurthino.jl")
 using .Neurthino
 include("usefulFunctionsToPlot.jl")
 include("NeurthinoRelated.jl")
+include("premFunctions.jl")
 
 boolFlat = true # we can read but for me it is better to have this information before reading since DIVAnd_rectdom can be applied before reading
 
@@ -49,23 +50,20 @@ end
 
 
 # file types
-dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025/"
-dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_first_run/"
-#dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_old_full_mars_2025/"
+#dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/data2025/"
+#dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_first_run/"
+dir="C:/Users/user/Desktop/stage 2A/données/MantleConvectionTakashi/op_old_full_mars_2025/"
 rhoFiles=myListDir(dir; pattern=r"test_rho\d");
 compositionFiles=myListDir(dir; pattern=r"test_c\d");
 temperatureFiles=myListDir(dir; pattern=r"test_t\d");
 wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
-#wtrFiles = filter(f -> !occursin(r"/\._", f), wtrFiles) #si données op_old_full_mars_2025
 
-
+rhoFiles = filter(f -> !occursin(r"/\._", f), rhoFiles) #if op_old_full_mars_2025
 
 iTime = 200
 n_pts = 100
 n_vectors = 100
 zposition = 2.5e3 
-
-#vectorsFromDetector(n_vectors, zposition)
 
 # Neurthino tests
 function creationPaths(n_vectors, zposition)
@@ -93,12 +91,11 @@ function linkWithNeurthino()
     H = Hamiltonian(osc)
     Uround = roundExt.(U, 0.01)
     Hround = roundExt.(H, 0.00001)
-
     cos_θ = range(-1, 0, length = n_vectors)
 
     paths = creationPaths(n_vectors, zposition)
     energies = 10 .^ range(0, stop=2, length=n_vectors)
-    probs = Pνν(Uround, Hround, energies, paths)[:,:,1,1]
+    probs = Pνν(Uround, Hround, energies, paths)[:,:,1,2]
     matprobs=parent(probs)
 
     fig = Figure()
@@ -110,20 +107,28 @@ function linkWithNeurthino()
     return energies, probs, paths
 end
 
+#energies, probs, paths=linkWithNeurthino()
+#export energies, probs, paths
 
-energies, probs, paths=linkWithNeurthino()
-export energies, probs, paths
-
-
-
-
+probs2 = linkWithNeurthinoPREM()
+export probs2
 
 
-#== 
-zoa_value = 0.5
-zoa = fill(zoa_value, size(fi)[1], size(fi)[2])
-densityModified = densities * 2 * zoa
-==#
+function diff(probs, probs2)
+    cos_θ = range(-1, 0, length = n_vectors)
+    fig3 = Figure()
+
+    probdiff = probs-probs2
+    matprobdiff = parent(probdiff)
+    ax3 = Axis(fig3[1,1], aspect = 1, xscale=log10, xlabel="Energy (GeV)", ylabel="cos(θ)")
+    hm3=heatmap!(ax3, energies, cos_θ, matprobdiff, colormap=cgrad(:inferno))
+    Colorbar(fig3[:,2], hm3, label="Probability")
+    display(fig3)
+end
+
+#diff(probs, probs2)
+
+
 
 
 #==
