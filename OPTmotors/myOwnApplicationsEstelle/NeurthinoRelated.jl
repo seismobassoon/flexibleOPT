@@ -169,6 +169,8 @@ end
 
 
 function sourcePosition(center, positionDetector, n_vectors, zposition; earthRadius = 6.371e6)
+
+    
     #to get the position of the different sources
 
     (xc, yc) = center[1], center[2] #m 

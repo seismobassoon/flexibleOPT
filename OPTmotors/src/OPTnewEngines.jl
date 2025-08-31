@@ -204,7 +204,6 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
 
     # in fact, available points depend on the position of μ (=k here), we need to 'mute' some points
     # with Y_μ
-
     
     # for this pointsIndices are filtered for every μ
     
@@ -361,22 +360,20 @@ function getIngegralWYYKKK(params::Dict)
         for l_n_variable in 0:1:l_n_max
             for μ in 1:1:LCoord
                 for μᶜ in 1:1:LCoord
-                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1]=integralBsplineTaylorKernels1DWithWindow1D!(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field,modμ)
+                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1],modμ=integralBsplineTaylorKernels1DWithWindow1D!(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field)
                 end
             end
         end
     end
-    # it happens that modμ is still nothing
 
+    
 
     return @strdict(intKernelforνLΔ=kernels,modμ=modμ)
     # the target
     #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
 end
 
-function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field,modμForCinversion)
-
-    # Don't worry the modμForCinversion is the only one to be replaced
+function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
 
     # this computes the analytical value of the 1D integral between B-spline fns and weighted Taylor kernels
     # \int dx Bspline Y_μᶜ Y_μ  K_{lᶜ-nᶜ}(y-y_μᶜ) K_{l-n}(y-y_μ)
@@ -415,9 +412,7 @@ function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,
         output=myProduceOrLoad(BsplineTimesPolynomialsIntegrated,params,"BsplineInt","Bspline")
 
         nodeIndices,nodesSymbolic,b_deriv,integral_b,Δx,extFns,x,modμ =output["BsplineIntegraters"]
-        if modμForCinversion === nothing
-            modμForCinversion = modμ
-        end
+        
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
         # note that ν is somewhere middle or at extremeties and 'ν+' expression is ommitted 
 
@@ -492,7 +487,7 @@ function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,
         #a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         #@show a
     end
-    return kernelValue
+    return kernelValue,modμ
     
 end
 
@@ -869,7 +864,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
         integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
         output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
         integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
-        modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
+        @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
 
     #endregion
