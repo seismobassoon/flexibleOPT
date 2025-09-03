@@ -218,6 +218,9 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
         η_μ = pointsIndices[i]
         iSayWeSayGo = 1
         for iCoord in eachindex(modifiedμ) # Ndimension
+            tmp=modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1]
+            @show typeof(tmp)
+            @show Float64(tmp)
             modifiedμ_vector[iCoord]= modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1]
             if WorderBspline[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
                 iSayWeSayGo *= 1
@@ -254,6 +257,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
     
     aa=transpose(tmpTaylorExpansionCoeffs)*tmpTaylorExpansionCoeffs
+
     invaa= myInv(aa)
     tmpCˡηlocal=invaa*transpose(tmpTaylorExpansionCoeffs)
 
@@ -360,7 +364,7 @@ function getIngegralWYYKKK(params::Dict)
         for l_n_variable in 0:1:l_n_max
             for μ in 1:1:LCoord
                 for μᶜ in 1:1:LCoord
-                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1],modμ=integralBsplineTaylorKernels1DWithWindow1D!(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field)
+                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1],modμ=integralBsplineTaylorKernels1DWithWindow1D(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field)
                 end
             end
         end
@@ -373,7 +377,7 @@ function getIngegralWYYKKK(params::Dict)
     #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
 end
 
-function integralBsplineTaylorKernels1DWithWindow1D!(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
+function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
 
     # this computes the analytical value of the 1D integral between B-spline fns and weighted Taylor kernels
     # \int dx Bspline Y_μᶜ Y_μ  K_{lᶜ-nᶜ}(y-y_μᶜ) K_{l-n}(y-y_μ)
