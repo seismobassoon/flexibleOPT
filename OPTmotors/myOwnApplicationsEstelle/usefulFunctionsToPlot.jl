@@ -19,11 +19,10 @@ function myPlot2DConvectionModel(iTime, fieldname, filename)
     file = filename[iTime]
     field, Xnode, Ynode, rcmb = readStagYYFiles(file)
     extendToCoreWithρ!(field, Xnode, Ynode, rcmb, dR, iCheckCoreModel=false)
-    quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
+    #quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
     fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
     
-    diam = maxX - minX #earth
-    #diam = 3389e3*2 #mars
+    diam = maxX - minX
     x = range(0, diam, length=size(fi)[1])
     y = range(0, diam, length=size(fi)[2])
 
@@ -42,8 +41,8 @@ function myAnimation(step, iTime, fieldname, filename)
     fi_list=[]
     for file in filename[1:step:iTime]
         field, Xnode, Ynode= readStagYYFiles(file)
-        extendToCoreWithρ!(field, Xnode, Ynode, rcmb, dR)
-        quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
+        #extendToCoreWithρ!(field, Xnode, Ynode, rcmb, dR)
+        #quarterDiskExtrapolationRawGrid!(field, Xnode, Ynode)
         fi,_ = DIVAndrun(mask,(pm,pn),(xi,yi),(Xnode,Ynode),field,correlationLength,epsilon2);
         push!(fi_list, fi)
     end
@@ -53,7 +52,7 @@ function myAnimation(step, iTime, fieldname, filename)
     data = Observable(fi_list[1])
     colormap = myChoiceColormap(fieldname)
     hm=heatmap!(ax, data, colormap=colormap)#, colorrange=()) if needed
-    Colorbar(fig[:, 2], hm)
+    Colorbar(fig[:, 2], hm, label="Temperature (K)")
     record(fig, "animation2D.mp4", 1:length(fi_list); framerate = 2) do i
         data[] = fi_list[i]
     end
