@@ -218,13 +218,14 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
         η_μ = pointsIndices[i]
         iSayWeSayGo = 1
         for iCoord in eachindex(modifiedμ) # Ndimension
-            tmp=modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1]
-            @show typeof(tmp)
-            @show Float64(tmp)
-            modifiedμ_vector[iCoord]= modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1]
+            tmp1=Num2Float64(modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1])
+            tmp2=Num2Float64(modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1])
+            tmp3=Num2Float64(modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1])
+            
+            modifiedμ_vector[iCoord]= tmp3
             if WorderBspline[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
                 iSayWeSayGo *= 1
-            elseif  modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1] <=η_μ[iCoord] <= modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1]
+            elseif  tmp1 <=η_μ[iCoord] <= tmp2
                 iSayWeSayGo *= 1
             else
                 iSayWeSayGo *= 0

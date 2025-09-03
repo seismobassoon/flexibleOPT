@@ -19,6 +19,8 @@ using Symbolics,UnPack,Tullio
 
 #endregion
 
+Num2Float64(x) = Symbolics.val(x)
+
 function usefulPartials(coordinates)
     ∂=[]
     ∂²=[]

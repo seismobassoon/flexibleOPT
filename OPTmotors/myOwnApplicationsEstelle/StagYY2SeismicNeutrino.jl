@@ -13,7 +13,7 @@ using Colors
 include("../src/batchStagYY.jl")
 include("../src_Neurthino/Neurthino.jl")
 using .Neurthino
-include("usefulFunctionsToPlot.jl")
+include("../src_Neurthino/usefulFunctionsToPlot.jl")
 include("NeurthinoRelated.jl")
 include("premFunctions.jl")
 
