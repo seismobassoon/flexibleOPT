@@ -1,3 +1,6 @@
+#= these functions here are the beautiful fruits of Estelle Salomé's 2-month internship in 2025 =#
+
+
 function myDensityFrom1DModel(arrayRadius) 
     #dependencies : DSM1D
 

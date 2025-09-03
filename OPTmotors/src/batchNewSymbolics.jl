@@ -19,7 +19,7 @@ using Symbolics,UnPack,Tullio
 
 #endregion
 
-Num2Float64(x) = Symbolics.val(x)
+Num2Float64(x) = Symbolics.value(x)
 
 function usefulPartials(coordinates)
     ∂=[]

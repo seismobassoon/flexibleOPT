@@ -14,7 +14,7 @@ include("../src/batchStagYY.jl")
 include("../src_Neurthino/Neurthino.jl")
 using .Neurthino
 include("../src_Neurthino/usefulFunctionsToPlot.jl")
-include("NeurthinoRelated.jl")
+include("../src_Neurthino/NeurthinoRelated.jl")
 include("premFunctions.jl")
 
 boolFlat = true # we can read but for me it is better to have this information before reading since DIVAnd_rectdom can be applied before reading
