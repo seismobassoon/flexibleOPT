@@ -33,14 +33,18 @@ end
 
 logsOfHinverse = [1.0*i for i in 0:3]
 
-numPointsX = collect(2:4)
+numPointsX = collect(2:2)
 tmpOrderBtime=1
 tmpOrderBspace=1
+
+tmpWorderBtime=1
+tmpWorderBspace=1
+tmpSupplementaryOrder=2
 
 cases=[]
 
 # manufactured ExactSolutions 
-prefix="B"*string(tmpOrderBspace)*"_"
+prefix="B"*string(tmpOrderBspace)*"_"*"w"*string(tmpWorderBspace)*"_"*string(tmpSupplementaryOrder)*"_"
 #cases = push!(cases,(name=prefix*"sameλ",u=cos(x),β=sin(x)+2))
 #cases = push!(cases,(name=prefix*"twiceλ",u=cos(x),β=sin(x/2) + 2))
 #cases = push!(cases,(name=prefix*"sameλ_shifted_π_3",u=cos(x),β=sin(x+π/3) + 2))
@@ -53,7 +57,7 @@ L = 10.0*π # the length of the segment
 
 misfit = Array{Float64,3}(undef,length(logsOfHinverse),length(cases),length(numPointsX))
 
-fileMisfit="misfit_B"*string(tmpOrderBspace)*string(numPointsX[end])*".jld2"
+fileMisfit="misfit_B"*string(tmpOrderBspace)*"_Y_"*string(tmpWorderBspace)*"_max_"*string(numPointsX[end])*"_moreTaylor_"*string(tmpSupplementaryOrder)*".jld2"
 
 if !isfile(fileMisfit)
 for iPointsUsed in eachindex(numPointsX)
@@ -90,6 +94,10 @@ for iPointsUsed in eachindex(numPointsX)
             pointsInSpace=numPointsX[iPointsUsed]
             pointsInTime=0
 
+            WorderBtime=tmpWorderBtime
+            WorderBspace=tmpWorderBspace
+            supplementaryOrder=tmpSupplementaryOrder
+
             modelName = name*string(Nx)
 
             modelPoints = (Nx)
@@ -98,10 +106,12 @@ for iPointsUsed in eachindex(numPointsX)
 
             forceModels =((1.0)) # if your model does not have anything special material parameters then it's how it's written
 
-            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace iExperiment
+            concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace WorderBtime WorderBspace supplementaryOrder pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace iExperiment
 
 
-            opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+            #opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+
+            opt=myProduceOrLoad(makeCompleteCostFunctions,concreteModelParameters,"numOperators","quasiNum")
 
             Nt = 1
             
@@ -112,9 +122,9 @@ for iPointsUsed in eachindex(numPointsX)
 
             fig =Figure()
             ax=Axis(fig[1,1]; title="Comparison for h=$Δx, model=$(cases[iCase].name), points=1+$pointsInSpace")
-            lines!(ax,X,analyticalData,color=:blue,label="analytical")
-            scatter!(ax,X,syntheticData,color=:red,marker=:circle,label="synthetic")        
-            axislegend(ax)
+            lines!(ax,X,analyticalData,color=:blue)
+            scatter!(ax,X,syntheticData,color=:red,marker=:circle)        
+            #axislegend(ax)
             display(fig)
             
             #save("plot_$iH_$iCase_$iPointsUsed.png",fig)

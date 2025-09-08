@@ -10,18 +10,25 @@ include("../src/batchNewSymbolics.jl")
 
 function BsplineTimesPolynomialsIntegrated(params::Dict)
 
-    @unpack maximumOrder numberNodes = params
+    @unpack maximumOrder, numberNodes = params
     @variables x Δx ξ
+   
+    extFns = Symbolics.variables(:extFns,1:2,1:numberNodes,1:maximumOrder+1)
+    # maximum order of B-spline
+    
+    maximumOrder = maximumOrder + 1
+
+    
+
     ∂x = Differential(x)
     
     # input parameters
     
-    # maximum order of B-spline
-    
-    maximumOrder = maximumOrder + 1
+  
     
     # the left and right indices
-    νₗ = 1
+    
+    νₗ = 1 # we cannot touch this anymore
     νᵣ = numberNodes # like in the middle we know that the expression is ok 
 
     
@@ -31,7 +38,10 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     nodeIndices = collect(νₗ:1:νᵣ)
     
     nodesSymbolic = Δx .* nodeIndices
+
     append!(nodesSymbolic,nodesSymbolic[end])
+
+
     
     # b-splines
     
@@ -115,9 +125,11 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     
         end
     
+
         b[:,1,ι+1]=bX[:,1,ι+1]
         b[:,end,ι+1]=bX[:,end,ι+1]
-    
+        
+          
         
         # computing the derivatives 
     
@@ -134,24 +146,28 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     end
         
     
+    # re-calculated centre
     
-    b_deriv_ξ = similar(b_deriv)
+    modμ=zeros(Num,3,numberNodes,maximumOrder) # min, max, mid for each b-splines this can be a multiple of Δx / 2 
+
     for ι in 0:1:maximumOrder-1
-        for i in 0:1:maximumOrder-1
-            for ν in nodeIndices # this will run for all the ν related to nodes
-                tmpν = ν - νₗ + 1
-                for νSegment in nodeIndices
-                    tmpνSegment = νSegment - νₗ + 1
-                    b_deriv_ξ[tmpνSegment,tmpν,i+1,ι+1]=substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>ξ+Δx*(tmpν-1)))
-                end
-            end
+        for μ in nodeIndices
+            leftLimit = nodesSymbolic[findfirst(x->x!==0,b[:,μ,ι+1])] /Δx
+            rightLimit = nodesSymbolic[findlast(x->x!==0,b[:,μ,ι+1])+1] /Δx
+            midNode = mySimplify((leftLimit+rightLimit)/2)
+            modμ[1,μ,ι+1]=leftLimit 
+            modμ[2,μ,ι+1]=rightLimit
+            modμ[3,μ,ι+1]=midNode
         end
     end
     
+
+    integral_b= zeros(Num,numberNodes,maximumOrder)
+
+    #gvec = (@variables (g(x))[1:maximumOrder])[1]
     
-    integral_b= zeros(Num,numberNodes)
-    gvec = (@variables (g(x))[1:maximumOrder])[1]
     
+
     for ι in 0:1:maximumOrder-1
         for i in 0:1:maximumOrder-1
             for ν in nodeIndices # this will run for all the ν related to nodes
@@ -159,78 +175,21 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
                 for νSegment in nodeIndices
                     tmpνSegment = νSegment - νₗ + 1
                     
-                    diff = Δx * (tmpνSegment - tmpν)
-                    tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] -= (-1)^(i+1)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
+                    integral_b[tmpν,ι+1] -= (-1)^(i)*extFns[1,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment]))
     
-                    diff = Δx * (tmpνSegment - tmpν+1)
-                    tmpDic = Dict(x=>diff)
-                    integral_b[tmpν] += (-1)^(i+1)*substitute(gvec[i+1],tmpDic)*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]*Δx))
+                    integral_b[tmpν,ι+1] += (-1)^(i)*extFns[2,tmpνSegment,i+1]*substitute(b_deriv[tmpνSegment,tmpν,i+1,ι+1],Dict(x=>nodesSymbolic[tmpνSegment+1]))
                     
                 end
             end
         end
     end
     
-    #display.(b_deriv)
-    b_deriv_ξ=mySimplify.(b_deriv_ξ)
-    #b_deriv_extremes=mySimplify.(b_deriv_extremes)
+    
     integral_b=mySimplify.(integral_b)
     
-    # for special g(x) = C ξ^N 
-    @variables C N
-    
-    
-    dictionaryForSubstitute =Dict()
-    
-    
-    taylorNum = 1
-    
-    for i in 1:1:maximumOrder
-        taylorNum *= N+i
-        dictionaryForSubstitute[gvec[i]]=x^(N+i)/taylorNum
-        
-    end
-
-    #@show dictionaryForSubstitute
-    integral_b_polys= zeros(Num,numberNodes,maximumOrder)
-    for ι in 0:1:maximumOrder-1
-        for i in 0:1:maximumOrder-1
-            for ν in nodeIndices # this will run for all the ν related to nodes
-                tmpν = ν - νₗ + 1
-                for νSegment in nodeIndices
-                    tmpνSegment = νSegment - νₗ + 1
-                    
-                    tmp_b_deriv = b_deriv[tmpνSegment,tmpν,i+1,ι+1]
-                    tmpG = substitute(gvec[i+1],dictionaryForSubstitute)
-                        
-
-                    if 1 <= tmpνSegment <= numberNodes-1
-                        
-                        diff = nodesSymbolic[tmpνSegment]-nodesSymbolic[tmpν]
-                        tmpDic = Dict(x=>diff)
-
-                        integral_b_polys[tmpν,ι+1] -= (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment]))
-
-                        diff = nodesSymbolic[tmpνSegment+1]-nodesSymbolic[tmpν]
-                        tmpDic = Dict(x=>diff)
-
-                        integral_b_polys[tmpν,ι+1] += (-1)^(i)*substitute(tmpG,tmpDic)*substitute(tmp_b_deriv,Dict(x=>nodesSymbolic[tmpνSegment+1]))
-
-                    end
-
-
-                    
-                end
-            end
-        end
-    end
-
-
-    integral_b_polys=mySimplify.(integral_b_polys)
-    BsplineIntegraters=(numberNodes=numberNodes,integral_b_polys=integral_b_polys,N=N,Δx =Δx)
+    BsplineIntegraters=(nodeIndices=nodeIndices,nodesSymbolic=nodesSymbolic,b_deriv=b_deriv,integral_b=integral_b,Δx=Δx,extFns=extFns,x=x,modμ=modμ)
     return @strdict(BsplineIntegraters)
-    
+
 end
     
 

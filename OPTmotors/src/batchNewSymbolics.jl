@@ -19,6 +19,8 @@ using Symbolics,UnPack,Tullio
 
 #endregion
 
+Num2Float64(x) = Symbolics.value(x)
+
 function usefulPartials(coordinates)
     ∂=[]
     ∂²=[]
@@ -97,7 +99,7 @@ function integrateTaylorPolynomials(eq, x)
         for i in 1:highestOrder
             old_coef=Symbolics.coeff(eq,x^i)
             tmpeq-=old_coef*x^i
-            new_coef=old_coef//(i+1)
+            new_coef=old_coef/(i+1)
             neweq+=new_coef*x^(i+1)        
         end
     end

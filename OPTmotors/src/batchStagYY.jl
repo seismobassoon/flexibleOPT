@@ -161,7 +161,7 @@ function read_header(io,inputILEN,magic)
     end
     
     if magic >=7 # core radius for cylindrical or spherical geometry
-        @show rcmb= binRead(io,floatDataType)
+        rcmb= binRead(io,floatDataType)
 
         if rcmb==-1.
             boolSpherical= false  #cartesian
@@ -181,8 +181,8 @@ function read_header(io,inputILEN,magic)
 
 
     if magic >= 3
-        @show iStep = binRead(io,intDataType)
-        @show time =  binRead(io,floatDataType)
+        iStep = binRead(io,intDataType)
+        time =  binRead(io,floatDataType)
     else
         istep = 0
         time = 0.0
@@ -278,18 +278,37 @@ end
 
 
 
+function quarterDiskExtrapolationRawGrid!(fi, Xnode, Ynode)
+    fiO=copy(fi)
+    XnodeO=copy(Xnode)
+    YnodeO=copy(Ynode)
+    append!(fi,fiO)
+    append!(Xnode,-YnodeO)
+    append!(Ynode,XnodeO)
+
+    append!(fi,fiO)
+    append!(Xnode,-XnodeO)
+    append!(Ynode,-YnodeO)
+    
+    append!(fi,fiO)
+    append!(Xnode,YnodeO)
+    append!(Ynode,-XnodeO)
+    return 
+end
 
 
 function quarterDiskExtrapolation(fi,nX,nY)
+#it depends but  the discontinuities are sometimes visible
+    halfnX = (nX-1) ÷ 2
+    halfnY = (nY-1) ÷ 2
 
-    halfnX = (nX -1) ÷ 2
-    halfnY = (nY -1) ÷ 2
+    fi[1:halfnX+1,1:halfnY+1]=transpose(fi[nX:-1:halfnX+1,1:halfnY+1])
+    fi[halfnX+1:nX,halfnY+1:nY]= transpose(fi[halfnX+1:nX,halfnY+1:-1:1])
+    fi[1:halfnX+1,halfnY+1:nY]=fi[nX:-1:halfnX+1,halfnY+1:-1:1]
 
-    fi[1:halfnX+1,halfnY+1:nY]=transpose(fi[halfnX+1:nX,1:halfnY+1])
-    fi[halfnX+1:nX,halfnY+1:nY]= fi[halfnX+1:nX,halfnY+1:-1:1]
-    fi[1:halfnX+1,1:halfnY+1]=fi[nX:-1:halfnX+1,1:halfnY+1]
     return fi
 end
+
 
 
 
@@ -472,4 +491,52 @@ function readStagYYFiles(file)
     end
    #fieldInterpolated=interpolate(nodes,newField,Gridded(Linear()))
 
+end
+
+
+
+function extendToCoreWithρ!(ρfield, Xnode, Ynode, rcmb, dR; dθ=2*π/360.0, iCheckCoreModel=true)
+    # local function here: this requires DSM1D.jl, testparam.csv
+    #
+    # This function will add the ρ field computed only for the core 
+
+    # Xnode and Ynodes are the one that we give but 
+
+    # the 1D core model will be given by specifying the file to use in testparam.csv 
+
+
+    premCMB = DSM1D.my1DDSMmodel.averagedPlanetCMBInKilometer * 1.e3
+
+    arrayRadius = collect(0:dR:rcmb)
+    if arrayRadius[end] != rcmb
+        arrayRadius = push!(arrayRadius,rcmb)
+    end
+    arrayRadiusFaked = min.(arrayRadius,premCMB) .* 1.e-3
+
+
+
+    _, arrayParams  = DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadiusFaked, "below")
+    #DSM1D.compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(DSM1D.my1DDSMmodel, arrayRadius.*1.e-3, "above")
+    tmpDensity=arrayParams.ρ
+
+    tmpXnode = [(tmpRadius*cos(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
+    tmpYnode = [(tmpRadius*sin(tmpθ)) for tmpRadius in arrayRadius for tmpθ in collect(0:dθ:2π)]
+    tmpValue = [(1.e3*tmpDensity[iRadius]) for iRadius in eachindex(arrayRadius) for tmpθ in collect(0:dθ:2π)]
+    #@show minimum(tmpXnode),maximum(tmpXnode)
+
+    if iCheckCoreModel
+        f=Figure()
+    
+        lines(f[1,1],arrayRadius, arrayParams.ρ,color=:red)
+
+        display(f)
+    end
+
+
+    Xnode=append!(Xnode,tmpXnode)
+    Ynode=append!(Ynode,tmpYnode)
+    ρfield=append!(ρfield,tmpValue)
+
+    return
+    
 end

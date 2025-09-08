@@ -1,4 +1,17 @@
 using Enzyme
+using Requires
+
+function __init__()
+    if Sys.isapple()
+        @require Metal="dde4c033-4e86-420c-a63e-0dd931031962" begin
+            println("Metal backend available")
+        end
+    else
+        @require CUDA="052768ef-5323-5732-b1bb-66c8b64840ba" begin
+            println("CUDA backend available")
+        end
+    end
+end
 
 
 function detect_backend()

@@ -93,7 +93,11 @@ for iPointsUsed in eachindex(numPointsX)
             concreteModelParameters = @strdict famousEquationType Δnum orderBtime orderBspace pointsInSpace pointsInTime IneedExternalSources modelName models modelPoints forceModels maskedRegionForSourcesInSpace iExperiment
 
 
+            opt = myProduceOrLoad(makeCompleteCostFunctions,concreteModelParameters,"numParameters","quasiNum")
+            
+            #=
             opt,file=@produce_or_load(makeCompleteCostFunctions,concreteModelParameters,datadir("numOperators");filename = config -> savename("quasiNum",concreteModelParameters))
+            =#
 
             Nt = 1
             

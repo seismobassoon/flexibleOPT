@@ -38,24 +38,18 @@ end
 
 
 #region Physics to choose, method to define material variable models
-
 #famousEquationType="2DsismoTimeIsoHetero" # you can write a new governing equation using x-y-z-t coordinates 
 #famousEquationType="1DsismoFreqHomo"
 #famousEquationType="2DpoissonHetero"
 famousEquationType="2DacousticTime"
 #famousEquationType="1DsismoTime"
 
-exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂²=famousEquations(famousEquationType)
-
-#endregion
-
-#region model definition
 modelName="marmousi"
 
 modelDefinitionMethod="2DimageFile" # ToyModel or 2DimageFile (or 1DsphericalPlanet)
 model =nothing
 
-
+#endregion
 
 if modelDefinitionMethod !== nothing
         
@@ -93,7 +87,6 @@ if modelDefinitionMethod !== nothing
 #endregion
 end
 
-#endregion
 
 #region numerical configuration
 
@@ -131,6 +124,7 @@ models=push!(models, (model .* 0.2 .+ 0.4))
 
 
 # put fake Nt here for quasi-numerical operator construction
+exprs,fields,vars,extexprs,extfields,extvars,coordinates,∂,∂² = famousEquations(famousEquationType)
 
 fakeNt = 1
 timeMarching = any(a -> a === timeDimensionString, string.(coordinates)) 

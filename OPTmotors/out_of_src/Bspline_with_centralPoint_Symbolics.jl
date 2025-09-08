@@ -19,7 +19,7 @@ pointPerSegment = 20
 # input parameters
 
 # the left and right indices
-νₗ = 0
+νₗ = 1
 νᵣ = 3
 
 # δy for plotting, Δy for the real discretisation
@@ -283,9 +283,9 @@ for ι in 0:1:maximumOrder-1
 end
 integral_b_polys=simplify.(integral_b_polys)
 
-return b_deriv_ξ, b_deriv,integral_b,integral_b_polys
+return b,b_deriv_ξ, b_deriv,integral_b,integral_b_polys
 end
 
 
-b_deriv_ξ, b_deriv,integral_b,integral_b_polys=makeBspline()
-export b_deriv_ξ, b_deriv,integral_b,integral_b_polys
+b,b_deriv_ξ, b_deriv,integral_b,integral_b_polys=makeBspline()
+export b,b_deriv_ξ, b_deriv,integral_b,integral_b_polys

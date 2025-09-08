@@ -3,6 +3,7 @@ include("../src/batchImages.jl")
 using FileIO,CairoMakie
 
 function read2DimageModel(file,cmap;min=0.0,max=1.0,showRecoveredImage=true,Nheight=nothing,Nwidth=nothing)
+    
     if cmap isa String
         cmap=getColorPalette(cmap)
     end
@@ -48,12 +49,12 @@ function read2DimageModel(file; Ncolor=256, colorbar = [RGB(0.0, 0.0, 1.0), RGB(
     #@show values[1],values[end]
     #@show minimum(float_array), maximum(float_array)
     # Define colorbar and corresponding float values
-
+    
 
     if showRecoveredImage
-
+   
         newColorBar,newValues=regenerataionColorMap(colorbar,values,Ncolor)
-        scene = heatmap(transpose(float_array[end:1,1:end]), colormap =  newColorBar,colorrange=(values[1],values[end]))
+        scene = heatmap(transpose(float_array[end:-1:1,:]), colormap =  newColorBar,colorrange=(values[1],values[end]))
         display(scene)
     end
    
