@@ -258,7 +258,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     # here we do the famous inversion (ttttttt) even though this code is essentially a forward problem
     
     aa=transpose(tmpTaylorExpansionCoeffs)*tmpTaylorExpansionCoeffs
-    aa=Num2Float64(aa)
+    aa=Num2Float64.(aa)
     @show typeof(aa),aa,size(aa)
     invaa= myInv(aa)
     tmpCˡηlocal=invaa*transpose(tmpTaylorExpansionCoeffs)

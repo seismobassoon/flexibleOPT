@@ -19,7 +19,13 @@ using Symbolics,UnPack,Tullio
 
 #endregion
 
-Num2Float64(x) = Symbolics.value(x)
+function Num2Float64(x)
+    val = Symbolics.value(x)
+    if val isa Num
+        error("Cannot convert symbolic Num to Float64: $x")
+    end
+    return Float64(val)
+end
 
 function usefulPartials(coordinates)
     ∂=[]
