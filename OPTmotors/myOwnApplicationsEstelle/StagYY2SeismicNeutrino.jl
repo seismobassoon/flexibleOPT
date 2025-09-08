@@ -61,11 +61,12 @@ wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
 rhoFiles = filter(f -> !occursin(r"/\._", f), rhoFiles) #if op_old_full_mars_2025
 
 iTime = 200
-n_pts = 100
-n_vectors = 100
-zposition = 2.5e3 
+n_pts = 100 # the number of segments for each baseline
+n_vectors = 100 # the number of zenith angles
+zposition = 2.5e3 # depth of dectecor in metre
 
 # Neurthino tests
+
 function creationPaths(n_vectors, zposition)
 
     densities_list, sections_list = vectorsFromDetector(n_vectors, zposition) 
