@@ -222,7 +222,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
             tmp2=Num2Float64(modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1])
             tmp3=Num2Float64(modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1])
             
-            modifiedμ_vector[iCoord]= tmp3
+            modifiedμ_vector[iCoord] = tmp3
             if WorderBspline[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
                 iSayWeSayGo *= 1
             elseif  tmp1 <=η_μ[iCoord] <= tmp2
