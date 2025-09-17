@@ -207,17 +207,21 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     
     # for this pointsIndices are filtered for every μ
     
-    Ndimension = length(WorderBspline)
+    @show Ndimension = length(WorderBspline)
 
     tmpPointsIndices = []
     linearIndicesUsed = []
 
     modifiedμ_vector = Array{Float64,1}(undef,Ndimension)
 
+
+
     for i in eachindex(pointsIndices)
         η_μ = pointsIndices[i]
         iSayWeSayGo = 1
         for iCoord in eachindex(modifiedμ) # Ndimension
+
+            @show 1,μ,WorderBspline[iCoord]+1, iCoord
             tmp1=Num2Float64(modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1])
             tmp2=Num2Float64(modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1])
             tmp3=Num2Float64(modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1])
