@@ -4,8 +4,9 @@
 # 'iExperiment' can be fixed to be 1 if the user does not need to perform benchmark tests
 # (which should be the case for the most of the time when the software gets stabilised)
 
-using  Pkg, BenchmarkTools
 
+using Pkg, BenchmarkTools
+using Revise
 cd(@__DIR__)
 Pkg.activate("../..")
 

@@ -222,7 +222,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
         iSayWeSayGo = 1
         for iCoord in eachindex(modifiedμ) # Ndimension
 
-            #@show 1,μ,WorderBspline[iCoord]+1, iCoord
+            @show 1,μ,WorderBspline[iCoord]+1, iCoord
             #tmp1=Num2Float64(modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1])
             #tmp2=Num2Float64(modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1])
             #tmp3=Num2Float64(modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1])
@@ -230,6 +230,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
             tmp1=Num2Float64(safeget(modifiedμ[iCoord],1,μ,WorderBspline[iCoord]+1))
             tmp2=Num2Float64(safeget(modifiedμ[iCoord],2,μ,WorderBspline[iCoord]+1))
             tmp3=Num2Float64(safeget(modifiedμ[iCoord],3,μ,WorderBspline[iCoord]+1))
+            @show tmp1, tmp2, tmp3
 
             modifiedμ_vector[iCoord] = tmp3
             if WorderBspline[iCoord] === -1 # this will use Y everywhere (for ν+μ = ν)
@@ -248,6 +249,8 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
 
     tmpNumberOfEtas = length(tmpPointsIndices)
     tmpTaylorExpansionCoeffs = Array{Any,2}(undef,numberOfLs,tmpNumberOfEtas)
+
+    
 
     for i in eachindex(tmpPointsIndices)
         #η = tmpPointsIndices[i]-pointsIndices[μ]
