@@ -222,14 +222,14 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
         iSayWeSayGo = 1
         for iCoord in eachindex(modifiedμ) # Ndimension
 
-            @show 1,μ_oneD,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1, iCoord
+            @show 1,μ_oneD,pointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1, iCoord
             #tmp1=Num2Float64(modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1])
             #tmp2=Num2Float64(modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1])
             #tmp3=Num2Float64(modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1])
             
-            tmp1=Num2Float64(safeget(modifiedμ[iCoord],1,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1))
-            tmp2=Num2Float64(safeget(modifiedμ[iCoord],2,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1))
-            tmp3=Num2Float64(safeget(modifiedμ[iCoord],3,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp1=Num2Float64(safeget(modifiedμ[iCoord],1,pointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp2=Num2Float64(safeget(modifiedμ[iCoord],2,pointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp3=Num2Float64(safeget(modifiedμ[iCoord],3,pointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
             @show tmp1, tmp2, tmp3
 
             modifiedμ_vector[iCoord] = tmp3
