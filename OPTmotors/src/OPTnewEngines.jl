@@ -188,8 +188,8 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
     # this is the C^{(l)}_{\mu+\eta; μ, \nu}
 
-    for μ in eachindex(pointsIndices)
-        CˡηGlobal[:,:,μ]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline,modifiedμ)
+    for μ_oneD in eachindex(pointsIndices)
+        CˡηGlobal[:,:,μ_oneD]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ_oneD,WorderBspline,modifiedμ)
     end 
 
 
@@ -199,7 +199,7 @@ function TaylorCoefInversion(coefInversionDict::Dict)
 
 end
 
-function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ,WorderBspline,modifiedμ)
+function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ_oneD,WorderBspline,modifiedμ)
     # the old version is : illposedTaylorCoefficientsInversionSingleCentre
 
     # in fact, available points depend on the position of μ (=k here), we need to 'mute' some points
@@ -222,14 +222,14 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
         iSayWeSayGo = 1
         for iCoord in eachindex(modifiedμ) # Ndimension
 
-            @show 1,μ,WorderBspline[iCoord]+1, iCoord
+            @show 1,μ_oneD,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1, iCoord
             #tmp1=Num2Float64(modifiedμ[iCoord][1,μ,WorderBspline[iCoord]+1])
             #tmp2=Num2Float64(modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1])
             #tmp3=Num2Float64(modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1])
             
-            tmp1=Num2Float64(safeget(modifiedμ[iCoord],1,μ,WorderBspline[iCoord]+1))
-            tmp2=Num2Float64(safeget(modifiedμ[iCoord],2,μ,WorderBspline[iCoord]+1))
-            tmp3=Num2Float64(safeget(modifiedμ[iCoord],3,μ,WorderBspline[iCoord]+1))
+            tmp1=Num2Float64(safeget(modifiedμ[iCoord],1,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp2=Num2Float64(safeget(modifiedμ[iCoord],2,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp3=Num2Float64(safeget(modifiedμ[iCoord],3,pointsIndex[μ_oneD][iCoord],WorderBspline[iCoord]+1))
             @show tmp1, tmp2, tmp3
 
             modifiedμ_vector[iCoord] = tmp3
@@ -889,7 +889,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
 
     #region obtaining Cˡη either symbolically either with Δcoordinates in a numerical way
-
+    #@show pointsIndices, "message from AuSymbolic"
 
     coefInversionDict = @strdict coordinates multiOrdersIndices pointsIndices Δ WorderBspline modifiedμ
 
