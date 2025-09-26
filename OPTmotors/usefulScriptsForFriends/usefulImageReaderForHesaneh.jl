@@ -9,12 +9,14 @@ include("../src/imageReader.jl")
 
 #imagefile="../data/model/artemis/IMG_6098.jpeg"
 #imagefile="../data/model/random/tmp.png"
-imagefile = "../data/model/moi/ground_canyon.png"
+#imagefile = "../data/model/moi/ground_canyon.png"
+imagefile = "/Users/hessiemohammadi/Documents/FUJI/events/image14.png"
 colormap = "hot" #colormap can be RGB vector or predefined colormap
 
 floatMatrix=read2DimageModel(imagefile,colormap;min=1000,max=3300, showRecoveredImage=true) 
-@show size(floatMatrix)
+#@show size(floatMatrix)
 
+#size(floatMatrix) = (nz, nx)
 
 
 # Brocher (2005)
@@ -37,7 +39,7 @@ data_single = Float32.(data)
 data_vec = vec(data_single)
 
 # Write to binary file
-open("GCNF.rho", "w") do io
+open("volcano(b).rho", "w") do io
     write(io, data_vec)
 end
 
@@ -52,7 +54,7 @@ data_single = Float32.(data)
 data_vec = vec(data_single)
 
 # Write to binary file
-open("GCNF.vp", "w") do io
+open("volcano(b).vp", "w") do io
     write(io, data_vec)
 end
 
@@ -66,6 +68,6 @@ data_single = Float32.(data)
 data_vec = vec(data_single)
 
 # Write to binary file
-open("GCNF.vs", "w") do io
+open("volcano(b).vs", "w") do io
     write(io, data_vec)
 end
