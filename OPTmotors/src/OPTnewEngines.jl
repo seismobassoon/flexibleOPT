@@ -951,7 +951,9 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
 
                             for linearμᶜ_plus_ηᶜ in eachindex(pointsIndices)
                                 
-                                linearμᶜ_plus_ηᶜ_in_the_whole = LinearIndices(multiOrdersIndices)[vec2car(pointsIndices[linearμᶜ_plus_ηᶜ])]
+                                #linearμᶜ_plus_ηᶜ_in_the_whole = LinearIndices(multiOrdersIndices)[vec2car(pointsIndices[linearμᶜ_plus_ηᶜ])]
+                                linearμᶜ_plus_ηᶜ_in_the_whole = LinearIndices(pointsIndices)[vec2car(pointsIndices[linearμᶜ_plus_ηᶜ])]
+                                #NF 29/09/2025 I am not sure if it is ok to change like this ...
 
                                 localmapηᶜ=Dict()
 
