@@ -789,8 +789,11 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
     
     multiOrdersIndices=CartesianIndices(orderTaylors)
 
-    availablePointsConfigurations = []
-    centrePointConfigurations=[]
+    #availablePointsConfigurations = []
+    #centrePointConfigurations=[]
+
+    availablePointsConfigurations = Array{Array{Vector{Int64},Ndimension},1}()
+    centrePointConfigurations=Array{Int64,1}()
 
     #endregion
 
@@ -861,6 +864,38 @@ function OPTobj(exprs,fields,vars; coordinates=(x,y,z,t), TaylorOptions=(WorderB
     
 end
 
+
+
+function ASymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
+    # I write this function to be able to go through the matrix inversion path
+    # the model function is AuSymbolic (below)
+
+    # 07/10/2025
+    AjiννᶜU=0
+    Ulocal=0
+
+    #region preparation 
+
+    L_MINUS_N = multiOrdersIndices
+    L_MINUS_N = L_MINUS_N .-L_MINUS_N[1]
+
+    #endregion
+
+     #region we compute the integral for 1D domain(s)
+
+    integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
+    modifiedμ=Array{Any,1}(undef,length(coordinates))
+    for iCoord in eachindex(coordinates)
+        integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
+        output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
+        integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
+        @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
+    end
+
+    #endregion
+
+    return AjiννᶜU,Ulocal
+end
 
 function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
 
