@@ -6,9 +6,14 @@
 
 
 using Pkg, BenchmarkTools
-using Revise
+using Revise # if we use Revise, myInclude will be Revise.includet
+
 cd(@__DIR__)
 Pkg.activate("../..")
+
+include("../src/batchRevise.jl")
+using .BatchRevise
+
 
 include("../src/imageReader.jl") # read 2D images for models
 

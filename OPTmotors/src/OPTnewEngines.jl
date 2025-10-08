@@ -888,7 +888,7 @@ function ASymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndic
     for iCoord in eachindex(coordinates)
         integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
         output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
-        integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
+        @show integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
         @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
 
