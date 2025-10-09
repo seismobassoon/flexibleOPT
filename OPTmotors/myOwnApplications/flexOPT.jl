@@ -12,7 +12,7 @@ cd(@__DIR__)
 Pkg.activate("../..")
 
 include("../src/batchRevise.jl")
-using .BatchRevise
+Base.invokelatest(Main.BatchRevise, args...)
 
 
 include("../src/imageReader.jl") # read 2D images for models
