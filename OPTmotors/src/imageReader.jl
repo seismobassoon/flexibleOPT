@@ -1,4 +1,6 @@
-include("../src/batchImages.jl")
+
+
+myInclude("../src/batchImages.jl")
 
 using FileIO,CairoMakie
 
