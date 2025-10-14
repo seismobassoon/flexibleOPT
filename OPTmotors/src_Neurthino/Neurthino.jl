@@ -27,9 +27,9 @@ const G_F = 8.961877245622253e-38 #[eV*cm^3]
 isnothing(::Any) = false
 isnothing(::Nothing) = true
 
-include("Oscillation.jl")
-include("Matter.jl")
-include("earthModels2Dor3D.jl")
-#include("PREM.jl")
+myInclude("Oscillation.jl")
+myInclude("Matter.jl")
+myInclude("earthModels2Dor3D.jl")
+#myInclude("PREM.jl")
 
 end # module

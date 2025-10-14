@@ -1,10 +1,10 @@
 using Symbolics,UnPack,LinearAlgebra,DrWatson
 
-include("../src/batchNewSymbolics.jl")
-include("../src/batchUseful.jl")
-include("../src/batchDrWatson.jl")
-include("../src/CerjanBoundary.jl")
-include("../src/IntegrateBsplineAndPolynomials.jl")
+myInclude("../src/batchNewSymbolics.jl")
+myInclude("../src/batchUseful.jl")
+myInclude("../src/batchDrWatson.jl")
+myInclude("../src/CerjanBoundary.jl")
+myInclude("../src/IntegrateBsplineAndPolynomials.jl")
 
 # PDECoefFinder cannot detect the material partials × material partials for the moment!! 
 
@@ -1073,7 +1073,7 @@ function constructingNumericalDiscretisedEquations(semiSymbolicsOperators,coordi
     # 
     # need extend to 4 points with the same test functions (3 points) -> staggered grid
     #  
-    # I have to include some complex initial condition for 場
+    # I have to myInclude some complex initial condition for 場
     #
     # have to write:
     #  function illposedTaylorCoefficientsInversion(coordinates,multiOrdersIndices,multiPointsIndices,midPoint,Δ)

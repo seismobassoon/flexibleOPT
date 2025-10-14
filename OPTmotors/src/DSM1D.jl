@@ -1,5 +1,5 @@
 module DSM1D
-# This module will include all the functions needed to run the 1D DSM
+# This module will myInclude all the functions needed to run the 1D DSM
 # Packages that should be installed before running the DSM:
 
 # - SeisBase
@@ -21,10 +21,10 @@ module DSM1D
 
 
 # preprocessing 
-include("mainStructures.jl")
+myInclude("mainStructures.jl")
 export compute1DseismicParamtersFromPolynomialCoefficients
-include("inputParams.jl")
-include("inputModels.jl")
+myInclude("inputParams.jl")
+myInclude("inputModels.jl")
 
 # if geodynamic model -> use another function and get parameter conversion
 modelFile=dirname(@__FILE__)*"/"*DSM1D.dsm1Dconfig.modelFolder*"/"*DSM1D.input.modelFile
@@ -35,7 +35,7 @@ modelFile=dirname(@__FILE__)*"/"*DSM1D.dsm1Dconfig.modelFolder*"/"*DSM1D.input.m
 
 
 # Here we make vertical grids in radius for the DSM computation
-include("DSM1Dmotor.jl")
+myInclude("DSM1Dmotor.jl")
 
 
 end # module DSM1D

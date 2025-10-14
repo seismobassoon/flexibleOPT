@@ -11,13 +11,13 @@ using Revise # if we use Revise, myInclude will be Revise.includet
 cd(@__DIR__)
 Pkg.activate("../..")
 
-include("../src/batchRevise.jl")
+myInclude("../src/batchRevise.jl")
 Base.invokelatest(Main.BatchRevise, args...)
 
 
-include("../src/imageReader.jl") # read 2D images for models
+myInclude("../src/imageReader.jl") # read 2D images for models
 
-include("../src/OPTwrappers.jl") 
+myInclude("../src/OPTwrappers.jl") 
 
 iExperiment = 1
 

@@ -10,8 +10,8 @@ Pkg.activate("../..")
 ParamFile = "../test/testparam.csv"
 
 
-include("../src/DSM1D.jl")
-include("../src_Neurthino/Neurthino.jl")
+myInclude("../src/DSM1D.jl")
+myInclude("../src_Neurthino/Neurthino.jl")
 
 #using .Neurthino: OscillationParameters, setθ!, setδ!, setΔm²!
 using .Neurthino
