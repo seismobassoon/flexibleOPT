@@ -891,6 +891,7 @@ function ASymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndic
         @show integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
         @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
+    @show typeof(integral1DWYYKK[1]), typeof(modifiedμ[1])
 
     #endregion
 
