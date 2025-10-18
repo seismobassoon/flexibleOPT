@@ -546,6 +546,7 @@ function compute1DseismicParamtersFromPolynomialCoefficients(Coefs::DSM1DPSVmode
     end
     radius=Float64[]
     parameter=(ρ=Float64[],Vpv=Float64[],Vph=Float64[],Vsv=Float64[],Vsh=Float64[],Qμ=Float64[],Qκ=Float64[],QμPower=Float64[],QκPower=Float64[],η=Float64[])
+    
    
     for i in 1:nLayers
         radiusInterval = (normalisedtmpTopRadius[i]-normalisedtmpBottomRadius[i])/convert(Float64,numPointsPerLayer-1)
@@ -622,12 +623,15 @@ function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(
     # here we sort the radii
 
     tmpRadiiInKilometer = sort(tmpRadiiInKilometer)
-    
+    numberRadii = length(tmpRadiiInKilometer)
 
     tmpNormalisedRadii = tmpRadiiInKilometer./Coefs.averagedPlanetRadiusInKilometer
 
 
-    parameter=(ρ=Float64[],Vpv=Float64[],Vph=Float64[],Vsv=Float64[],Vsh=Float64[],Qμ=Float64[],Qκ=Float64[],QμPower=Float64[],QκPower=Float64[],η=Float64[])
+    #parameter=(ρ=Float64[],Vpv=Float64[],Vph=Float64[],Vsv=Float64[],Vsh=Float64[],Qμ=Float64[],Qκ=Float64[],QμPower=Float64[],QκPower=Float64[],η=Float64[])
+
+
+    parameter=(ρ=zeros(Float64,numberRadii),Vpv=zeros(Float64,numberRadii),Vph=zeros(Float64,numberRadii),Vsv=zeros(Float64,numberRadii),Vsh=zeros(Float64,numberRadii),Qμ=zeros(Float64,numberRadii),Qκ=zeros(Float64,numberRadii),QμPower=zeros(Float64,numberRadii),QκPower=zeros(Float64,numberRadii),η=zeros(Float64,numberRadii))
 
     N深さインデックス=size(tmpNormalisedRadii)[1]
  
@@ -660,16 +664,28 @@ function compute1DseismicParamtersFromPolynomialCoefficientsWithGivenRadiiArray(
 
             x = tmpNormalisedRadii[深さインデックス]
 
-            push!(parameter.ρ,Coefs.C_ρ[i,1]+Coefs.C_ρ[i,2]*x+Coefs.C_ρ[i,3]*x^2+Coefs.C_ρ[i,4]*x^3)
-            push!(parameter.Vpv,Coefs.C_Vpv[i,1]+Coefs.C_Vpv[i,2]*x+Coefs.C_Vpv[i,3]*x^2+Coefs.C_Vpv[i,4]*x^3)
-            push!(parameter.Vph,Coefs.C_Vph[i,1]+Coefs.C_Vph[i,2]*x+Coefs.C_Vph[i,3]*x^2+Coefs.C_Vph[i,4]*x^3)
-            push!(parameter.Vsv,Coefs.C_Vsv[i,1]+Coefs.C_Vsv[i,2]*x+Coefs.C_Vsv[i,3]*x^2+Coefs.C_Vsv[i,4]*x^3)
-            push!(parameter.Vsh,Coefs.C_Vsh[i,1]+Coefs.C_Vsh[i,2]*x+Coefs.C_Vsh[i,3]*x^2+Coefs.C_Vsh[i,4]*x^3)
-            push!(parameter.Qμ,Coefs.C_Qμ[i,1]+Coefs.C_Qμ[i,2]*x+Coefs.C_Qμ[i,3]*x^2+Coefs.C_Qμ[i,4]*x^3)
-            push!(parameter.Qκ,Coefs.C_Qκ[i,1]+Coefs.C_Qκ[i,2]*x+Coefs.C_Qκ[i,3]*x^2+Coefs.C_Qκ[i,4]*x^3)
-            push!(parameter.QμPower,Coefs.C_QμPower[i,1]+Coefs.C_QμPower[i,2]*x+Coefs.C_QμPower[i,3]*x^2+Coefs.C_QμPower[i,4]*x^3)
-            push!(parameter.QκPower,Coefs.C_QκPower[i,1]+Coefs.C_QκPower[i,2]*x+Coefs.C_QκPower[i,3]*x^2+Coefs.C_QκPower[i,4]*x^3)
-            push!(parameter.η,Coefs.C_η[i,1]+Coefs.C_η[i,2]*x+Coefs.C_η[i,3]*x^2+Coefs.C_η[i,4]*x^3)
+            #push!(parameter.ρ,Coefs.C_ρ[i,1]+Coefs.C_ρ[i,2]*x+Coefs.C_ρ[i,3]*x^2+Coefs.C_ρ[i,4]*x^3)
+            #push!(parameter.Vpv,Coefs.C_Vpv[i,1]+Coefs.C_Vpv[i,2]*x+Coefs.C_Vpv[i,3]*x^2+Coefs.C_Vpv[i,4]*x^3)
+            #push!(parameter.Vph,Coefs.C_Vph[i,1]+Coefs.C_Vph[i,2]*x+Coefs.C_Vph[i,3]*x^2+Coefs.C_Vph[i,4]*x^3)
+            #push!(parameter.Vsv,Coefs.C_Vsv[i,1]+Coefs.C_Vsv[i,2]*x+Coefs.C_Vsv[i,3]*x^2+Coefs.C_Vsv[i,4]*x^3)
+            #push!(parameter.Vsh,Coefs.C_Vsh[i,1]+Coefs.C_Vsh[i,2]*x+Coefs.C_Vsh[i,3]*x^2+Coefs.C_Vsh[i,4]*x^3)
+            #push!(parameter.Qμ,Coefs.C_Qμ[i,1]+Coefs.C_Qμ[i,2]*x+Coefs.C_Qμ[i,3]*x^2+Coefs.C_Qμ[i,4]*x^3)
+            #push!(parameter.Qκ,Coefs.C_Qκ[i,1]+Coefs.C_Qκ[i,2]*x+Coefs.C_Qκ[i,3]*x^2+Coefs.C_Qκ[i,4]*x^3)
+            #push!(parameter.QμPower,Coefs.C_QμPower[i,1]+Coefs.C_QμPower[i,2]*x+Coefs.C_QμPower[i,3]*x^2+Coefs.C_QμPower[i,4]*x^3)
+            #push!(parameter.QκPower,Coefs.C_QκPower[i,1]+Coefs.C_QκPower[i,2]*x+Coefs.C_QκPower[i,3]*x^2+Coefs.C_QκPower[i,4]*x^3)
+            #push!(parameter.η,Coefs.C_η[i,1]+Coefs.C_η[i,2]*x+Coefs.C_η[i,3]*x^2+Coefs.C_η[i,4]*x^3)
+
+            parameter.ρ[深さインデックス]=Coefs.C_ρ[i,1]+Coefs.C_ρ[i,2]*x+Coefs.C_ρ[i,3]*x^2+Coefs.C_ρ[i,4]*x^3
+            parameter.Vpv[深さインデックス]=Coefs.C_Vpv[i,1]+Coefs.C_Vpv[i,2]*x+Coefs.C_Vpv[i,3]*x^2+Coefs.C_Vpv[i,4]*x^3
+            parameter.Vph[深さインデックス]=Coefs.C_Vph[i,1]+Coefs.C_Vph[i,2]*x+Coefs.C_Vph[i,3]*x^2+Coefs.C_Vph[i,4]*x^3
+            parameter.Vsv[深さインデックス]=Coefs.C_Vsv[i,1]+Coefs.C_Vsv[i,2]*x+Coefs.C_Vsv[i,3]*x^2+Coefs.C_Vsv[i,4]*x^3
+            parameter.Vsh[深さインデックス]=Coefs.C_Vsh[i,1]+Coefs.C_Vsh[i,2]*x+Coefs.C_Vsh[i,3]*x^2+Coefs.C_Vsh[i,4]*x^3
+            parameter.Qμ[深さインデックス]=Coefs.C_Qμ[i,1]+Coefs.C_Qμ[i,2]*x+Coefs.C_Qμ[i,3]*x^2+Coefs.C_Qμ[i,4]*x^3
+            parameter.Qκ[深さインデックス]=Coefs.C_Qκ[i,1]+Coefs.C_Qκ[i,2]*x+Coefs.C_Qκ[i,3]*x^2+Coefs.C_Qκ[i,4]*x^3
+            parameter.QμPower[深さインデックス]=Coefs.C_QμPower[i,1]+Coefs.C_QμPower[i,2]*x+Coefs.C_QμPower[i,3]*x^2+Coefs.C_QμPower[i,4]*x^3
+            parameter.QκPower[深さインデックス]=Coefs.C_QκPower[i,1]+Coefs.C_QκPower[i,2]*x+Coefs.C_QκPower[i,3]*x^2+Coefs.C_QκPower[i,4]*x^3
+            parameter.η[深さインデックス]=Coefs.C_η[i,1]+Coefs.C_η[i,2]*x+Coefs.C_η[i,3]*x^2+Coefs.C_η[i,4]*x^3
+
 
 
             if 深さインデックス < N深さインデックス
