@@ -1,4 +1,4 @@
-using GLMakie
+using GLMakie, Colors
 using Makie: Axis
 using Makie: Top
 using DelimitedFiles
@@ -11,8 +11,10 @@ using CSV, DataFrames
  Toggle Pair mode: connect S→R by clicking near them (nearest point is picked)
  Background: velocity model heatmap (Vp)
 """
-fig = Figure(size = (900, 520))
+fig = Figure(size = (800, 500))
 ax  = Axis(fig[1, 1], xlabel = "x (km)", ylabel = "z (km)")
+ax.aspect = DataAspect()  # Ensures equal scale in x and z
+
 xlims!(ax, -50.0, 50.0)
 ylims!(ax,  50.0, -10.0)     # surface near top
 
@@ -20,8 +22,8 @@ ylims!(ax,  50.0, -10.0)     # surface near top
 
 datadir = "/Users/hessiemohammadi/Documents/FUJI/Github/flexibleDSM/OPTmotors/usefulScriptsForFriends"
 
-#nz, nx = (338, 461)   # model dimensions
-nz, nx = (389, 206)
+nz, nx = (338, 461)   # model dimensions
+#nz, nx = (389, 206)
 #nz, nx = (427, 461)
 npts = nz * nx
   
@@ -38,7 +40,7 @@ xlims_plot = (-50.0, 50.0)
 
 
 # Overlay topography curve
-lines!(ax, x_topo, z_topo; color=:brown, linewidth=2, label="Topography")
+lines!(ax, x_topo, z_topo; color=RGB(0.55, 0.27, 0.07), linewidth=2, label="Topography")
 
 
 
@@ -48,22 +50,37 @@ function read_binary_matrix(path, nz, nx)
         read!(io, vec)
     end
     
-    return reshape(vec, nx, nz)'   
+    return reshape(vec, nx, nz)'  
+    
 end
 
 
-rho = read_binary_matrix(joinpath(datadir, "volcano(c).rho"), nz, nx)
-vp  = read_binary_matrix(joinpath(datadir, "volcano(c).vp"),  nz, nx)
-vs  = read_binary_matrix(joinpath(datadir, "volcano(c).vs"),  nz, nx)
+rho = read_binary_matrix(joinpath(datadir, "volcano_f_vp300.rho"), nz, nx)
+vp  = read_binary_matrix(joinpath(datadir, "volcano_f_vp300.vp"),  nz, nx)
+vs  = read_binary_matrix(joinpath(datadir, "volcano_f_vp300.vs"),  nz, nx)
 
 # Coordinates
-xs = range(-50, 50, length=nx)     # horizontal (km)
-zs = range(0, 50, length=nz)     # vertical (km)
+xs = range(50, -50, length=nx)     # horizontal (km)
+zs = range(start = -3.776, stop = 50, length = nz)
+     # vertical (km)
+
+
+# custom gradient (low → high)
+my_colormap = cgrad([
+    RGB(1.0, 1.0, 1.0),     # Air (white)  
+    RGB(1.0, 0.0, 0.0),  # red = low velocity
+    RGB(1.0, 0.65, 0.0),     # orange = medium velocity
+    RGB(0.55, 0.27, 0.07)       # brown = high velocity
+], [0.0, 0.5, 1.0])          # control points (low, mid, high)
 
 # Background heatmap (Vp)
-hm = heatmap!(ax, xs, zs, reverse(vp, dims=1); colormap=:viridis, alpha=0.6)
+#hm = heatmap!(ax, xs, zs, reverse(vp, dims=1); colormap=my_colormap, alpha=0.8)
+hm = heatmap!(ax, xs, zs, reverse(vp, dims=1); 
+              colormap=my_colormap, alpha=0.8)
 
-Colorbar(fig[1, 2], hm, label="Vp (m/s)")
+
+Colorbar(fig[1, 2], hm, label = "Vp (m/s)", height = Relative(0.6))
+
 
 #  Data stores 
 sources   = Observable(Point2f[])   # red circles
