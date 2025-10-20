@@ -6,6 +6,7 @@ myInclude("../src/famousSourceFunctions.jl")
 myInclude("../src/famousEquations.jl")
 myInclude("../src/timeMarchingSchemes.jl")
 
+
 function makeCompleteCostFunctions(concreteModelParameters::Dict)
     # This is a kind of big wrapper to construct an explicit numerical Cost functions to be minimised during the simulation
     
