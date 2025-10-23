@@ -58,28 +58,26 @@ struct GeoPoint
 end
 
 struct localCoord2D
-    ix::Int64
-    iz::Int64
-    x::Float64
-    z::Float64
+    iXZ::SVector{2,Integer}
+    xz::SVector{2,Float64}
     horizontalVector::SVector{2,Float64}
     normalVector::SVector{2,Float64}
 end
 
 struct localCoord3D
-    ix::Int64
-    iy::Int64
-    iz::Int64
-    x::Float64
-    y::Float64
-    z::Float64
+    iXYZ::SVector{3,Integer}
+    xyz::SVector{3,Float64}
     horizontalVector1::SVector{3,Float64}
     horizontalVector2::SVector{3,Float64}
     normalVector::SVector{3,Float64}
 end
 
-function localCoord2D(ix,iz,x,z)
-    localCoord2D(ix,iz,x,z,(0.0,0.0),(0.0,0.0))
+function localCoord2D(p::localCoord3D)
+    iXZ=SVector{2,Integer}(p.iXYZ[1],p.iXYZ[3])
+    xz=SVector{2,Float64}(p.xyz[1],p.xyz[3])
+    horizontalVector=SVector{2,Float64}(p.horizontalVector1[1],p.horizontalVector1[3])
+    normalVector=SVector{2,Float64}(p.normalVector[1],p.normalVector[3])
+    localCoord2D(iXZ,xz,horizontalVector,normalVector)
 end
 
 function GeoPoint(lat::Float64, lon::Float64; alt=0.0, ell=DEFAULT_ELLIPSOID[])
