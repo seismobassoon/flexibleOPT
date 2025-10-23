@@ -5,6 +5,47 @@ using Geodesy, StaticArrays,LinearAlgebra
 
 import Base: +,-,/,*
 
+DEFAULT_PLANET = Ref(:Earth) #set_default_planet! can change this
+
+
+
+
+
+# Planetary parameters (semi-major axis `a` in meters, flattening `f`)
+
+function planet_ellipsoid(name::Symbol)
+    if name == :Earth # WGS84
+        a= 6378137.0
+        f =1.0/298.257223563
+    elseif name == :Mars
+        a = 3396200.0
+        f = 1 / 169.8
+    elseif name == :Moon
+        a = 1737400.0
+        f = 0.0
+    elseif name == :Venus
+        a = 6051800.0
+        f = 0.0
+    elseif name == :Mercury
+        a = 2439700.0
+        f = 0.0
+    else
+        error("Unknown planet: $name")
+    end
+    e2 = 2f - f^2
+    b = a * (1 - f)
+    return Ellipsoid(a, b, f, e2, name)
+end
+
+
+const DEFAULT_ELLIPSOID = Ref(planet_ellipsoid(DEFAULT_PLANET[]))
+
+# The planet can be changed by this function
+
+function set_default_planet!(name::Symbol)
+    DEFAULT_PLANET[]=name
+    DEFAULT_ELLIPSOID[] = planet_ellipsoid(name)
+end
 
 
 struct GeoPoint
@@ -41,35 +82,39 @@ function localCoord2D(ix,iz,x,z)
     localCoord2D(ix,iz,x,z,(0.0,0.0),(0.0,0.0))
 end
 
-function GeoPoint(lat::Float64, lon::Float64; alt=0.0, ell=wgs84, planet="Earth")
+function GeoPoint(lat::Float64, lon::Float64; alt=0.0, ell=DEFAULT_ELLIPSOID[])
     lla = LLA(lat,lon, alt) # be careful LLA uses degrees by default!!
     ecef_coords = ECEF(lla,ell)
     radius = norm([ecef_coords.x,ecef_coords.y,ecef_coords.z])
     GeoPoint(lat, lon, alt, SVector(ecef_coords.x, ecef_coords.y, ecef_coords.z),radius)
 end
 
+function GeoPoint(x::Real,y::Real,z::Real; ell=DEFAULT_ELLIPSOID[])
+    ecef = SVector{3,Float64}(x,y,z)
+    GeoPoint(ecef;ell=ell)
+end
 
-function GeoPoint(ecef::SVector{3,Float64}; ell=wgs84)
+function GeoPoint(ecef::SVector{3,Float64}; ell=DEFAULT_ELLIPSOID[])
     lla = LLA(ECEF(ecef...),ell)
     radius = norm(ecef)
     GeoPoint(lla.lat,lla.lon,lla.alt,ecef,radius)
 end
 
-function +(a::GeoPoint,b::GeoPoint; ell=wgs84)
+function +(a::GeoPoint,b::GeoPoint; ell=DEFAULT_ELLIPSOID[])
     ecef=a.ecef + b.ecef
     lla = LLA(ECEF(ecef...),ell)
     radius = norm(ecef)
     GeoPoint(lla.lat,lla.lon,lla.alt,ecef,radius)
 end
 
-function -(a::GeoPoint,b::GeoPoint; ell=wgs84)
+function -(a::GeoPoint,b::GeoPoint; ell=DEFAULT_ELLIPSOID[])
     ecef=a.ecef - b.ecef
     lla = LLA(ECEF(ecef...),ell)
     radius = norm(ecef)
     GeoPoint(lla.lat,lla.lon,lla.alt,ecef,radius)
 end
 
-function /(a::GeoPoint,c::Real; ell=wgs84)
+function /(a::GeoPoint,c::Real; ell=DEFAULT_ELLIPSOID[])
     ecef=a.ecef / c
     lla = LLA(ECEF(ecef...),ell)
     radius = norm(ecef)
@@ -77,7 +122,7 @@ function /(a::GeoPoint,c::Real; ell=wgs84)
 end
 
 
-function *(a::GeoPoint,c::Real; ell=wgs84)
+function *(a::GeoPoint,c::Real; ell=DEFAULT_ELLIPSOID[])
     ecef=a.ecef * c
     lla = LLA(ECEF(ecef...),ell)
     radius = norm(ecef)
@@ -85,7 +130,7 @@ function *(a::GeoPoint,c::Real; ell=wgs84)
 end
 
 
-function effectiveRadius(a::GeoPoint,r0::Float64; ell=wgs84)
+function effectiveRadius(a::GeoPoint,r0::Float64; ell=DEFAULT_ELLIPSOID[])
     radiusPlanetHere = GeoPoint(a.lat,a.lon).radius 
     ratio = r0/radiusPlanetHere
     return a.radius*ratio
@@ -118,11 +163,15 @@ function makeLocalCoordinates(p1::SVector{3,Float64},p2::SVector{3,Float64};pOri
         y_axis[1], y_axis[2], y_axis[3],
         z_axis[1], z_axis[2], z_axis[3]
     )
-
+    return x_axis,y_axis,z_axis,R
 end
 
+p_ECEF_to_local(p_3D::SVector{3,Float64},pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = R' * (p_3D - pOrigin)
 
-p_2D_to_ECEF(x_2D,z_2D,pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = pOrigin+R*SVector(x_2D,0.e0,z_2D)
+p_local_to_ECEF(x_2D,z_2D,pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = pOrigin+R*SVector(x_2D,0.e0,z_2D)
 
-p_ECEF_to_2D(p_3D::SVector{3,Float64},pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = R' * (p_3D - pOrigin)
+p_local_to_ECEF(vec2D::SVector{2,Float64},pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = pOrigin+R*SVector(vec2D[1],0.e0,vec2D[2])
 
+p_local_to_ECEF(x_3D,y_3D,z_3D,pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = pOrigin+R*SVector(x_3D,y_3D,z_3D)
+
+p_local_to_ECEF(vec3D::SVector{3,Float64},pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = pOrigin+R*SVector(vec3D[1],vec3D[2],vec3D[3])
