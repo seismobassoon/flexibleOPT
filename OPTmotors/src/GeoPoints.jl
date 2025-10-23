@@ -80,6 +80,15 @@ function localCoord2D(p::localCoord3D)
     localCoord2D(iXZ,xz,horizontalVector,normalVector)
 end
 
+function localCoord3D(p::localCoord2D)
+    iXYZ=SVector{3,Integer}(p.iXYZ[1],1,p.iXYZ[2])
+    xyz=SVector{3,Float64}(p.xyz[1],0.0,p.xyz[2])
+    horizontalVector=SVector{3,Float64}(p.horizontalVector1[1],0.0,p.horizontalVector1[2])
+    horizontalVector=SVector{3,Float64}(0.0,1.0,0.0)
+    normalVector=SVector{3,Float64}(p.normalVector[1],0.0,p.normalVector[2])
+    localCoord3D(iXYZ,xyz,horizontalVector1,horizontalVector2,normalVector)
+end
+
 function GeoPoint(lat::Float64, lon::Float64; alt=0.0, ell=DEFAULT_ELLIPSOID[])
     lla = LLA(lat,lon, alt) # be careful LLA uses degrees by default!!
     ecef_coords = ECEF(lla,ell)
