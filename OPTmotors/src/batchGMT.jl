@@ -1,4 +1,4 @@
-# useful functions for GMT.jl
+# useful functions for GMT.jl and GeoPoint su
 
 using GMT
 
