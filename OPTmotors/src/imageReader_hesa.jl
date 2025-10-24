@@ -34,7 +34,7 @@ function read2DimageModel(file; Ncolor=256, colorbar = [RGB(0.0, 0.0, 1.0), RGB(
 
     # Read RGB and take the absolute value
 
-    # Load the image
+    
     image = load(file)
 
     #rescaling the image
