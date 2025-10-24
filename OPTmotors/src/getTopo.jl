@@ -25,12 +25,34 @@ function getTopo(p1::GeoPoint,p2::GeoPoint,Δx::Float64,Δy::Float64,Δz::Float6
 
     effectiveRadii=Array{Float64,3}(undef,Nx,Ny,Nz)
 
-    allGridsInCartesian=Array{localCoord2D,2}(undef,Nx,Ny,Nz)
+    allGridsInCartesian=Array{localCoord2D,3}(undef,Nx,Ny,Nz)
 
     seismicModel=(ρ=zeros(Float64,Nx,Ny,Nz),Vpv=zeros(Float64,Nx,Ny,Nz),Vph=zeros(Float64,Nx,Ny,Nz),Vsv=zeros(Float64,Nx,Ny,Nz),Vsh=zeros(Float64,Nx,Ny,Nz),Qμ=zeros(Float64,Nx,Ny,Nz),Qκ=zeros(Float64,Nx,Ny,Nz),QμPower=zeros(Float64,Nx,Ny,Nz),QκPower=zeros(Float64,Nx,Ny,Nz),η=zeros(Float64,Nx,Ny,Nz))
   
- 
+
+
+    for iXYZ in CartesianIndices(allGridsInGeoPoints)
+        ix, iy, iz = Tuple(iXYZ)
+        x = leftLimit+(ix-1)*Δx
+        y = 奥行きMin+(iy-1)*Δy
+        z = altMin+(iz-1)*Δz 
+
+        tmpGeoPoint=GeoPoint(p_local_to_ECEF(x,z,p1.ecef,R))
+        
+        allGridsInGeoPoints[iXZ]=tmpGeoPoint
+
+        allGridsInCartesian[iXZ]=localCoord2D(ix,iz,x,z)
+    
+        effectiveRadii[iXZ]=effectiveRadius(tmpGeoPoint,DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer*1.e3 )
+    end
+
+
+    
 end
+
+
+
+
 
 function getTopo(Δx,Δy,Δz)
     # 2D and 3D

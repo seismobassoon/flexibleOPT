@@ -89,6 +89,12 @@ function localCoord3D(p::localCoord2D)
     localCoord3D(iXYZ,xyz,horizontalVector1,horizontalVector2,normalVector)
 end
 
+
+function localCoord2D(iX::SVector{2,Integer},X::SVector{2,Float64})
+    
+end
+
+
 function GeoPoint(lat::Float64, lon::Float64; alt=0.0, ell=DEFAULT_ELLIPSOID[])
     lla = LLA(lat,lon, alt) # be careful LLA uses degrees by default!!
     ecef_coords = ECEF(lla,ell)
