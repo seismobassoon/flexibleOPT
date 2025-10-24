@@ -1,6 +1,6 @@
 
-include("../src/batchSymbolics.jl")
-include("../src/batchUseful.jl")
+myInclude("../src/batchSymbolics.jl")
+myInclude("../src/batchUseful.jl")
 using BenchmarkTools
 
 function findTXYZDependency(expression)

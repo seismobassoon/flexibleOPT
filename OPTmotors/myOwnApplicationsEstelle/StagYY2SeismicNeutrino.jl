@@ -3,19 +3,19 @@ using  Pkg, BenchmarkTools
 cd(@__DIR__)
 Pkg.activate("../..")
 ParamFile = "../test/testparam.csv"
-include("../src/DSM1D.jl")
-include("../src/batchUseful.jl")
+myInclude("../src/DSM1D.jl")
+myInclude("../src/batchUseful.jl")
 using .DSM1D
 using DIVAnd,CairoMakie
 using Interpolations
 import GLMakie
 using Colors
-include("../src/batchStagYY.jl")
-include("../src_Neurthino/Neurthino.jl")
+myInclude("../src/batchStagYY.jl")
+myInclude("../src_Neurthino/Neurthino.jl")
 using .Neurthino
-include("../src_Neurthino/usefulFunctionsToPlot.jl")
-include("../src_Neurthino/NeurthinoRelated.jl")
-include("../src_Neurthino/premFunctions.jl")
+myInclude("../src_Neurthino/usefulFunctionsToPlot.jl")
+myInclude("../src_Neurthino/NeurthinoRelated.jl")
+myInclude("../src_Neurthino/premFunctions.jl")
 
 boolFlat = true # we can read but for me it is better to have this information before reading since DIVAnd_rectdom can be applied before reading
 
@@ -61,11 +61,12 @@ wtrFiles=myListDir(dir; pattern=r"test_wtr\d");
 rhoFiles = filter(f -> !occursin(r"/\._", f), rhoFiles) #if op_old_full_mars_2025
 
 iTime = 200
-n_pts = 100
-n_vectors = 100
-zposition = 2.5e3 
+n_pts = 100 # the number of segments for each baseline
+n_vectors = 100 # the number of zenith angles
+zposition = 2.5e3 # depth of dectecor in metre
 
 # Neurthino tests
+
 function creationPaths(n_vectors, zposition)
 
     densities_list, sections_list = vectorsFromDetector(n_vectors, zposition) 

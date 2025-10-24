@@ -1,11 +1,11 @@
-include("../src/OPTEngines.jl")
-include("../src/batchSymbolics.jl")
-include("../src/batchUseful.jl")
+myInclude("../src/OPTEngines.jl")
+myInclude("../src/batchSymbolics.jl")
+myInclude("../src/batchUseful.jl")
 
-include("../src/famousEquations.jl")
-include("../src/readOrMakeModels.jl")
-include("../src/imageReader.jl") # we can read 2D photos with a user-defined colorbar
-include("../src/plotTomography.jl") # myPcolor is inside (very useful for plot just a matrix)
+myInclude("../src/famousEquations.jl")
+myInclude("../src/readOrMakeModels.jl")
+myInclude("../src/imageReader.jl") # we can read 2D photos with a user-defined colorbar
+myInclude("../src/plotTomography.jl") # myPcolor is inside (very useful for plot just a matrix)
 using BenchmarkTools
 
 # available equations: 1Dacceleration,1Dlaplacian,1DsismoFreq,2DsismoSHFreq,

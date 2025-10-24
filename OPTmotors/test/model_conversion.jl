@@ -7,7 +7,7 @@ Pkg.activate("../..")
 
 ParamFile = "../test/testparam_Mars.csv"
 
-include("../src/DSM1D.jl")
+myInclude("../src/DSM1D.jl")
 using .DSM1D
 
 

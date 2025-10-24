@@ -4,14 +4,20 @@
 # 'iExperiment' can be fixed to be 1 if the user does not need to perform benchmark tests
 # (which should be the case for the most of the time when the software gets stabilised)
 
-using  Pkg, BenchmarkTools
+
+using Pkg, BenchmarkTools
+using Revise # if we use Revise, myInclude will be Revise.includet
 
 cd(@__DIR__)
 Pkg.activate("../..")
 
-include("../src/imageReader.jl") # read 2D images for models
+myInclude("../src/batchRevise.jl")
+Base.invokelatest(Main.BatchRevise, args...)
 
-include("../src/OPTwrappers.jl") 
+
+myInclude("../src/imageReader.jl") # read 2D images for models
+
+myInclude("../src/OPTwrappers.jl") 
 
 iExperiment = 1
 

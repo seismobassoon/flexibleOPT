@@ -8,7 +8,7 @@ cd(@__DIR__)
 Pkg.activate("../..")
 
 
-include("../src/OPTwrappers.jl") 
+myInclude("../src/OPTwrappers.jl") 
 
 
 # Choose backend depending on environment

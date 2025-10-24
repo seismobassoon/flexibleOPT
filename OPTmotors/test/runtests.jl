@@ -2,7 +2,7 @@ using Test,BenchmarkTools,CairoMakie
 
 ParamFile = "../test/testparam.csv"
 
-include("../src/DSM1D.jl")
+myInclude("../src/DSM1D.jl")
 using .DSM1D
 
 #println(DSM1D.my1DDSMmodel.solid_or_fluid)

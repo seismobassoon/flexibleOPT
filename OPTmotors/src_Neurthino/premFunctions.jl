@@ -39,6 +39,8 @@ function extendWithρ!(ρfield, Xnode, Ynode, dR;rcmb=6.371e6, dθ=2*π/360.0, i
     
 end
 
+\
+
 
 function myPREMPlot2DConvectionModel(iTime, fieldname, filename)
 #only if the field in DIVandrun is the same as in readStagYYFiles
