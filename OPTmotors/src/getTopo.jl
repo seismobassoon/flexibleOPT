@@ -27,7 +27,7 @@ function getTopo(p1::GeoPoint,p2::GeoPoint,Δx::Float64,Δy::Float64,Δz::Float6
 
     allGridsInCartesian=Array{localCoord2D,2}(undef,Nx,Ny,Nz)
 
-    seismicModel2D=(ρ=zeros(Float64,Nx,Nz),Vpv=zeros(Float64,Nx,Nz),Vph=zeros(Float64,Nx,Nz),Vsv=zeros(Float64,Nx,Nz),Vsh=zeros(Float64,Nx,Nz),Qμ=zeros(Float64,Nx,Nz),Qκ=zeros(Float64,Nx,Nz),QμPower=zeros(Float64,Nx,Nz),QκPower=zeros(Float64,Nx,Nz),η=zeros(Float64,Nx,Nz))
+    seismicModel=(ρ=zeros(Float64,Nx,Ny,Nz),Vpv=zeros(Float64,Nx,Ny,Nz),Vph=zeros(Float64,Nx,Ny,Nz),Vsv=zeros(Float64,Nx,Ny,Nz),Vsh=zeros(Float64,Nx,Ny,Nz),Qμ=zeros(Float64,Nx,Ny,Nz),Qκ=zeros(Float64,Nx,Ny,Nz),QμPower=zeros(Float64,Nx,Ny,Nz),QκPower=zeros(Float64,Nx,Ny,Nz),η=zeros(Float64,Nx,Ny,Nz))
   
  
 end
