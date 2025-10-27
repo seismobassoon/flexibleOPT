@@ -202,13 +202,28 @@ function effectiveRadius(a::GeoPoint,r0::Float64; ell=DEFAULT_ELLIPSOID[])
     return a.radius*ratio
 end
 
+function makeLocalCoordinateUnitVectors(p1::GeoPoint,p2::GeoPoint;p0::SVector{3,Float64}, p2_1::SVector{3,Float64})
 
-makeLocalCoordinates(p1::GeoPoint,p2::GeoPoint;pOrigin::GeoPoint=p1,p0::GeoPoint=(p1+p2)/2.0, p2_1::GeoPoint=p2-p1)=makeLocalCoordinates(p1.ecef,p2.ecef;pOrigin = (pOrigin isa GeoPoint ? pOrigin : p1).ecef,p0=((p1+p2)/2.0).ecef,p2_1=(p2-p1).ecef)
+    makeLocalCoordinateUnitVectors(p1.ecef,p2.ecef;p0=p0,p2_1=p2_1)
+end
 
-makeLocalCoordinates(p1::GeoPoint,p2::GeoPoint;pOrigin::SVector{3,Float64},p0::SVector{3,Float64}, p2_1::SVector{3,Float64})=makeLocalCoordinates(p1.ecef,p2.ecef;pOrigin = (pOrigin isa GeoPoint ? pOrigin : p1).ecef,p0=p0,p2_1=p2_1)
+
+function makeLocalCoordinateUnitVectors(p1::GeoPoint, p2::GeoPoint; p0::GeoPoint = (p1 + p2) / 2.0,p2_1::GeoPoint = p2 - p1)
+    # Prepare ECEF equivalents first
+    ecef_p1 = p1.ecef
+    ecef_p2 = p2.ecef
+    ecef_p0 = p0.ecef
+    ecef_p2_1 = p2_1.ecef
+
+    makeLocalCoordinateUnitVectors(ecef_p1, ecef_p2; p0 = ecef_p0, p2_1 = ecef_p2_1)
+end
 
 
-function makeLocalCoordinates(p1::SVector{3,Float64},p2::SVector{3,Float64};pOrigin::SVector{3,Float64}=p1, p0::SVector{3,Float64}=(p1+p2)/2.0, p2_1::SVector{3,Float64}=p2-p1)
+
+
+
+
+function makeLocalCoordinateUnitVectors(p1::SVector{3,Float64},p2::SVector{3,Float64}; p0::SVector{3,Float64}=(p1+p2)/2.0, p2_1::SVector{3,Float64}=p2-p1)
 
     # this function will define local (x,y,z) coordinates centred at pOrigin
     # 
@@ -249,3 +264,56 @@ p_local_to_ECEF(vec2D::SVector{2,Float64},pOrigin::SVector{3,Float64},R::SMatrix
 p_local_to_ECEF(x_3D,y_3D,z_3D,pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = pOrigin+R*SVector(x_3D,y_3D,z_3D)
 
 p_local_to_ECEF(vec3D::SVector{3,Float64},pOrigin::SVector{3,Float64},R::SMatrix{3,3,Float64}) = pOrigin+R*SVector(vec3D[1],vec3D[2],vec3D[3])
+
+
+
+
+function constructLocalBox(p1::GeoPoint,p2::GeoPoint,Δx::Float64,Δz::Float64,altMin::Float64,altMax::Float64;leftLimit::Float64 = 0.0, rightLimit::Float64=(p2-p1).radius)
+
+    # 2D
+    Δy = 1.0 # in metre as a dummy
+    奥行きMin=0.0 # y axis range
+    奥行きMax=1.0
+    allGridsInGeoPoints, allGridsInCartesian, effectiveRadii=constructLocalBox(p1,p2,Δx,Δy,Δz,奥行きMin,奥行きMax,altMin,altMax;leftLimit=leftLimit,rightLimit=rightLimit)
+    return allGridsInGeoPoints[:,1,:], localCoord2D.(allGridsInCartesian[:,1,:]), effectiveRadii[:,1,:]
+end
+
+
+function constructLocalBox(p1::GeoPoint,p2::GeoPoint,Δx::Float64,Δy::Float64,Δz::Float64,奥行きMin::Float64,奥行きMax::Float64,altMin::Float64,altMax::Float64;leftLimit::Float64=0.0,rightLimit::Float64=(p2-p1).radius)
+
+    # 3D
+
+    R=makeLocalCoordinateUnitVectors(p1,p2) 
+    pOrigin = p1.ecef # p1 centred coordinates
+    pCentre = SVector(0.0,0.0,0.0) # This is the default centre of the planet to measure the local vertical vectors
+
+    Nx = Int64((rightLimit-leftLimit) ÷ Δx+1) 
+    Ny = Int64((奥行きMax-奥行きMin) ÷ Δy +1)
+    Nz = Int64((altMax-altMin) ÷ Δz + 1 ) 
+
+    allGridsInGeoPoints=Array{GeoPoint,3}(undef,Nx,Ny,Nz)
+
+    allGridsInCartesian=Array{localCoord3D,3}(undef,Nx,Ny,Nz)
+
+    effectiveRadii=Array{Float64,3}(undef,Nx,Ny,Nz)
+
+
+    for iXYZ in CartesianIndices(allGridsInGeoPoints)
+        
+        ix, iy, iz = Tuple(iXYZ)
+        
+        tmpLocalPoint=localCoord3D(ix,iy,iz,Δx,Δy,Δz,pOrigin,R;startX=leftLimit-Δx,startY=奥行きMin-Δy,startZ=altMin-Δz,pCentre=pCentre)
+        tmpGeoPoint=GeoPoint(p_local_to_ECEF(tmpLocalPoint.xyz,pOrigin,R))
+        
+        allGridsInGeoPoints[iXYZ]=tmpGeoPoint
+        allGridsInCartesian[iXYZ] = tmpLocalPoint
+
+        effectiveRadii[iXYZ]=effectiveRadius(tmpGeoPoint,DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer*1.e3 )
+    end
+
+    return allGridsInGeoPoints, allGridsInCartesian, effectiveRadii
+    
+end
+
+
+
