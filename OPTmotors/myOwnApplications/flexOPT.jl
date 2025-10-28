@@ -33,7 +33,7 @@ iExperiment = 1
 
 
 #region Choose backend depending on environment
-if isdefined(Main, :IJulia) || get(ENV, "JULIA_EDITOR", "") == "code"
+if  (get(ENV, "JUPYTER", nothing) !== nothing) || isdefined(Main, :IJulia) 
     # Use CairoMakie for inline if in notebook or VS Code
     using CairoMakie
 else
