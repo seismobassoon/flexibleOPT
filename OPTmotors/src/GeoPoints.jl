@@ -7,10 +7,6 @@ import Base: +,-,/,*
 
 DEFAULT_PLANET = Ref(:Earth) #set_default_planet! can change this
 
-
-
-
-
 # Planetary parameters (semi-major axis `a` in meters, flattening `f`)
 
 function planet_ellipsoid(name::Symbol)

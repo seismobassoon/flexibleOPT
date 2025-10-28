@@ -1,8 +1,9 @@
-using GMT, Interpolations
+using Interpolations
 
 include("../src/batchRevise.jl")
 myInclude("../src/GeoPoints.jl")
-
+myInclude("../src/batchGMT.jl")
+myInclude("../src/batchDrWatson.jl")
 
 
 function getParamsAndTopo(allGridsInGeoPoints,precisionInKm::Float64;NradiusNodes=500,eps=10.0,VpWater=1.5,ρWater=1.0,VpAir=0.314,ρAir=0.001,hasAirModel=false)
@@ -69,15 +70,23 @@ function getParamsAndTopo(allGridsInGeoPoints,precisionInKm::Float64;NradiusNode
     end
 
 
-    @show region = [lon_min, lon_max, lat_min, lat_max]
+    region = [lon_min,lon_max,lat_min,lat_max]
 
-    topo = GMT.grdcut(precision, region=region)
-    #@show size(topo.x),size(topo.y),size(topo.z)
+    paramsForGMT = @strdict precision region
+    topo_out=myProduceOrLoad(getTopoViaGMT,paramsForGMT,"topoViaGMT")
+    topo=topo_out["topo"]
     
+    # below is a very strange behaviour from GMT and I need to clarify soon
 
-    x = (topo.x[1:end-1] .+ topo.x[2:end]) ./ 2
-    y = (topo.y[1:end-1] .+ topo.y[2:end]) ./ 2
-    z = topo.z
+    if size(topo.x)[1] !== size(topo.z)[2]
+        x = (topo.x[1:end-1] .+ topo.x[2:end]) ./ 2
+        y = (topo.y[1:end-1] .+ topo.y[2:end]) ./ 2
+        z = topo.z
+    else
+        x=topo.x
+        y=topo.y
+        z=topo.z
+    end
 
     #@show size(x), size(y), size(z)
 
