@@ -2,6 +2,8 @@ October 2025
 
 -finally I can work on the demo1.ipynb in myOwnApplications
 
+-how to deal with interfaces \Delta x that differs (interpolator on the discontinuities?)
+
 -DEFAULT_PLANET thing with 1D planet model -> how to make this more flexible?
 
 -batchXXX.jl in another folder?
