@@ -10,22 +10,11 @@ run in production mode without modification.
 """
 
 
-# Try to activate Revise automatically
-using_revise = try
-    @eval using Revise
-    true
-catch
-    @warn "Revise not found; falling back to myInclude."
-    false
-end
 
-"Smart myInclude: uses Revise.includet if Revise is active, otherwise include()."
+
+# now I don't use Revise.jl (incompatible with Pluto.jl)
 function myInclude(file::AbstractString)
-    if using_revise #&& hasproperty(Main, :Revise)
-        @info "Including with Revise: $file"
-        @eval Main Revise.includet($file)
-    else
-        include(file)
-    end
+    absfile = joinpath(@__DIR__, file)
+    Base.include_dependency(absfile)  # so Pluto tracks it
+    return Base.include(Main, absfile) # load into Main (so visible across cells)
 end
-

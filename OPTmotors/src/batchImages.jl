@@ -1,4 +1,3 @@
-myInclude("../src/batchUseful.jl")
 using FileIO, Images,ColorSchemes
 
 Base.retry_load_extensions()

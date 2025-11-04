@@ -6,7 +6,7 @@
 
 
 using Pkg, BenchmarkTools
-using Revise # if we use Revise, myInclude will be Revise.includet
+#using Revise # if we use Revise, myInclude will be Revise.includet
 
 cd(@__DIR__)
 Pkg.activate("../..")
@@ -14,6 +14,7 @@ Pkg.activate("../..")
 myInclude("../src/batchRevise.jl")
 Base.invokelatest(Main.BatchRevise, args...)
 
+myInclude("../src/batchUseful.jl")
 
 myInclude("../src/imageReader.jl") # read 2D images for models
 

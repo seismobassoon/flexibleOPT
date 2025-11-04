@@ -1,4 +1,4 @@
-using SparseDiffTools,SparseArrays,Symbolics
+using SparseArrays,Symbolics #SparseDiffTools
 
 myInclude("../src/batchUseful.jl")
 myInclude("../src/batchEnzyme.jl")

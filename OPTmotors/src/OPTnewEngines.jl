@@ -372,15 +372,19 @@ end
 
 
 
-function getIngegralWYYKKK(params::Dict)
+function getIntegralWYYKKK(params::Dict)
     @unpack oB, oWB, νCoord, LCoord, ΔCoord, l_n_max = params
-    kernels = Array{Any,4}(undef,LCoord,LCoord,l_n_max+1,l_n_max+1)
+    kernels = Array{Float64,4}(undef,LCoord,LCoord,l_n_max+1,l_n_max+1)
     modμ = nothing
     for l_n_field in 0:1:l_n_max
         for l_n_variable in 0:1:l_n_max
             for μ in 1:1:LCoord
                 for μᶜ in 1:1:LCoord
-                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1],modμ=integralBsplineTaylorKernels1DWithWindow1D(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field)
+                    #kernels[μᶜ,μ,l_n_variable+1,l_n_field+1],modμ=integralBsplineTaylorKernels1DWithWindow1D(oB,oWB,μᶜ,μ,νCoord,LCoord,ΔCoord,l_n_variable,l_n_field)
+                    paramsBsplineTaylorIntegral1D=@strdict BsplineOrder = oB WBsplineOrder = oWB μᶜ = μᶜ μ = μ ν = νCoord L = LCoord Δ = ΔCoord l_n_variable = l_n_variable l_n_field = l_n_field
+                    output=myProduceOrLoad(integralBsplineTaylorKernels1DWithWindow1D,paramsBsplineTaylorIntegral1D,"BsplineInt","BsplineTaylorIntegral1D")
+                    kernels[μᶜ,μ,l_n_variable+1,l_n_field+1]=Num2Float64(output["kernels"])
+                    modμ=output["modμ"]
                 end
             end
         end
@@ -393,7 +397,18 @@ function getIngegralWYYKKK(params::Dict)
     #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
 end
 
-function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
+
+function integralBsplineTaylorKernels1DWithWindow1D(params::Dict)
+    @unpack BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field = params
+    kernels,modμ=integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ,l_n_variable,l_n_field)
+    return @strdict(kernels=kernels,modμ=modμ)
+end
+
+
+
+function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,μᶜ,μ,ν,L,Δ::Float64,l_n_variable,l_n_field)
+
+    # Δ should be strictly Float64
 
     # this computes the analytical value of the 1D integral between B-spline fns and weighted Taylor kernels
     # \int dx Bspline Y_μᶜ Y_μ  K_{lᶜ-nᶜ}(y-y_μᶜ) K_{l-n}(y-y_μ)
@@ -430,7 +445,7 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         #output,_=@produce_or_load(BsplineTimesPolynomialsIntegrated,params,datadir("BsplineInt");filename = config -> savename("Bspline",params))
         
         output=myProduceOrLoad(BsplineTimesPolynomialsIntegrated,params,"BsplineInt","Bspline")
-
+        #@show output
         nodeIndices,nodesSymbolic,b_deriv,integral_b,Δx,extFns,x,modμ =output["BsplineIntegraters"]
         
         # here we make a function Y_μ' Y_μ K_μ' K_μ (details ommitted)
@@ -502,8 +517,8 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
         kernelValue = substitute(targetKernel,dictionaryForSubstitute)  
         
         kernelValue = substitute(kernelValue,Dict(Δx=>Δ))/(BigInt(factorial(l_n_field))*BigInt(factorial(l_n_variable)))
-    
-
+        kernelValue = Num2Float64(kernelValue)
+        
         #a= (Δ^(l_n_variable+l_n_field+1)-(-Δ)^(l_n_variable+l_n_field+1))/((l_n_variable+l_n_field+2)*(l_n_variable+l_n_field+1)*factorial(BigInt(l_n_variable))*factorial(BigInt(l_n_field)))
         #@show a
     end
@@ -868,7 +883,7 @@ end
 
 
 
-function ASymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
+function ASemiSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndices,middleLinearν,Δ,varM,bigα,orderBspline,WorderBspline,NtypeofExpr,NtypeofFields)
     # I write this function to be able to go through the matrix inversion path
     # the model function is AuSymbolic (below)
 
@@ -887,14 +902,14 @@ function ASymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndic
 
     integral1DWYYKK = Array{Any,1}(undef,length(coordinates))
     modifiedμ=Array{Any,1}(undef,length(coordinates))
-    for iCoord in eachindex(coordinates)
+    for iCoord in eachindex(coordinates) # for each 
         integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
-        output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
+        output = myProduceOrLoad(getIntegralWYYKKK,integralParams,"intKernel")
         @show integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
         @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
     @show typeof(integral1DWYYKK[1]), typeof(modifiedμ[1])
-
+    @show size(integral1DWYYKK[1])
     #endregion
 
     return AjiννᶜU,Ulocal
@@ -918,7 +933,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     modifiedμ=Array{Any,1}(undef,length(coordinates))
     for iCoord in eachindex(coordinates)
         integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
-        output = myProduceOrLoad(getIngegralWYYKKK,integralParams,"intKernel")
+        output = myProduceOrLoad(getIntegralWYYKKK,integralParams,"intKernel")
         integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
         @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
