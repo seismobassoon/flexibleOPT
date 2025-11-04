@@ -5,7 +5,7 @@ Pkg.activate("../..")           # active the project, with a  static environment
 # Pkg.activate(; temp=true)    #  activate the project with a temporary environment
 Pkg.update()      
 
-myInclude("../src/imageReader.jl")
+include("../src/imageReader.jl")
 
 #imagefile="../data/model/artemis/IMG_6098.jpeg"
 #imagefile="../data/model/random/tmp.png"

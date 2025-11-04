@@ -1,12 +1,28 @@
-# This is just a gallery of well-known PDEs and model construction methods to test
+# 
+
+
+
 
 using Symbolics, LinearAlgebra, Tullio
 
-# you can call your coordinates (locally cartesian) as much as you want but time should be called t not T not τ !!!
-# this is important because timeMarching scheme mode should be detected by that!
 
 # famousEquation: we should also need to think how to treat equations with variable division
-function famousEquations(name)
+
+
+@doc raw"""
+    famousEquations(name)
+
+This is just a gallery of well-known PDEs and model construction methods to test.
+
+you can call your coordinates (locally cartesian) as much as you want but time should be called t not T not τ!!!
+# this is important because timeMarching scheme mode should be detected by that!
+
+# Examples
+```julia-repl
+julia>  famousEquations("1Dacceleration")
+```
+"""
+function famousEquations(name::AbstractString)
     if name==="1Dacceleration"
         @variables u(t) ω
         exprs =∂t²(u)

@@ -7,7 +7,7 @@ include("../src/batchRevise.jl")
 if @isdefined DEFAULT_PLANET
     #
 else
-    myInclude("../src/GeoPoints.jl")
+    include("../src/GeoPoints.jl")
 end
 
 

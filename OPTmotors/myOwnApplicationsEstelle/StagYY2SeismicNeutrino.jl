@@ -3,19 +3,19 @@ using  Pkg, BenchmarkTools
 cd(@__DIR__)
 Pkg.activate("../..")
 ParamFile = "../test/testparam.csv"
-myInclude("../src/DSM1D.jl")
-myInclude("../src/batchUseful.jl")
+include("../src/DSM1D.jl")
+include("../src/batchUseful.jl")
 using .DSM1D
 using DIVAnd,CairoMakie
 using Interpolations
 import GLMakie
 using Colors
-myInclude("../src/batchStagYY.jl")
-myInclude("../src_Neurthino/Neurthino.jl")
+include("../src/batchStagYY.jl")
+include("../src_Neurthino/Neurthino.jl")
 using .Neurthino
-myInclude("../src_Neurthino/usefulFunctionsToPlot.jl")
-myInclude("../src_Neurthino/NeurthinoRelated.jl")
-myInclude("../src_Neurthino/premFunctions.jl")
+include("../src_Neurthino/usefulFunctionsToPlot.jl")
+include("../src_Neurthino/NeurthinoRelated.jl")
+include("../src_Neurthino/premFunctions.jl")
 
 boolFlat = true # we can read but for me it is better to have this information before reading since DIVAnd_rectdom can be applied before reading
 

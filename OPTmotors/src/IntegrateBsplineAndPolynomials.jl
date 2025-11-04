@@ -3,7 +3,7 @@ using Symbolics
 # look at out_of_src/Bspline_with_centralPoint_Symbolics.jl for some experiments
 # that motivated to make this code
 
-myInclude("../src/batchNewSymbolics.jl")
+include("../src/batchNewSymbolics.jl")
 
 
 

@@ -15,23 +15,30 @@ end
 
 
 function detect_backend()
-    _has_cuda = false
-    _has_metal = false
+    has_cuda = false
+    has_metal = false
 
     try
         if Sys.isapple()
-            @eval using Metal
-            devs = Metal.devices()
-            _has_metal = !isempty(devs)
+            try
+                @eval using Metal
+                has_metal = !isempty(Metal.devices())
+            catch e
+                @warn "Metal.jl not available or no Metal devices detected: $e"
+            end
         else
-            @eval using CUDA
-            _has_cuda = CUDA.has_cuda()
+            try
+                @eval using CUDA
+                has_cuda = CUDA.has_cuda()
+            catch e
+                @warn "CUDA.jl not available or no CUDA devices detected: $e"
+            end
         end
     catch e
-        @warn "GPU backend not available: $e"
+        @warn "Error detecting GPU backend: $e"
     end
 
-    return (_has_cuda, _has_metal)
+    return (has_cuda, has_metal)
 end
 
 

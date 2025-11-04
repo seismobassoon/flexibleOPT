@@ -1,9 +1,9 @@
 using Interpolations
 
 include("../src/batchRevise.jl")
-myInclude("../src/GeoPoints.jl")
-myInclude("../src/batchGMT.jl")
-myInclude("../src/batchDrWatson.jl")
+include("../src/GeoPoints.jl")
+include("../src/batchGMT.jl")
+include("../src/batchDrWatson.jl")
 
 
 function getParamsAndTopo(allGridsInGeoPoints,precisionInKm::Float64;NradiusNodes=500,eps=10.0,VpWater=1.5,ρWater=1.0,VpAir=0.314,ρAir=0.001,hasAirModel=false)

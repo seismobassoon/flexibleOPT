@@ -1,10 +1,10 @@
 using Symbolics,DrWatson
 
-myInclude("../src/batchNewSymbolics.jl")
-#myInclude("../src/OPTnewEngines.jl") 
-myInclude("../src/famousSourceFunctions.jl")
-myInclude("../src/famousEquations.jl")
-myInclude("../src/timeMarchingSchemes.jl")
+include("../src/batchNewSymbolics.jl")
+include("../src/OPTnewEngines.jl") 
+include("../src/famousSourceFunctions.jl")
+include("../src/famousEquations.jl")
+include("../src/timeMarchingSchemes.jl")
 
 
 function makeCompleteCostFunctions(concreteModelParameters::Dict)

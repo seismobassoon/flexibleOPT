@@ -1,4 +1,4 @@
-myInclude("../src/batchDiffTools.jl")
+include("../src/batchDiffTools.jl")
 using DrWatson,JLD2
 using GLMakie: Figure, Axis, heatmap!, Colorbar, record
 # I kind of use what Tibo did in ExactSolutions.jl

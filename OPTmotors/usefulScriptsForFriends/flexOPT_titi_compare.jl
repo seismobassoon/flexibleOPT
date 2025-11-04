@@ -10,10 +10,10 @@
 #   |
 # Above is not needed since there is one Project.toml at the root and it's already loaded.
 
-# myInclude("../src/imageReader.jl") # read 2D images for models
-myInclude("../src/batchNewSymbolics.jl")
-myInclude("../src/OPTnewEngines.jl") 
-myInclude("../src/famousEquations.jl")
+# include("../src/imageReader.jl") # read 2D images for models
+include("../src/batchNewSymbolics.jl")
+include("../src/OPTnewEngines.jl") 
+include("../src/famousEquations.jl")
 
 
 # important!!! You can call the coordinates as you like but if you want to make a timeMarching, then

@@ -6,19 +6,19 @@
 
 
 using Pkg, BenchmarkTools
-#using Revise # if we use Revise, myInclude will be Revise.includet
+#using Revise # if we use Revise, include will be Revise.includet
 
 cd(@__DIR__)
 Pkg.activate("../..")
 
-myInclude("../src/batchRevise.jl")
+include("../src/batchRevise.jl")
 Base.invokelatest(Main.BatchRevise, args...)
 
-myInclude("../src/batchUseful.jl")
+include("../src/batchUseful.jl")
 
-myInclude("../src/imageReader.jl") # read 2D images for models
+include("../src/imageReader.jl") # read 2D images for models
 
-myInclude("../src/OPTwrappers.jl") 
+include("../src/OPTwrappers.jl") 
 
 iExperiment = 1
 
