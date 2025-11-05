@@ -1,6 +1,6 @@
 using Enzyme
 using Requires
-
+using SparseArrays
 function __init__()
     if Sys.isapple()
         @require Metal="dde4c033-4e86-420c-a63e-0dd931031962" begin
