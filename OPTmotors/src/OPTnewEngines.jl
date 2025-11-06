@@ -164,6 +164,8 @@ end
 
 function TaylorCoefInversion(coefInversionDict::Dict)
 
+    # this function will give Float64 array (not Any)
+
     # the user might want to have a look on illposedTaylorCoefficientsInversion_legend, which is deprecated as of 10/06/2025.
 
 
@@ -184,16 +186,13 @@ function TaylorCoefInversion(coefInversionDict::Dict)
     numberOfEtas = length(pointsIndices)
     numberOfLs   = length(multiOrdersIndices)
 
-    CˡηGlobal = Array{Any,3}(undef,numberOfEtas,numberOfLs,numberOfEtas)
+    CˡηGlobal = Array{Float64,3}(undef,numberOfEtas,numberOfLs,numberOfEtas)
 
     # this is the C^{(l)}_{\mu+\eta; μ, \nu}
 
     for μ_oneD in eachindex(pointsIndices)
         CˡηGlobal[:,:,μ_oneD]=TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIndices,Δ,μ_oneD,WorderBspline,modifiedμ)
     end 
-
-
-
 
     return @strdict(CˡηGlobal)
 
