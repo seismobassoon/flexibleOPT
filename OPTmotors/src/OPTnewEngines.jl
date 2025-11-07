@@ -371,7 +371,8 @@ end
 
 
 
-function getIntegralWYYKKK(params::Dict)
+function getIntegralWYYKK(params::Dict)
+    # this will give the integral of WYYKK of the equation 54 in 1 dimension
     @unpack oB, oWB, νCoord, LCoord, ΔCoord, l_n_max = params
     kernels = Array{Float64,4}(undef,LCoord,LCoord,l_n_max+1,l_n_max+1)
     modμ = nothing
@@ -903,7 +904,7 @@ function ASemiSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsI
     modifiedμ=Array{Any,1}(undef,length(coordinates))
     for iCoord in eachindex(coordinates) # for each 
         integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
-        output = myProduceOrLoad(getIntegralWYYKKK,integralParams,"intKernel")
+        output = myProduceOrLoad(getIntegralWYYKK,integralParams,"intKernel")
         @show integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
         @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
@@ -932,7 +933,7 @@ function AuSymbolic(coordinates,multiOrdersIndices,pointsIndices,multiPointsIndi
     modifiedμ=Array{Any,1}(undef,length(coordinates))
     for iCoord in eachindex(coordinates)
         integralParams = @strdict oB =orderBspline[iCoord] oWB = WorderBspline[iCoord] νCoord=pointsIndices[middleLinearν][iCoord] LCoord = multiPointsIndices[end][iCoord] ΔCoord=Δ[iCoord] l_n_max=L_MINUS_N[end][iCoord]
-        output = myProduceOrLoad(getIntegralWYYKKK,integralParams,"intKernel")
+        output = myProduceOrLoad(getIntegralWYYKK,integralParams,"intKernel")
         integral1DWYYKK[iCoord] = output["intKernelforνLΔ"]
         @show modifiedμ[iCoord] = output["modμ"] # this can be still 'nothing'
     end
