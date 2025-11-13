@@ -11,3 +11,5 @@ October 2025
 -after the blackforest hackathon, pull Hesaneh's development
 
 -GMT -> GMRT?
+
+- after famousEquations -> if we detect some product of material variables, we need to prepare a pseudo material variable
