@@ -43,6 +43,14 @@ end
     result[i]=a[i]*b[i]*c[i]*d[i]*e[i]
 end
 
+function makeGPUarray(backend,A)
+    A_gpu= Adapt.adapt(backend, Float32.(A))
+    return A_gpu
+end
+function recoverCPUarray(A_gpu)
+    A_cpu = Array(A_gpu)         # preserves shape
+    return Float64.(A_cpu)       # convert elements
+end
 
 function GPUsum(gpuArray)
     return KernelAbstractions.sum(gpuArray)
