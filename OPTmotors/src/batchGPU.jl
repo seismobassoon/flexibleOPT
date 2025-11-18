@@ -43,6 +43,16 @@ end
     result[i]=a[i]*b[i]*c[i]*d[i]*e[i]
 end
 
+@kernel function piecewiseProductAll!(A, B, C, result, ::Val{N}) where {N}
+    i = @index(Global)
+    temp = one(eltype(result))
+    for n in 1:N
+        temp *= A[n, i]
+    end
+    temp *= B[i]*C[i]
+    result[i] = temp
+end
+
 function makeGPUarray(backend,A)
     A_gpu= Adapt.adapt(backend, Float32.(A))
     return A_gpu
