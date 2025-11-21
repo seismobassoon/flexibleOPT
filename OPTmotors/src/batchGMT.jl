@@ -2,7 +2,7 @@ using GMT
 
 # Nobuaki Fuji October 2025
 
-include("../src/batchRevise.jl")
+#include("../src/batchRevise.jl")
 
 if @isdefined DEFAULT_PLANET
     #

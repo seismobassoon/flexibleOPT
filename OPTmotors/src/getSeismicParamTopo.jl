@@ -1,6 +1,6 @@
 using Interpolations
 
-include("../src/batchRevise.jl")
+#include("../src/batchRevise.jl")
 include("../src/GeoPoints.jl")
 include("../src/batchGMT.jl")
 include("../src/batchDrWatson.jl")
@@ -106,6 +106,9 @@ function getParamsAndTopo(allGridsInGeoPoints,precisionInKm::Float64;NradiusNode
             effectiveRadii[i]=DSM1D.my1DDSMmodel.averagedPlanetRadiusInKilometer*1.e3 - eps
      
         end
+
+
+        # NF needs to give topography file
 
         if hasAirModel === false
             if topoInterpolater(tmpPoint.lon,tmpPoint.lat) <tmpPoint.alt

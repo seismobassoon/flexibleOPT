@@ -1,5 +1,7 @@
 October 2025
 
+-give a topo table
+
 -finally I can work on the demo1.ipynb in myOwnApplications
 
 -how to deal with interfaces \Delta x that differs (interpolator on the discontinuities?)
