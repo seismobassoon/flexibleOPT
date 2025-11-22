@@ -34,7 +34,7 @@ end
 function main()
 
     
-    dir = "/Users/hessiemohammadi/Documents/github/OptimallyAccurate2D/volcano_simu1/rock_magma_chamber_topo_air/bin_files"
+    dir = "/Users/hessiemohammadi/Documents/github/OptimallyAccurate2D/volcano_simu1/snapshots_chamber/bin_files"
     datadir = "/Users/hessiemohammadi/Documents/FUJI/Github/flexibleDSM/OPTmotors/usefulScriptsForFriends"
 
     # Visualization parameters
@@ -46,12 +46,12 @@ function main()
     WAVE_ALPHA = 0.85
 
     # Model grid sizes 
-    nx_full, nz_full = 261, 438
-    nx_crop, nz_crop = 161, 338
+    nx_full, nz_full = 438, 261
+    nx_crop, nz_crop = 338, 161
     n_expected = nx_full * nz_full
 
     #  Physical coordinates (km) 
-    x_min, x_max = -50.0, 50.0
+    x_min, x_max = 0, 100.0
     z_min, z_max = -10.0, 43.70
     x_full = range(x_min, x_max; length=nx_full)
     z_full = range(z_min, z_max; length=nz_full)
@@ -68,7 +68,7 @@ function main()
     z = range(z_data_min, z_max; length=nz_crop)
 
     #  Load background Vp 
-    vp_file = joinpath(datadir, "rock_magma_chamber_topo_air.vp")
+    vp_file = joinpath(datadir, "rock_chamber_new.vp")
     println("Loading velocity model: $vp_file")
     vp = read_binary_matrix(vp_file, nz_crop, nx_crop)
     vp_min, vp_max = extrema(vp)
@@ -87,13 +87,15 @@ function main()
     files = sort(filter(f -> endswith(f, ".bin"), readdir(dir; join=true)))
 
     # Source location (indices and coordinates)
-    iz_src, ix_src = 133, 60
+    iz_src, ix_src = 59, 161
     x_src, z_src = x[ix_src], z[iz_src]
     println("Source indices (ix, iz) = ($ix_src, $iz_src)")
     println(" Source coordinates (x, z) = ($(round(x_src, digits=2)), $(round(z_src, digits=2))) km")
 
     # Receivers
-    receiver_coords = [(-10.0, 1.0), (-5.0, 1.0), (0.0, 1.0), (10.0, 1.0), (20.0, 1.0)]
+   # receiver_coords = [(−28.102, −0.618), (-5.0, 1.0), (0.0, 1.0), (19.682, −0.785), (24.251, −0.263)]
+    #receiver_coords = [(-28.102, 2), (-5.0, 2.0), (0.0, 2.0), (19.682, 2), (24.251, 2)]
+    receiver_coords = [(-15.0, 1), (-5.0, 1.0), (0.0, 1.0), (5.0, 1), (15.0, 1)]
     receiver_indices = [(argmin(abs.(x .- xr)), argmin(abs.(z .- zr))) for (xr, zr) in receiver_coords]
     time_series = [Float32[] for _ in receiver_indices]
 
@@ -105,8 +107,8 @@ function main()
         if length(data) == n_expected
             data = reshape(data, (nx_full, nz_full))'
             data = data[iz_start:iz_end, ix_start:ix_end]
-            c = 1e-4
-            B = sign.(data) .* log1p.(abs.(data) ./ c)
+            c = 1e-2
+            B = sign.(data) .* log1p.(abs.(data) ./ c) 
             global_max = max(global_max, maximum(abs, B))
         end
     end
@@ -130,7 +132,7 @@ function main()
         data = data[iz_start:iz_end, ix_start:ix_end]
 
         # amplitude compression
-        c = 1e-4
+        c = 1e-2
         B = sign.(data) .* log1p.(abs.(data) ./ c)
 
         # upsample the wavefield for smooth display
@@ -181,7 +183,7 @@ function main()
         GLMakie.Colorbar(fig[1, 0];
             limits=(vp_min, vp_max),
             colormap=GLMakie.cgrad(transparent_colormap),
-            label="Vp (km/s)")
+            label="Vp (m/s)")
 
         axislegend(ax; position=:rb, orientation=:vertical, patchsize=(8,8), labelsize=10)
 

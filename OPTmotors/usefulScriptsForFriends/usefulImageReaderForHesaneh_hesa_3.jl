@@ -5,11 +5,12 @@ cd(@__DIR__)
 Pkg.activate("../..")
 Pkg.update()
 Pkg.update("Makie")
+include("../src/batchRevise.jl")
 
 include("../src/imageReader_hesa.jl")
 
 
-imagefile = "/Users/hessiemohammadi/Documents/FUJI/events/rock_no_topo_air.jpg"
+imagefile = "/Users/hessiemohammadi/Documents/FUJI/events/rock_chamber_new.jpg"
 
 #  Define geology color - velocity mapping 
 geologyColors = [
@@ -20,7 +21,7 @@ geologyColors = [
 ]
 
 targetVp = [
-    343.0,   # Air (m/s)
+    1500.0,   # Air (m/s)
     2000.0,  # Magma
     4000.0,  # Mush
     6000.0   # Rock
@@ -63,15 +64,15 @@ vsMatrix  = vs_from_vp.(floatMatrix_vp)
 
 
 # Save to binary files 
-open("rock_no_topo_air.vp", "w") do io
+open("rock_chamber_new.vp", "w") do io
     write(io, Float32.(vec(floatMatrix_vp)))
 end
 
-open("rock_no_topo_air.rho", "w") do io
+open("rock_chamber_new.rho", "w") do io
     write(io, Float32.(vec(rhoMatrix)))
 end
 
-open("rock_no_topo_air.vs", "w") do io
+open("rock_chamber_new.vs", "w") do io
     write(io, Float32.(vec(vsMatrix)))
 end
 

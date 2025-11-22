@@ -12,7 +12,7 @@ include("../src/imageReader_hesa.jl")
 #imagefile="../data/model/artemis/IMG_6098.jpeg"
 #imagefile="../data/model/random/tmp.png"
 #imagefile = "../data/model/moi/ground_canyon.png"
-imagefile = "/Users/hessiemohammadi/Documents/FUJI/events/rock_potato_topo_air.jpg"
+imagefile = "/Users/hessiemohammadi/Documents/FUJI/events/rock_no_topo_air.jpg"
 #colormap = "hot" #colormap can be RGB vector or predefined colormap
 
 # Define geology color - velocity mapping
@@ -71,7 +71,7 @@ data_single = Float32.(data)
 data_vec = vec(data_single)
 
 # Write to binary file
-open("volcano_rock_topo_air_vp300.rho", "w") do io
+open("rock_no_topo_air2.rho", "w") do io
     write(io, data_vec)
 end
 
@@ -86,7 +86,7 @@ data_single = Float32.(data)
 data_vec = vec(data_single)
 
 # Write to binary file
-open("volcano_rock_topo_air_vp300.vp", "w") do io
+open("rock_no_topo_air2.vp", "w") do io
     write(io, data_vec)
 end
 
@@ -100,6 +100,6 @@ data_single = Float32.(data)
 data_vec = vec(data_single)
 
 # Write to binary file
-open("volcano_rock_topo_air_vp300.vs", "w") do io
+open("rock_no_topo_air2.vs", "w") do io
     write(io, data_vec)
 end
