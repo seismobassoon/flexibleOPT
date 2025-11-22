@@ -3,7 +3,7 @@
 using CairoMakie, Symbolics,Pkg
 cd(@__DIR__)
 Pkg.activate("../..")
-myInclude("../src/batchNewSymbolics.jl")
+include("../src/batchNewSymbolics.jl")
 
 # this is a home-made B-spline functions' plot in order to understand the validity of truncation at left and right extremeties
 

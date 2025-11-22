@@ -1,0 +1,17 @@
+October 2025
+
+-give a topo table
+
+-finally I can work on the demo1.ipynb in myOwnApplications
+
+-how to deal with interfaces \Delta x that differs (interpolator on the discontinuities?)
+
+-DEFAULT_PLANET thing with 1D planet model -> how to make this more flexible?
+
+-batchXXX.jl in another folder?
+
+-after the blackforest hackathon, pull Hesaneh's development
+
+-GMT -> GMRT?
+
+- after famousEquations -> if we detect some product of material variables, we need to prepare a pseudo material variable

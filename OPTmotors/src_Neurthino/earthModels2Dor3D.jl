@@ -1,7 +1,7 @@
 # Estelle Salomé (stagiaire ENSG 2ème année) and Nobuaki Fuji (IPGP/UPC/IUF)
 # extends PREM.jl in Neurthino.jl package for a half circle disk
 
-myInclude("PREM.jl")
+include("PREM.jl")
 function earthpath(zenith::T, zposition; samples=100, discrete_densities=nothing,EARTH_RADIUS=6371.0) where {T <: Number}
 """
 

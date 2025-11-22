@@ -6,18 +6,19 @@
 
 
 using Pkg, BenchmarkTools
-using Revise # if we use Revise, myInclude will be Revise.includet
+#using Revise # if we use Revise, include will be Revise.includet
 
 cd(@__DIR__)
 Pkg.activate("../..")
 
-myInclude("../src/batchRevise.jl")
+include("../src/batchRevise.jl")
 Base.invokelatest(Main.BatchRevise, args...)
 
+include("../src/batchUseful.jl")
 
-myInclude("../src/imageReader.jl") # read 2D images for models
+include("../src/imageReader.jl") # read 2D images for models
 
-myInclude("../src/OPTwrappers.jl") 
+include("../src/OPTwrappers.jl") 
 
 iExperiment = 1
 
@@ -33,7 +34,7 @@ iExperiment = 1
 
 
 #region Choose backend depending on environment
-if isdefined(Main, :IJulia) || get(ENV, "JULIA_EDITOR", "") == "code"
+if  (get(ENV, "JUPYTER", nothing) !== nothing) || isdefined(Main, :IJulia) 
     # Use CairoMakie for inline if in notebook or VS Code
     using CairoMakie
 else

@@ -3,9 +3,9 @@ using  Pkg, BenchmarkTools
 cd(@__DIR__)
 Pkg.activate("../..")
 
-myInclude("../src/imageReader.jl") # read 2D images for models
+include("../src/imageReader.jl") # read 2D images for models
 
-myInclude("../src/OPTwrappers.jl") 
+include("../src/OPTwrappers.jl") 
 
 using Enzyme
 using SparseArrays

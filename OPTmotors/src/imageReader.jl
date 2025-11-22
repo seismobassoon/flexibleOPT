@@ -1,6 +1,6 @@
 
 
-myInclude("../src/batchImages.jl")
+include("../src/batchImages.jl")
 
 using FileIO,CairoMakie
 
@@ -65,7 +65,7 @@ function read2DimageModel(file; Ncolor=256, colorbar = [RGB(0.0, 0.0, 1.0), RGB(
 end
 
 
-greenColorMap=[RGB(1.0,1.0,1.0),RGB(0.0,1.0,0.0)]
+#greenColorMap=[RGB(1.0,1.0,1.0),RGB(0.0,1.0,0.0)]
 
 #file="DSM1D/data/model/random/colourful.jpg"
 #file="DSM1D/data/model/artemis/IMG_6098.jpeg"

@@ -1,5 +1,5 @@
 module DSM1D
-# This module will myInclude all the functions needed to run the 1D DSM
+# This module will include all the functions needed to run the 1D DSM
 # Packages that should be installed before running the DSM:
 
 # - SeisBase

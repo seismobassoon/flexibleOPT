@@ -4,8 +4,8 @@ cd(@__DIR__)
 Pkg.activate("../..")
 
 
-#myInclude("../src/OPTwrappers.jl") 
-myInclude("../src/batchnewSymbolics.jl")
+#include("../src/OPTwrappers.jl") 
+include("../src/batchnewSymbolics.jl")
 
 @variables dx
 matrixA=[1 -dx dx^2//2; 1 0 0 ; 1 dx dx^2//2]
