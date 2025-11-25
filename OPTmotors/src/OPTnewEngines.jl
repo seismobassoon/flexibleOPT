@@ -214,8 +214,8 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
     modifiedμ_vector = Array{Float64,1}(undef,Ndimension)
 
 
-    @show modifiedμ
-    @show size(modifiedμ)
+    #@show modifiedμ
+    #@show size(modifiedμ)
     for i in eachindex(pointsIndices)
         η_μ = pointsIndices[i]
         iSayWeSayGo = 1
