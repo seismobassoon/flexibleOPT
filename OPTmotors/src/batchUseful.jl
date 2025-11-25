@@ -66,6 +66,13 @@ carDropDim(x::CartesianIndex) = CartesianIndex(Tuple(car2vec(x)[1:end-1]))
 carAddDim(x::CartesianIndex,n::Int) = CartesianIndex(Tuple([car2vec(x);n]))
 vec2car(x::Array{Int})=CartesianIndex(Tuple(vec(x))) 
 
+function vec2car(x::Vector{Int}, Ndimension::Int)
+    @assert length(x) % Ndimension == 0 "Flat array length not divisible by dimension"
+
+    M = reshape(x, Ndimension, :)
+    return [CartesianIndex(Tuple(M[:,i])) for i in axes(M, 2)]
+end
+
 function is_all_less_than_or_equal(c1::CartesianIndex, c2::CartesianIndex)
     all(x -> x[1] ≤ x[2], zip(Tuple(c1), Tuple(c2)))
 end
