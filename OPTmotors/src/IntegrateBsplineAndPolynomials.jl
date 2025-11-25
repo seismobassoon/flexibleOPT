@@ -36,9 +36,7 @@ function BsplineTimesPolynomialsIntegrated(params::Dict)
     
     
     nodeIndices = collect(νₗ:1:νᵣ)
-    
     nodesSymbolic = Δx .* nodeIndices
-
     append!(nodesSymbolic,nodesSymbolic[end])
 
 

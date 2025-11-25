@@ -391,7 +391,6 @@ function getIntegralWYYKK(params::Dict)
     end
 
     
-
     return @strdict(intKernelforνLΔ=kernels,modμ=modμ)
     # the target
     #integral1DWYYKK[iCoord][pointsIndices[linearμᶜ][iCoord],pointsIndices[linearμ][iCoord],l_n_variable,l_n_field]
@@ -415,10 +414,10 @@ function integralBsplineTaylorKernels1DWithWindow1D(BsplineOrder,WBsplineOrder,�
 
     # unlike the previous integralBsplineTaylorKernels1D, it computes for a specific ν
     # Cˡη;μ are computed for a specific geometry, so even though the boundary condition reduce
-    # the number of available points, each Taylor expansion for K_{l-n}(y-y_μ) should be Okubo
+    # the number of available points, each Taylor expansion for K_{l-n}(y-y_μ) should be Ok
     
     # however, the 'forgotten' μ (due to the whole) should be treated carefully 
-    # (which I do not yet implemented here): I think Y_ignoredμ should be added to the Y_availableneighbouringμ
+    # (which I have not yet implemented here): I think Y_ignoredμ should be added to the Y_availableneighbouringμ
 
     # or maybe the 'forgotten' μ is anyways not available (and thus very probably not continuous)
     # so we just let this be forgotten 
