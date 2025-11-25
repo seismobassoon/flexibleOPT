@@ -182,8 +182,10 @@ function TaylorCoefInversion(coefInversionDict::Dict)
         @error "the numerical delta increment has not the same dimension!"
     end
 
-    pointsIndices = vec2car(vec(pointsIndices),Ndimension)
-
+    #@show vcat(deep_flatten(pointsIndices))
+    #@show pointsIndices = vec2car(vcat(deep_flatten(pointsIndices)),Ndimension)
+    #pointsIndices=to_cartesian_list(pointsIndices,Ndimension)
+    pointsIndices = vec(CartesianIndex.(Tuple.(pointsIndices)))
     μpointsIndices = pointsIndices # which can be changed 
     
     numberOfEtas = length(pointsIndices)
@@ -223,7 +225,7 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
 
   
 
-    modifiedμ_vector = Float64.(car2vec(pointsIndices[μ_oneD]))
+    @show modifiedμ_vector = Float64.(car2vec(μpointsIndices[μ_oneD]))
 
 
    
@@ -237,9 +239,9 @@ function TaylorCoefInversion(numberOfLs,numberOfEtas,multiOrdersIndices,pointsIn
             #tmp2=Num2Float64(modifiedμ[iCoord][2,μ,WorderBspline[iCoord]+1])
             #tmp3=Num2Float64(modifiedμ[iCoord][3,μ,WorderBspline[iCoord]+1])
             
-            tmp1=Num2Float64(safeget(modifiedμ[iCoord],1,pointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
-            tmp2=Num2Float64(safeget(modifiedμ[iCoord],2,pointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
-            tmp3=Num2Float64(safeget(modifiedμ[iCoord],3,pointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp1=Num2Float64(safeget(modifiedμ[iCoord],1,μpointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp2=Num2Float64(safeget(modifiedμ[iCoord],2,μpointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
+            tmp3=Num2Float64(safeget(modifiedμ[iCoord],3,μpointsIndices[μ_oneD][iCoord],WorderBspline[iCoord]+1))
             #@show tmp1, tmp2, tmp3
 
             #modifiedμ_vector[iCoord] = tmp3

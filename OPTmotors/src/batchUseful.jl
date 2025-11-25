@@ -66,6 +66,27 @@ carDropDim(x::CartesianIndex) = CartesianIndex(Tuple(car2vec(x)[1:end-1]))
 carAddDim(x::CartesianIndex,n::Int) = CartesianIndex(Tuple([car2vec(x);n]))
 vec2car(x::Array{Int})=CartesianIndex(Tuple(vec(x))) 
 
+function flatten(x)
+    if isa(x, AbstractVector)
+        return vcat(flatten.(x)...)
+    else
+        return [x]
+    end
+end
+
+function deep_flatten(x)
+    if isa(x, Number)       # base case
+        return [x]
+    elseif isa(x, AbstractArray)
+        return vec(x)       # convert any array to 1D vector
+    elseif isa(x, AbstractVector)
+        return vcat(deep_flatten.(x)...)
+    else
+        error("Unsupported type: $(typeof(x))")
+    end
+end
+
+
 function vec2car(x::Vector{Int}, Ndimension::Int)
     @assert length(x) % Ndimension == 0 "Flat array length not divisible by dimension"
 
