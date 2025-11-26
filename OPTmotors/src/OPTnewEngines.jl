@@ -158,7 +158,6 @@ function PDECoefFinder(orders,coordinates,expr,field,vars)
     end
     alpha=unique(alpha)
 
-
     return alpha # varM: iVar and linearised cartesian indices
 end 
 
