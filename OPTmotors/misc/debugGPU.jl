@@ -11,11 +11,6 @@ using Metal
 end
 
 
-@kernel function mul2_kernel2!(A)
-    i = @index(Global,1)
-    j = @index(Global,2)
-    A[i,j]=2.0* A[i,j]
-end
 
 
 
@@ -31,17 +26,30 @@ A_gpu= Adapt.adapt(MetalBackend(), Float32.(A))
 
 #ev = mul2_kernel(dev,64)(A_gpu,ndrange=size(A_gpu))
 
-@time ev=mul2_kernel!(dev,64)(A_gpu; ndrange=size(A_gpu))
+@time ev=mul2_kernel!(dev)(A_gpu; ndrange=size(A_gpu))
 #KernelAbstractions.wait(ev)
-@print ev
+
 KernelAbstractions.synchronize(dev)
 
 
-B_gpu= Adapt.adapt(dev,ones(Float32,20,10))
-@time ev=mul2_kernel2!(dev,64)(B_gpu;ndrange=([20,10]))
+
+B_gpu = Adapt.adapt(dev, ones(Float32, 20, 10))
+
+# kernel
+@kernel function mul2_kernel2!(A)
+    i, j = @index(Global, NTuple)   # same as  (Global,1), (Global,2)
+    @inbounds A[i,j] = 2f0 * A[i,j]
+end
+
+# create kernel functor
+kernel! = mul2_kernel2!(dev)
+
+# launch on a 20×10 grid (one thread per element)
+ev = kernel!(B_gpu, ndrange=size(B_gpu))   # ← give ndrange (and optionally workgroups)
 
 
-
+B_cpu = collect(B_gpu)
+@show B_cpu
 
 # -----------------------------
 # Dummy dimensions
@@ -84,5 +92,5 @@ end
 # Launch kernel on Metal
 # -----------------------------
 ndrange=([P,P,nalpha])
-windowContraction2!(dev,64)(output_gpu,C_gpu;ndrange=ndrange)
+#windowContraction2!(dev,64)(output_gpu,C_gpu;ndrange=ndrange)
 
